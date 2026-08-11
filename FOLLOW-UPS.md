@@ -69,13 +69,45 @@ gets used at a desk, A–D key handlers on the option buttons would be a few lin
 
 ## Testing
 
+**The unit suite was removed on request** (personal app, no test burden wanted). It was
+green at the point of removal: 68 specs across the engine, the date maths, the session
+builder, the ported content and the stylesheet. If any of it comes back, the two worth
+having first are not the engine tests — they are the drift guards below.
+
+**Nothing now stops `src/data` drifting from the reference.**
+This is the real cost of dropping the suite. `data.test.ts` re-evaluated the reference's
+own `<script>` block and asserted the four ported modules still deep-equalled it, so a
+hand-edit to `src/data/*.ts` — or a bug in `scripts/extract-data.mjs` — could not pass
+unnoticed. `css-parity.test.ts` did the same for the stylesheet, catching any rule the
+split dropped. Both were cheap and both are gone. Re-running
+`node scripts/extract-data.mjs` and checking `git diff` is empty is the manual substitute
+for the first; there is no substitute for the second short of the browser harness.
+
 **The parity harness isn't wired into CI.**
 `scripts/parity/*` needs Chromium and an `--no-save` Playwright install, so it's a manual
 gate. `computed.mjs` is deterministic and would make a good pre-deploy check if the
-reference file is going to keep living in the repo.
+reference file is going to keep living in the repo. It is now the only automated check of
+any kind, which raises the value of wiring it up.
 
 **No component tests.**
-`lib/engine.js` is covered thoroughly and the browser harness covers the rendered result,
-but there is nothing in between — no jsdom render of, say, `QuizCard` asserting that a
-revealed card locks its options. The browser harness catches those today; if it ever gets
-dropped, that gap opens up.
+`lib/engine.ts` has no coverage at all now, and the browser harness covers only the
+rendered result — there is nothing in between, and nothing below. A jsdom render of, say,
+`QuizCard` asserting that a revealed card locks its options would be the first thing to
+add if the app starts changing again.
+
+## TypeScript
+
+**`normalize` casts at the trust boundary.**
+It takes `unknown` and hands back a `PersistedData`, which means somewhere inside it has
+to assert. The field-by-field vetting is real — every number goes through a finite check,
+every map is copied, every missed id is checked against the bank — but unknown *extra*
+keys on a v1 payload ride through untyped, exactly as the reference's `Object.assign` let
+them. A schema validator (zod, valibot) would replace the casts with a parse, at the cost
+of a runtime dependency the app currently doesn't have. Worth it only if the export format
+ever grows.
+
+**`shuffle` uses two non-null assertions.**
+Fisher-Yates indexes `a[i]` and `a[j]`, both in bounds by construction, but
+`noUncheckedIndexedAccess` can't see that. The alternatives are worse: widening the array
+type, or a formulation that changes the swap order and would break determinism against the
+reference's own shuffle. Two `!` with a comment is the honest minimum.
