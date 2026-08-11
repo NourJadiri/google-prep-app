@@ -1,5 +1,6 @@
 import { useApp } from "../../state/AppState";
 import { RITUAL_XP } from "../../data/plan";
+import Icon from "../shared/Icon";
 import type { Day } from "../../types";
 
 /* The morning ritual, dashed until it's done. Same toggle the dojo's log
@@ -23,7 +24,7 @@ export default function RitualRow({ day, done }: RitualRowProps) {
         className="pcheck"
         style={done ? { background: day.color, borderColor: day.color, color: "#fff" } : undefined}
       >
-        ✓
+        <Icon name="check" size={12} strokeWidth={3} />
       </span>
       <span style={{ flex: 1, textAlign: "left" }}>{day.ritual}</span>
       <span className="xpv">{"+" + RITUAL_XP}</span>
