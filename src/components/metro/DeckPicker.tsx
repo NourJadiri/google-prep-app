@@ -1,5 +1,6 @@
 import { useApp } from "../../state/AppState";
 import { DECKS } from "../../data/questions";
+import Icon from "../shared/Icon";
 
 /* Pick a deck, board the train. Redemption is greyed out until you've actually
    missed something. */
@@ -26,7 +27,8 @@ export default function DeckPicker() {
       </div>
 
       <button className="board" onClick={actions.startRun}>
-        🚇 Board — 10 stops
+        <Icon name="train" size={18} />
+        Board — 10 stops
       </button>
 
       {quiz.answered ? (

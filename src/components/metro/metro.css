@@ -1,40 +1,72 @@
 .decks { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
-.deck { padding: 8px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 500; }
+.deck {
+  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); font-size: 13px; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  transition: background .15s, border-color .15s, transform .12s;
+}
+@media (hover: hover) { .deck:not(:disabled):not(.sel):hover { background: var(--sunken); } }
+.deck:not(:disabled):active { transform: scale(.97); }
 .deck.sel { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.deck:disabled { opacity: .4; cursor: default; }
+.deck:disabled { opacity: .4; color: var(--ink2); cursor: default; }
 .board {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
   width: 100%; margin-top: 6px; padding: 14px; border-radius: 14px; border: none;
   background: var(--blue); color: #fff; font-size: 15.5px; font-weight: 600;
   box-shadow: var(--shadow);
+  transition: transform .12s, filter .15s;
 }
-@media (prefers-color-scheme: dark) { .board { color: #202124; } }
+.board svg { flex: none; }
+@media (hover: hover) { .board:hover { filter: brightness(1.06); } }
+.board:active { transform: scale(.98); }
+/* Dark blue token is light, so the label flips to ink-on-blue. */
+@media (prefers-color-scheme: dark) { .board { color: var(--bg); } }
 .qwrap { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 16px 14px; margin-top: 14px; }
 .qtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .qcat { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
 .qcat.pat { color: var(--blue); } .qcat.bug { color: var(--red); } .qcat.line { color: var(--med); } .qcat.cx { color: var(--green); }
-.qmeta { font-family: var(--mono); font-size: 11px; color: var(--ink2); display: flex; gap: 10px; align-items: center; }
+.qmeta { font-family: var(--mono); font-size: 11px; color: var(--ink2); display: flex; gap: 10px; align-items: center; font-variant-numeric: tabular-nums; }
+.qmeta .streak { display: inline-flex; align-items: center; gap: 3px; }
 .mult { color: var(--yellow); font-weight: 700; }
 .qtext { font-size: 15.5px; font-weight: 500; line-height: 1.45; margin: 0 0 10px; }
 .opts { display: grid; gap: 8px; }
 .opt {
   text-align: left; padding: 11px 13px; border-radius: 11px; border: 1.5px solid var(--line);
   background: var(--surface); font-size: 13.5px; line-height: 1.4; min-height: 44px;
-  transition: border-color .12s, background .12s;
+  transition: border-color .12s, background .12s, transform .12s;
 }
+@media (hover: hover) { .opt:not(:disabled):hover { background: var(--sunken); } }
+.opt:not(:disabled):active { transform: scale(.98); background: var(--sunken); }
 .opt .k { font-family: var(--mono); font-size: 10.5px; color: var(--ink2); margin-right: 7px; font-weight: 700; }
-.opt.right { border-color: var(--ok-ink); background: var(--ok-bg); }
-.opt.wrong { border-color: var(--bad-ink); background: var(--bad-bg); }
+/* Reveal: doubled border via inset ring so nothing shifts; key letter takes the state colour. */
+.opt.right { border-color: var(--ok-ink); background: var(--ok-bg); box-shadow: inset 0 0 0 .5px var(--ok-ink); }
+.opt.wrong { border-color: var(--bad-ink); background: var(--bad-bg); box-shadow: inset 0 0 0 .5px var(--bad-ink); }
+.opt.right .k { color: var(--ok-ink); }
+.opt.wrong .k { color: var(--bad-ink); }
 .opt.dim { opacity: .5; }
 .opt:disabled { cursor: default; }
-.explain { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--sunken); font-size: 13px; color: var(--ink); border-left: 3px solid var(--seg-ex, var(--blue)); }
+.explain { margin: 12px 0 0; padding: 11px 13px; border-radius: 10px; background: var(--sunken); font-size: 13px; line-height: 1.55; color: var(--ink); border-left: 3px solid var(--blue); }
 .qnav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-.next { padding: 10px 20px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px; }
-.quit { font-size: 12.5px; color: var(--ink2); padding: 8px; }
+.next {
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px 10px 20px;
+  border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px;
+  transition: transform .12s, opacity .15s;
+}
+.next svg { flex: none; }
+@media (hover: hover) { .next:hover { opacity: .88; } }
+.next:active { transform: scale(.97); }
+.quit { font-size: 12.5px; color: var(--ink2); padding: 8px; transition: color .15s; }
+@media (hover: hover) { .quit:hover { color: var(--ink); } }
+.quit:active { color: var(--ink); }
 .stops-track { display: flex; gap: 4px; margin-top: 14px; }
-.stops-track i { flex: 1; height: 4px; border-radius: 2px; background: var(--sunken); }
+.stops-track i { flex: 1; height: 4px; border-radius: 2px; background: var(--sunken); transition: background .2s; }
 .stops-track i.ok { background: var(--green); } .stops-track i.ko { background: var(--red); }
-.result { text-align: center; padding: 26px 16px 20px; }
-.result .big { font-size: 44px; font-weight: 700; font-family: var(--mono); letter-spacing: -1px; }
-.result .sub { color: var(--ink2); font-size: 13.5px; margin-top: 2px; }
-.result .row { display: flex; justify-content: center; gap: 18px; margin-top: 14px; font-family: var(--mono); font-size: 12px; color: var(--ink2); }
-.result .row b { color: var(--ink); font-size: 15px; display: block; }
+.result { text-align: center; padding: 30px 16px 22px; }
+.result .big { font-size: 46px; font-weight: 700; font-family: var(--mono); letter-spacing: -1.5px; line-height: 1; font-variant-numeric: tabular-nums; }
+.result .sub { color: var(--ink2); font-size: 13.5px; margin-top: 7px; }
+.result .row { display: flex; justify-content: center; gap: 22px; margin-top: 18px; font-family: var(--mono); font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.result .row b { color: var(--ink); font-size: 16px; display: block; margin-bottom: 1px; }
+.result .mrow { justify-content: center; margin-top: 20px; }
+.result .mbtn { transition: background .15s, transform .12s; }
+@media (hover: hover) { .result .mbtn:hover { background: var(--sunken); } }
+.result .mbtn:active { transform: scale(.97); background: var(--sunken); }
