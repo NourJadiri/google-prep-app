@@ -218,7 +218,7 @@ function _award(c: Ctx, id: string): void {
   if (c.d.badges[id]) return; // badges are never revoked, never re-announced
   c.d.badges[id] = c.now;
   const b = BADGES.find((x) => x.id === id);
-  if (b) toast(c, b.ic + " Badge — " + b.n, true);
+  if (b) toast(c, "Badge — " + b.n, true);
 }
 
 /* A streak is consecutive calendar days on which anything earned XP. */
@@ -270,7 +270,7 @@ export function toggleProb(data: PersistedData, id: string, opts?: EngineOpts): 
   _award(c, "first");
 
   if (dayDone(c.d, day)) {
-    toast(c, "🚉 " + day.stn + " cleared", true);
+    toast(c, day.stn + " cleared", true);
     confetti(c, 50);
     const cleared = stationsCleared(c.d);
     if (cleared >= 4) _award(c, "half");

@@ -6,7 +6,8 @@ import type { StampedConfetti } from "../../types";
    12 for a problem, 50 for a station, 60 for a rank-up, 70 for a perfect run,
    90 for the whole line. Silent when the reader asked for less motion. */
 
-const COLS = ["#1a73e8", "#d93025", "#f9ab00", "#1e8e3e"];
+// Logo tokens, not raw hex — dark mode's softer variants come along for free.
+const COLS = ["var(--blue)", "var(--red)", "var(--yellow)", "var(--green)"];
 
 export const prefersReducedMotion = (): boolean =>
   typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
