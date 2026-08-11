@@ -19,7 +19,12 @@ export default function MetroView() {
           your XP. No keyboard, no excuses.
         </p>
       </div>
-      {!s ? <DeckPicker /> : s.phase === "done" ? <RunResult /> : <QuizCard />}
+      {/* The reference mounted each tab's body into a container div. Keeping
+          them means the rendered DOM matches element for element, so margins
+          collapse the same way and a structural diff stays meaningful. */}
+      <div id="quizArea">
+        {!s ? <DeckPicker /> : s.phase === "done" ? <RunResult /> : <QuizCard />}
+      </div>
     </section>
   );
 }

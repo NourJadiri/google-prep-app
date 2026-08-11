@@ -25,22 +25,26 @@ export default function DojoView() {
         </p>
       </div>
 
-      <RitualLog day={day} logged={!!data.rituals[day.id]} />
+      {/* Mount point kept from the reference so the DOM matches element for
+          element — see the note in MetroView. */}
+      <div id="dojoArea">
+        <RitualLog day={day} logged={!!data.rituals[day.id]} />
 
-      {TPL.map((t) => {
-        const label = t.g !== group ? t.g : null;
-        group = t.g;
-        return (
-          <Fragment key={t.id}>
-            {label && <div className="sectionlabel">{label}</div>}
-            <TemplateCard
-              tpl={t}
-              open={state.openTpl.includes(t.id)}
-              shown={state.shownTpl.includes(t.id)}
-            />
-          </Fragment>
-        );
-      })}
+        {TPL.map((t) => {
+          const label = t.g !== group ? t.g : null;
+          group = t.g;
+          return (
+            <Fragment key={t.id}>
+              {label && <div className="sectionlabel">{label}</div>}
+              <TemplateCard
+                tpl={t}
+                open={state.openTpl.includes(t.id)}
+                shown={state.shownTpl.includes(t.id)}
+              />
+            </Fragment>
+          );
+        })}
+      </div>
     </section>
   );
 }

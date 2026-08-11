@@ -18,16 +18,20 @@ export default function MeView() {
         <p>The numbers, the ranks, the hardware.</p>
       </div>
 
-      <StatsGrid data={data} />
+      {/* Mount point kept from the reference so the DOM matches element for
+          element — see the note in MetroView. */}
+      <div id="meArea">
+        <StatsGrid data={data} />
 
-      <div className="sectionlabel">Rank ladder</div>
-      <RankLadder xp={data.xp} />
+        <div className="sectionlabel">Rank ladder</div>
+        <RankLadder xp={data.xp} />
 
-      <div className="sectionlabel">Hardware</div>
-      <BadgeGrid badges={data.badges} />
+        <div className="sectionlabel">Hardware</div>
+        <BadgeGrid badges={data.badges} />
 
-      <div className="sectionlabel">Data</div>
-      <DataPanel />
+        <div className="sectionlabel">Data</div>
+        <DataPanel />
+      </div>
     </section>
   );
 }
