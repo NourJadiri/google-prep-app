@@ -21,11 +21,14 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build    # -> dist/
 npm run preview  # serve the build
-npm test         # vitest
+npm run typecheck  # tsc, no emit
 ```
 
 Runtime dependencies are `react` and `react-dom`. Nothing else — no router (tabs are
 component state), no CSS framework, no state library.
+
+Written in TypeScript under `strict` plus `noUncheckedIndexedAccess`. `npm run build`
+typechecks before it bundles, so a type error fails the build rather than reaching Pages.
 
 ## Deploying to Cloudflare Pages
 
@@ -56,29 +59,49 @@ scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
 
 src/
-  main.jsx
-  App.jsx                       tab switch + layout
+  main.tsx
+  App.tsx                       tab switch + layout
+  types.ts                      the whole vocabulary: content, state, effects
   styles/       tokens.css      the ported custom properties, light and dark
                 base.css        reset, and the 44px touch-target overlays
                 layout.css      page frame + classes more than one tab uses
-  data/         plan.js         LC, XPD, RITUAL_XP, PLAN (7 days, 28 problems)
-                questions.js    Q (56 cards), DECKS, CATN
-                templates.js    TPL (15 templates in 3 groups)
-                meta.js         RANKS, BADGES, RANKCOL
-  lib/          engine.js       every rule, as pure functions
-                storage.js      localStorage with an in-memory fallback
-                dates.js        calendar-day helpers
-  state/        AppState.jsx    Context + useReducer + persistence
-                TimerProvider.jsx  the Day-7 mock clock, hoisted above the views
+  data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (7 days, 28 problems)
+                questions.ts    Q (56 cards), DECKS, CATN
+                templates.ts    TPL (15 templates in 3 groups)
+                meta.ts         RANKS, BADGES, RANKCOL
+  lib/          engine.ts       every rule, as pure functions
+                storage.ts      localStorage with an in-memory fallback
+                dates.ts        calendar-day helpers
+  state/        AppState.tsx    Context + useReducer + persistence
+                TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
   components/   layout/ line/ metro/ dojo/ me/ shared/
 ```
+
+### What the types are actually doing
+
+`src/types.ts` holds every shape in one file, split into content (ported from the
+reference, never mutated) and state (the persisted blob, which is also the export
+format). Three of them carry real weight:
+
+- **`Fx`** is a discriminated union of `ToastFx | ConfettiFx`. `Celebrations` splits the
+  queue by `kind`, and a toast can no longer be handed to the confetti renderer.
+- **`Action`** is a union over the reducer's fifteen cases, so `action.slot` exists only
+  in `ANSWER` and a new case can't be added without handling it.
+- **`PersistedData`** is the export format, so it is a compatibility promise. `normalize`
+  is the only function in the app that takes `unknown`; everything downstream is real.
+
+`noUncheckedIndexedAccess` is on, which matters more here than it sounds: `done`,
+`rituals`, `badges`, `perQ`, `PROBS` and `Q_BY_ID` are all sparse maps keyed by ids that a
+stale export can populate with anything. Every read has to admit it can miss. Where a
+lookup genuinely cannot fail — the current rank, the terminus day — `PLAN` and `RANKS` are
+typed as non-empty tuples so it resolves at compile time instead of with an assertion.
 
 ### The engine is pure
 
 `lib/engine.js` holds the rulebook. Mutators take the persisted state and return a new
 state plus an ordered queue of celebrations:
 
-```js
+```ts
 const { data, fx } = toggleProb(state.data, "ap", { today, now });
 // fx: [{kind:"toast", msg:"+20 XP · All Paths From Source to…"},
 //      {kind:"toast", msg:"⚡ Badge — First Blood", gold:true},
@@ -86,9 +109,8 @@ const { data, fx } = toggleProb(state.data, "ap", { today, now });
 ```
 
 Nothing in there reads the clock, the DOM or `localStorage` unless you hand it one —
-callers inject `today`, `now` and `rng`. That is what makes the whole thing testable, and
-why toasts and confetti fire in exactly the reference's order without a reducer ever
-performing a side effect.
+callers inject `today`, `now` and `rng`. That is why toasts and confetti fire in exactly
+the reference's order without a reducer ever performing a side effect.
 
 ### Content is extracted, not retyped
 
@@ -96,19 +118,21 @@ Every problem, question, template, note and piece of microcopy comes out of
 `reference/onsite-express.html` mechanically:
 
 ```bash
-node scripts/extract-data.mjs      # rewrites src/data/{plan,meta,questions,templates}.js
+node scripts/extract-data.mjs      # rewrites src/data/{plan,meta,questions,templates}.ts
 ```
 
-`src/data/data.test.js` re-evaluates the reference's own `<script>` block on every test run
-and asserts the ported modules still deep-equal it, so `src/data` can never quietly drift
-from the original. `src/styles/css-parity.test.js` does the same for the stylesheet.
+The generator copies each literal byte for byte and adds only a type annotation on the
+binding — `export const PLAN: NonEmpty<Day> = [...]`. Annotating the binding is what
+contextually types the data underneath it, so `diff:"M"` narrows to `Diff` and
+`ph:"graphs"` to `Phase` without a character of the reference's content being rewritten.
+Anything the generator emits without a declared type is an error, not an `any`.
 
 ### Quiz options are always shuffled
 
 Every card in `Q` stores its correct answer at `o[0]` — `a` is `0` for all 56. A run
 therefore carries its own display permutation, redealt for each card:
 
-```js
+```ts
 session.order            // e.g. [2, 0, 3, 1]
 session.order[slot]      // the stored index sitting in the slot you tapped
 ```
@@ -157,22 +181,14 @@ window or a cookie-blocked embed degrades instead of crashing.
 | Mix deck | up to 3 Redemption cards + `ceil(remaining/2)` from the focus phase + the rest |
 | Focus phase | Day 1 graphs · Days 2–3 backtracking · Days 4–6 DP · Day 7 none |
 
-## Tests
+## Verification
 
-```bash
-npm test
-```
+There is no unit-test suite — this is a personal app and the tests were removed on
+purpose. What remains is the parity harness below, which is the check that actually
+matters here: it compares this app against `reference/onsite-express.html` in a real
+browser rather than asserting against assumptions.
 
-66 Vitest specs, no browser needed:
-
-- **`src/lib/engine.test.js`** — a perfect ten pays `2+2+4+4+4+6+6+6+6+6 = 46` XP plus the
-  20 bonus; a wrong answer zeroes the run streak and books the card into Redemption while
-  the best streak survives; rank thresholds promote exactly on the boundary; day
-  completion and refund symmetry; the mix builder's focus-phase lean; `normalize()`
-  round-trips a reference export.
-- **`src/lib/dates.test.js`** — day arithmetic across month, year and leap-day boundaries.
-- **`src/data/data.test.js`** — the ported content still deep-equals the reference.
-- **`src/styles/css-parity.test.js`** — the split stylesheet still contains every rule.
+`npm run build` typechecks first, so a type error fails the build.
 
 ### Parity harness
 
