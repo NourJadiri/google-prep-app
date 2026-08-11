@@ -1,0 +1,32 @@
+import { useApp } from "../../state/AppState.jsx";
+import "./TabBar.css";
+
+const TABS = [
+  { id: "line", ic: "🚇", label: "Line" },
+  { id: "metro", ic: "🎮", label: "Metro" },
+  { id: "dojo", ic: "🥋", label: "Dojo" },
+  { id: "me", ic: "📈", label: "Me" },
+];
+
+export default function TabBar() {
+  const { state, actions } = useApp();
+
+  return (
+    <nav className="tabs" aria-label="Sections">
+      {TABS.map((t) => (
+        <button
+          key={t.id}
+          className={"tab" + (state.tab === t.id ? " on" : "")}
+          aria-current={state.tab === t.id ? "page" : undefined}
+          onClick={() => {
+            actions.setTab(t.id);
+            window.scrollTo(0, 0);
+          }}
+        >
+          <span className="ic">{t.ic}</span>
+          {t.label}
+        </button>
+      ))}
+    </nav>
+  );
+}

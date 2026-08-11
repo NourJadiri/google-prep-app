@@ -1,0 +1,27 @@
+/* Toasts, confetti and the code block — the three things every tab borrows. */
+
+pre.code {
+  margin: 0 0 12px; padding: 11px 12px; border-radius: 10px; background: var(--sunken);
+  font-family: var(--mono); font-size: 12px; line-height: 1.55; overflow-x: auto;
+  border: 1px solid var(--line); white-space: pre;
+}
+pre.code .blank { color: var(--med); font-weight: 700; }
+
+.toasts { position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 0; right: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.toast {
+  background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600;
+  padding: 9px 16px; border-radius: 999px; box-shadow: var(--shadow);
+  animation: tin .25s ease, tout .3s ease 2.5s forwards;
+}
+.toast.gold { background: var(--yellow); color: #202124; }
+@keyframes tin { from { transform: translateY(-14px); opacity: 0; } }
+@keyframes tout { to { transform: translateY(-10px); opacity: 0; } }
+
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 55; overflow: hidden; }
+.cf { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(105vh) rotate(560deg); opacity: .9; } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .cf, .confetti { display: none !important; }
+}

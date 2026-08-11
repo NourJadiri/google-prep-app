@@ -1,0 +1,27 @@
+/* The palette, ported from the reference :root. Google's four logo colours do
+   all the work; everything else is Material greys. Dark mode swaps the same
+   token names, so no component ever asks which theme it's in.
+
+   System fonts only — the app has to work on a plane, so nothing is fetched. */
+
+:root {
+  --blue: #1a73e8; --red: #d93025; --yellow: #f9ab00; --green: #1e8e3e;
+  --bg: #f8f9fa; --surface: #ffffff; --sunken: #f1f3f4;
+  --ink: #202124; --ink2: #5f6368; --line: #dadce0;
+  --easy: #1e8e3e; --med: #e8710a; --hard: #d93025;
+  --ok-bg: #e6f4ea; --ok-ink: #1e8e3e; --bad-bg: #fce8e6; --bad-ink: #d93025;
+  --shadow: 0 1px 2px rgba(60,64,67,.14), 0 1px 3px 1px rgba(60,64,67,.08);
+  --sans: -apple-system, BlinkMacSystemFont, "Google Sans", Roboto, "Segoe UI", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --blue: #8ab4f8; --red: #f28b82; --yellow: #fdd663; --green: #81c995;
+    --bg: #202124; --surface: #292a2d; --sunken: #202124;
+    --ink: #e8eaed; --ink2: #9aa0a6; --line: #3c4043;
+    --easy: #81c995; --med: #fdd663; --hard: #f28b82;
+    --ok-bg: #1e3a29; --ok-ink: #81c995; --bad-bg: #3c2422; --bad-ink: #f28b82;
+    --shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+}

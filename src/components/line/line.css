@@ -1,0 +1,63 @@
+/* The signature: a vertical metro line, one segment per day, ending at GOOGLE.
+   Each station sets --seg to its phase colour and everything inside inherits. */
+
+.linewrap { margin-top: 18px; }
+.stn { display: grid; grid-template-columns: 34px 1fr; gap: 10px; }
+.rail { position: relative; display: flex; justify-content: center; }
+.rail::before {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 5px;
+  background: var(--seg, var(--line)); left: 50%; transform: translateX(-50%);
+}
+.stn:first-child .rail::before { top: 14px; }
+.stn:last-child .rail::before { bottom: auto; height: 14px; }
+.stop {
+  position: relative; z-index: 1; width: 22px; height: 22px; margin-top: 8px;
+  border-radius: 50%; background: var(--surface); border: 4px solid var(--seg, var(--line));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #fff; flex: none; transition: background .3s;
+}
+.stn.done .stop { background: var(--seg); }
+.stn.now .stop { box-shadow: 0 0 0 4px color-mix(in srgb, var(--seg) 25%, transparent); }
+.stn-body { padding: 0 0 22px; min-width: 0; }
+.daycard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.dayhead { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; text-align: left; }
+.dayhead .eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--seg); font-weight: 700; }
+.dayhead h2 { font-size: 15.5px; font-weight: 600; margin: 1px 0 0; line-height: 1.3; }
+.dayhead .chev { margin-left: auto; color: var(--ink2); transition: transform .2s; flex: none; }
+.stn.open .chev { transform: rotate(180deg); }
+.dayprog { height: 3px; background: var(--sunken); }
+.dayprog i { display: block; height: 100%; background: var(--seg); width: 0%; transition: width .35s ease; }
+.daybody { display: none; border-top: 1px solid var(--line); }
+.stn.open .daybody { display: block; }
+.daynote { padding: 10px 14px 2px; font-size: 12.5px; color: var(--ink2); }
+.plist { list-style: none; margin: 6px 0 0; padding: 0 6px 8px; }
+.prow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; }
+.prow + .prow { border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+.pcheck {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line);
+  flex: none; display: flex; align-items: center; justify-content: center;
+  color: transparent; font-size: 14px; transition: all .15s;
+}
+.prow.done .pcheck { background: var(--seg, var(--green)); border-color: var(--seg, var(--green)); color: #fff; }
+.prow.done .pname { color: var(--ink2); text-decoration: line-through; text-decoration-thickness: 1px; }
+.pmain { min-width: 0; flex: 1; }
+.pname { font-size: 14px; font-weight: 500; display: block; }
+.pmeta { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+.diff { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .06em; padding: 1px 6px; border-radius: 999px; border: 1px solid; }
+.diff.E { color: var(--easy); border-color: var(--easy); }
+.diff.M { color: var(--med); border-color: var(--med); }
+.diff.H { color: var(--hard); border-color: var(--hard); }
+.tag { font-family: var(--mono); font-size: 9.5px; color: var(--ink2); letter-spacing: .06em; text-transform: uppercase; }
+.xpv { font-family: var(--mono); font-size: 10.5px; color: var(--ink2); flex: none; }
+.golink { flex: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--ink2); background: var(--sunken); font-size: 14px; }
+.ritual { display: flex; align-items: center; gap: 10px; margin: 4px 14px 12px; padding: 9px 12px; border: 1.5px dashed var(--seg); border-radius: 10px; font-size: 13px; }
+.ritual .pcheck { width: 22px; height: 22px; }
+.ritual.done { border-style: solid; background: color-mix(in srgb, var(--seg) 8%, transparent); }
+.terminus .stop { width: 26px; height: 26px; border: none; background: conic-gradient(var(--blue) 0 25%, var(--red) 0 50%, var(--yellow) 0 75%, var(--green) 0); }
+.terminus-card { padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.terminus-card h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.2px; }
+.terminus-card p { margin: 3px 0 0; font-size: 12.5px; color: var(--ink2); }
+.timer { display: flex; align-items: center; gap: 10px; margin: 10px 14px 14px; padding: 10px 12px; background: var(--sunken); border-radius: 10px; }
+.timer b { font-family: var(--mono); font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.timer.low b { color: var(--red); }
+.tbtn { font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }

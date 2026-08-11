@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Onsite Express">
+<meta name="theme-color" content="#f8f9fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#202124" media="(prefers-color-scheme: dark)">
+<title>Onsite Express — Google Round 3</title>
+<style>
+:root {
+  --blue: #1a73e8; --red: #d93025; --yellow: #f9ab00; --green: #1e8e3e;
+  --bg: #f8f9fa; --surface: #ffffff; --sunken: #f1f3f4;
+  --ink: #202124; --ink2: #5f6368; --line: #dadce0;
+  --easy: #1e8e3e; --med: #e8710a; --hard: #d93025;
+  --ok-bg: #e6f4ea; --ok-ink: #1e8e3e; --bad-bg: #fce8e6; --bad-ink: #d93025;
+  --shadow: 0 1px 2px rgba(60,64,67,.14), 0 1px 3px 1px rgba(60,64,67,.08);
+  --sans: -apple-system, BlinkMacSystemFont, "Google Sans", Roboto, "Segoe UI", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --blue: #8ab4f8; --red: #f28b82; --yellow: #fdd663; --green: #81c995;
+    --bg: #202124; --surface: #292a2d; --sunken: #202124;
+    --ink: #e8eaed; --ink2: #9aa0a6; --line: #3c4043;
+    --easy: #81c995; --med: #fdd663; --hard: #f28b82;
+    --ok-bg: #1e3a29; --ok-ink: #81c995; --bad-bg: #3c2422; --bad-ink: #f28b82;
+    --shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  margin: 0; min-height: 100%; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); line-height: 1.5; -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(74px + env(safe-area-inset-bottom));
+}
+button { font-family: inherit; font-size: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+a { color: var(--blue); text-decoration: none; }
+
+/* ---------- header ---------- */
+.hdr {
+  position: sticky; top: 0; z-index: 30; background: var(--bg);
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.hdr-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 720px; margin: 0 auto; }
+.rank { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rank-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.rank-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdr-stats { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--ink2); flex: none; }
+.hdr-stats b { color: var(--ink); font-weight: 700; }
+.xp-track { height: 4px; border-radius: 2px; background: var(--sunken); margin: 8px auto 0; max-width: 720px; overflow: hidden; }
+.xp-fill { height: 100%; width: 0%; border-radius: 2px; background: linear-gradient(90deg, var(--blue), var(--red), var(--yellow), var(--green)); transition: width .4s ease; }
+.xp-sub { max-width: 720px; margin: 4px auto 0; font-family: var(--mono); font-size: 10.5px; color: var(--ink2); display: flex; justify-content: space-between; }
+
+/* ---------- layout ---------- */
+.view { display: none; max-width: 720px; margin: 0 auto; padding: 18px 16px 30px; }
+.view.on { display: block; }
+.hero h1 { font-size: clamp(26px, 6vw, 36px); font-weight: 400; letter-spacing: -0.6px; margin: 6px 0 4px; }
+.hero h1 b { font-weight: 700; }
+.hero p { margin: 0 0 4px; color: var(--ink2); font-size: 14px; max-width: 52ch; }
+.gdots { display: flex; gap: 5px; margin: 2px 0 6px; }
+.gdots i { width: 8px; height: 8px; border-radius: 50%; }
+.gdots i:nth-child(1){background:var(--blue)} .gdots i:nth-child(2){background:var(--red)}
+.gdots i:nth-child(3){background:var(--yellow)} .gdots i:nth-child(4){background:var(--green)}
+
+/* ---------- transit line ---------- */
+.linewrap { margin-top: 18px; }
+.stn { display: grid; grid-template-columns: 34px 1fr; gap: 10px; }
+.rail { position: relative; display: flex; justify-content: center; }
+.rail::before {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 5px;
+  background: var(--seg, var(--line)); left: 50%; transform: translateX(-50%);
+}
+.stn:first-child .rail::before { top: 14px; }
+.stn:last-child .rail::before { bottom: auto; height: 14px; }
+.stop {
+  position: relative; z-index: 1; width: 22px; height: 22px; margin-top: 8px;
+  border-radius: 50%; background: var(--surface); border: 4px solid var(--seg, var(--line));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #fff; flex: none; transition: background .3s;
+}
+.stn.done .stop { background: var(--seg); }
+.stn.now .stop { box-shadow: 0 0 0 4px color-mix(in srgb, var(--seg) 25%, transparent); }
+.stn-body { padding: 0 0 22px; min-width: 0; }
+.daycard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.dayhead { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; text-align: left; }
+.dayhead .eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--seg); font-weight: 700; }
+.dayhead h2 { font-size: 15.5px; font-weight: 600; margin: 1px 0 0; line-height: 1.3; }
+.dayhead .chev { margin-left: auto; color: var(--ink2); transition: transform .2s; flex: none; }
+.stn.open .chev { transform: rotate(180deg); }
+.dayprog { height: 3px; background: var(--sunken); }
+.dayprog i { display: block; height: 100%; background: var(--seg); width: 0%; transition: width .35s ease; }
+.daybody { display: none; border-top: 1px solid var(--line); }
+.stn.open .daybody { display: block; }
+.daynote { padding: 10px 14px 2px; font-size: 12.5px; color: var(--ink2); }
+.plist { list-style: none; margin: 6px 0 0; padding: 0 6px 8px; }
+.prow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; }
+.prow + .prow { border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+.pcheck {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line);
+  flex: none; display: flex; align-items: center; justify-content: center;
+  color: transparent; font-size: 14px; transition: all .15s;
+}
+.prow.done .pcheck { background: var(--seg, var(--green)); border-color: var(--seg, var(--green)); color: #fff; }
+.prow.done .pname { color: var(--ink2); text-decoration: line-through; text-decoration-thickness: 1px; }
+.pmain { min-width: 0; flex: 1; }
+.pname { font-size: 14px; font-weight: 500; display: block; }
+.pmeta { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+.diff { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .06em; padding: 1px 6px; border-radius: 999px; border: 1px solid; }
+.diff.E { color: var(--easy); border-color: var(--easy); }
+.diff.M { color: var(--med); border-color: var(--med); }
+.diff.H { color: var(--hard); border-color: var(--hard); }
+.tag { font-family: var(--mono); font-size: 9.5px; color: var(--ink2); letter-spacing: .06em; text-transform: uppercase; }
+.xpv { font-family: var(--mono); font-size: 10.5px; color: var(--ink2); flex: none; }
+.golink { flex: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--ink2); background: var(--sunken); font-size: 14px; }
+.ritual { display: flex; align-items: center; gap: 10px; margin: 4px 14px 12px; padding: 9px 12px; border: 1.5px dashed var(--seg); border-radius: 10px; font-size: 13px; }
+.ritual .pcheck { width: 22px; height: 22px; }
+.ritual.done { border-style: solid; background: color-mix(in srgb, var(--seg) 8%, transparent); }
+.terminus .stop { width: 26px; height: 26px; border: none; background: conic-gradient(var(--blue) 0 25%, var(--red) 0 50%, var(--yellow) 0 75%, var(--green) 0); }
+.terminus-card { padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.terminus-card h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.2px; }
+.terminus-card p { margin: 3px 0 0; font-size: 12.5px; color: var(--ink2); }
+.timer { display: flex; align-items: center; gap: 10px; margin: 10px 14px 14px; padding: 10px 12px; background: var(--sunken); border-radius: 10px; }
+.timer b { font-family: var(--mono); font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.timer.low b { color: var(--red); }
+.tbtn { font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+
+/* ---------- metro mode ---------- */
+.decks { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.deck { padding: 8px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 500; }
+.deck.sel { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.deck:disabled { opacity: .4; cursor: default; }
+.board {
+  width: 100%; margin-top: 6px; padding: 14px; border-radius: 14px; border: none;
+  background: var(--blue); color: #fff; font-size: 15.5px; font-weight: 600;
+  box-shadow: var(--shadow);
+}
+@media (prefers-color-scheme: dark) { .board { color: #202124; } }
+.qwrap { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 16px 14px; margin-top: 14px; }
+.qtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.qcat { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
+.qcat.pat { color: var(--blue); } .qcat.bug { color: var(--red); } .qcat.line { color: var(--med); } .qcat.cx { color: var(--green); }
+.qmeta { font-family: var(--mono); font-size: 11px; color: var(--ink2); display: flex; gap: 10px; align-items: center; }
+.mult { color: var(--yellow); font-weight: 700; }
+.qtext { font-size: 15.5px; font-weight: 500; line-height: 1.45; margin: 0 0 10px; }
+pre.code {
+  margin: 0 0 12px; padding: 11px 12px; border-radius: 10px; background: var(--sunken);
+  font-family: var(--mono); font-size: 12px; line-height: 1.55; overflow-x: auto;
+  border: 1px solid var(--line); white-space: pre;
+}
+pre.code .blank { color: var(--med); font-weight: 700; }
+.opts { display: grid; gap: 8px; }
+.opt {
+  text-align: left; padding: 11px 13px; border-radius: 11px; border: 1.5px solid var(--line);
+  background: var(--surface); font-size: 13.5px; line-height: 1.4; min-height: 44px;
+  transition: border-color .12s, background .12s;
+}
+.opt .k { font-family: var(--mono); font-size: 10.5px; color: var(--ink2); margin-right: 7px; font-weight: 700; }
+.opt.right { border-color: var(--ok-ink); background: var(--ok-bg); }
+.opt.wrong { border-color: var(--bad-ink); background: var(--bad-bg); }
+.opt.dim { opacity: .5; }
+.opt:disabled { cursor: default; }
+.explain { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--sunken); font-size: 13px; color: var(--ink); border-left: 3px solid var(--seg-ex, var(--blue)); }
+.qnav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.next { padding: 10px 20px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px; }
+.quit { font-size: 12.5px; color: var(--ink2); padding: 8px; }
+.stops-track { display: flex; gap: 4px; margin-top: 14px; }
+.stops-track i { flex: 1; height: 4px; border-radius: 2px; background: var(--sunken); }
+.stops-track i.ok { background: var(--green); } .stops-track i.ko { background: var(--red); }
+.result { text-align: center; padding: 26px 16px 20px; }
+.result .big { font-size: 44px; font-weight: 700; font-family: var(--mono); letter-spacing: -1px; }
+.result .sub { color: var(--ink2); font-size: 13.5px; margin-top: 2px; }
+.result .row { display: flex; justify-content: center; gap: 18px; margin-top: 14px; font-family: var(--mono); font-size: 12px; color: var(--ink2); }
+.result .row b { color: var(--ink); font-size: 15px; display: block; }
+
+/* ---------- dojo ---------- */
+.tcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); margin-top: 12px; overflow: hidden; }
+.thead { width: 100%; text-align: left; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+.thead h3 { margin: 0; font-size: 14.5px; font-weight: 600; flex: 1; }
+.ttag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; background: var(--sunken); color: var(--ink2); flex: none; }
+.tbody { display: none; border-top: 1px solid var(--line); padding: 12px 14px 14px; }
+.tcard.open .tbody { display: block; }
+.tnote { font-size: 12.5px; color: var(--ink2); margin: 0 0 10px; }
+.tcode { position: relative; }
+.tcode pre { margin: 0; }
+.tcode.hidden pre { filter: blur(7px); user-select: none; }
+.veil {
+  position: absolute; inset: 0; display: flex; flex-direction: column; gap: 6px;
+  align-items: center; justify-content: center; text-align: center; padding: 10px;
+}
+.veil span { font-size: 12px; color: var(--ink2); max-width: 30ch; }
+.veil button { padding: 8px 16px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; }
+.tcode:not(.hidden) .veil { display: none; }
+.dojo-log { margin-top: 14px; padding: 13px 14px; border-radius: 14px; border: 1.5px dashed var(--yellow); display: flex; align-items: center; gap: 12px; background: var(--surface); }
+.dojo-log p { margin: 0; font-size: 13px; flex: 1; }
+.dojo-log button { padding: 9px 15px; border-radius: 999px; background: var(--yellow); color: #202124; font-weight: 700; font-size: 13px; flex: none; }
+.dojo-log.logged { border-style: solid; }
+.dojo-log.logged button { background: var(--sunken); color: var(--ink2); }
+.sectionlabel { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin: 22px 0 2px; font-weight: 700; }
+
+/* ---------- me ---------- */
+.statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 10px; text-align: center; }
+.stat b { display: block; font-family: var(--mono); font-size: 20px; font-weight: 700; }
+.stat span { font-size: 11px; color: var(--ink2); }
+.ladder { list-style: none; margin: 10px 0 0; padding: 0; }
+.ladder li { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); font-size: 13.5px; }
+.ladder li.past { color: var(--ink2); }
+.ladder li.cur { font-weight: 700; }
+.ladder .lxp { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink2); }
+.badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+.badge { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 6px; text-align: center; }
+.badge .ic { font-size: 22px; display: block; }
+.badge span { font-size: 10px; color: var(--ink2); display: block; margin-top: 3px; line-height: 1.25; }
+.badge.locked { opacity: .35; filter: grayscale(1); }
+.mrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.mbtn { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 500; }
+.mbtn.danger { color: var(--red); border-color: var(--red); }
+.io { width: 100%; margin-top: 10px; font-family: var(--mono); font-size: 11px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-height: 70px; display: none; }
+.io.on { display: block; }
+.storenote { font-size: 11.5px; color: var(--ink2); margin-top: 14px; }
+
+/* ---------- tabs / toast / confetti ---------- */
+.tabs {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line); display: flex;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: 10px; color: var(--ink2); font-size: 10.5px; font-weight: 600; }
+.tab .ic { font-size: 19px; line-height: 1; }
+.tab.on { color: var(--blue); }
+.toasts { position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 0; right: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.toast {
+  background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600;
+  padding: 9px 16px; border-radius: 999px; box-shadow: var(--shadow);
+  animation: tin .25s ease, tout .3s ease 2.5s forwards;
+}
+.toast.gold { background: var(--yellow); color: #202124; }
+@keyframes tin { from { transform: translateY(-14px); opacity: 0; } }
+@keyframes tout { to { transform: translateY(-10px); opacity: 0; } }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 55; overflow: hidden; }
+.cf { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(105vh) rotate(560deg); opacity: .9; } }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .cf, .confetti { display: none !important; }
+}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-row">
+    <div class="rank"><span class="rank-dot" id="rankDot"></span><span class="rank-name" id="rankName">Wanderer</span></div>
+    <div class="hdr-stats"><span id="streakChip">🔥 <b>0</b></span><span>XP <b id="xpNow">0</b></span></div>
+  </div>
+  <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+  <div class="xp-sub"><span id="dayChip"></span><span id="xpNext"></span></div>
+</header>
+
+<main>
+  <section class="view on" id="view-line">
+    <div class="hero">
+      <div class="gdots"><i></i><i></i><i></i><i></i></div>
+      <h1>Onsite <b>Express</b></h1>
+      <p>Two rounds between you and the terminus. Seven stations, one line. Board anywhere.</p>
+      <p id="heroProg" style="font-family:var(--mono);font-size:12px;margin-top:6px"></p>
+    </div>
+    <div class="linewrap" id="stations"></div>
+  </section>
+
+  <section class="view" id="view-metro">
+    <div class="hero">
+      <h1>Metro <b>mode</b></h1>
+      <p>Thumb-only drills for the commute or the plane. Ten stops per run, streaks multiply your XP. No keyboard, no excuses.</p>
+    </div>
+    <div id="quizArea"></div>
+  </section>
+
+  <section class="view" id="view-dojo">
+    <div class="hero">
+      <h1>The <b>dojo</b></h1>
+      <p>The daily ritual: write the day's template from a blank page, from memory. Then reveal and diff — the gap is the lesson.</p>
+    </div>
+    <div id="dojoArea"></div>
+  </section>
+
+  <section class="view" id="view-me">
+    <div class="hero">
+      <h1>Your <b>line</b></h1>
+      <p>The numbers, the ranks, the hardware.</p>
+    </div>
+    <div id="meArea"></div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Sections">
+  <button class="tab on" data-tab="line"><span class="ic">🚇</span>Line</button>
+  <button class="tab" data-tab="metro"><span class="ic">🎮</span>Metro</button>
+  <button class="tab" data-tab="dojo"><span class="ic">🥋</span>Dojo</button>
+  <button class="tab" data-tab="me"><span class="ic">📈</span>Me</button>
+</nav>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+/* ============================== DATA ============================== */
+const LC = s => "https://leetcode.com/problems/" + s + "/";
+const XPD = { E: 10, M: 20, H: 40 };
+const RITUAL_XP = 15;
+
+const PLAN = [
+  { id:"d1", d:1, stn:"Pathfinding", color:"var(--blue)", ph:"graphs",
+    name:"Paths as first-class objects",
+    note:"DFS that carries a path — your reconstruction rehab. Decide once: mutate + copy at the leaf, or copy on every call. Pop on the way out.",
+    ritual:"Write from memory: a DFS collecting all root-to-leaf paths.",
+    probs:[
+      { id:"ap",  n:"All Paths From Source to Target", slug:"all-paths-from-source-to-target", diff:"M" },
+      { id:"btp", n:"Binary Tree Paths", slug:"binary-tree-paths", diff:"E" },
+      { id:"ps2", n:"Path Sum II", slug:"path-sum-ii", diff:"M" },
+      { id:"lsw", n:"Last Stone Weight", slug:"last-stone-weight", diff:"E", warm:true },
+    ]},
+  { id:"d2", d:2, stn:"Backtrack Jct.", color:"var(--red)", ph:"bt",
+    name:"The backtracking skeleton",
+    note:"Choose → explore → un-choose. A start index gives every combination exactly one spelling.",
+    ritual:"Write the skeleton cold: for loop, append, recurse, pop.",
+    probs:[
+      { id:"sub", n:"Subsets", slug:"subsets", diff:"M" },
+      { id:"perm", n:"Permutations", slug:"permutations", diff:"M" },
+      { id:"cs2", n:"Combination Sum II", slug:"combination-sum-ii", diff:"M" },
+      { id:"kls", n:"Kth Largest Element in a Stream", slug:"kth-largest-element-in-a-stream", diff:"E", warm:true },
+    ]},
+  { id:"d3", d:3, stn:"Constraint St.", color:"var(--red)", ph:"bt",
+    name:"Backtracking under constraints",
+    note:"Same skeleton, harder pruning: palindrome checks, phone pads, and both diagonals.",
+    ritual:"Write permutations with a used set — no peeking.",
+    probs:[
+      { id:"lcp", n:"Letter Combinations of a Phone Number", slug:"letter-combinations-of-a-phone-number", diff:"M" },
+      { id:"pp",  n:"Palindrome Partitioning", slug:"palindrome-partitioning", diff:"M" },
+      { id:"nq",  n:"N-Queens", slug:"n-queens", diff:"H" },
+      { id:"tkf", n:"Top K Frequent Elements", slug:"top-k-frequent-elements", diff:"M", warm:true },
+    ]},
+  { id:"d4", d:4, stn:"Memo Bridge", color:"var(--yellow)", ph:"dp",
+    name:"The pivot: DFS + cache = DP",
+    note:"Yesterday's recursion with a dictionary bolted on. Same tree, no repeated work. This is the whole trick.",
+    ritual:"Write the memoized-DFS shape: look up, base, recurse, store, return.",
+    probs:[
+      { id:"cs",   n:"Climbing Stairs", slug:"climbing-stairs", diff:"E" },
+      { id:"mccs", n:"Min Cost Climbing Stairs", slug:"min-cost-climbing-stairs", diff:"E" },
+      { id:"wb",   n:"Word Break", slug:"word-break", diff:"M" },
+      { id:"kla",  n:"Kth Largest Element in an Array", slug:"kth-largest-element-in-an-array", diff:"M", warm:true },
+    ]},
+  { id:"d5", d:5, stn:"Tabulation Sq.", color:"var(--green)", ph:"dp",
+    name:"1D DP, bottom-up",
+    note:"Flip the recursion: what dp[i] means, the seeds, the fill order. Three decisions, then it's a for loop.",
+    ritual:"Write bottom-up Climbing Stairs, then say Coin Change's recurrence out loud.",
+    probs:[
+      { id:"hr2",  n:"House Robber II", slug:"house-robber-ii", diff:"M" },
+      { id:"cc",   n:"Coin Change", slug:"coin-change", diff:"M" },
+      { id:"lis",  n:"Longest Increasing Subsequence", slug:"longest-increasing-subsequence", diff:"M" },
+      { id:"trie", n:"Implement Trie (Prefix Tree)", slug:"implement-trie-prefix-tree", diff:"M", warm:true },
+    ]},
+  { id:"d6", d:6, stn:"Grid Gardens", color:"var(--green)", ph:"dp",
+    name:"Grid DP — back where we started",
+    note:"Grids again, but dp[r][c] looks up-left instead of flooding. Maximal Square is the farmer's field — this time you finish it.",
+    ritual:"Write the 2D DP double loop with a padded first row and column.",
+    probs:[
+      { id:"up",   n:"Unique Paths", slug:"unique-paths", diff:"M" },
+      { id:"mps",  n:"Minimum Path Sum", slug:"minimum-path-sum", diff:"M" },
+      { id:"msq",  n:"Maximal Square", slug:"maximal-square", diff:"M" },
+      { id:"lcs",  n:"Longest Common Subsequence (if time)", slug:"longest-common-subsequence", diff:"M" },
+      { id:"dasw", n:"Design Add and Search Words", slug:"design-add-and-search-words-data-structure", diff:"M", warm:true },
+    ]},
+  { id:"d7", d:7, stn:"Interchange", color:"var(--blue)", ph:"mix",
+    name:"Fusion + the clock",
+    note:"Everything at once: trie + backtracking + pruning in one problem, a knapsack, then a timed mock. 25:00, no pauses, talk out loud.",
+    ritual:"Write trie insert + search from memory.",
+    probs:[
+      { id:"ws2",  n:"Word Search II", slug:"word-search-ii", diff:"H" },
+      { id:"pess", n:"Partition Equal Subset Sum", slug:"partition-equal-subset-sum", diff:"M" },
+      { id:"mock", n:"Timed mock — random Google-tagged medium", url:"https://github.com/liquidslr/leetcode-company-wise-problems", diff:"M", xp:30 },
+    ]},
+];
+
+const RANKS = [
+  ["Wanderer", 0], ["Pathfinder", 100], ["Backtracker", 250], ["Memoizer", 450],
+  ["Tabulator", 700], ["Pattern Oracle", 1000], ["Noogler", 1350],
+];
+
+const BADGES = [
+  { id:"first",    ic:"⚡", n:"First Blood",    d:"Clear your first problem" },
+  { id:"ritual5",  ic:"🧘", n:"Template Monk",  d:"Log 5 morning rituals" },
+  { id:"metro100", ic:"🚇", n:"Metro Rat",      d:"Answer 100 cards" },
+  { id:"perfect",  ic:"💯", n:"Perfect Run",    d:"Score 10/10 in a session" },
+  { id:"bugs20",   ic:"🐞", n:"Exterminator",   d:"20 bug hunts right" },
+  { id:"streak3",  ic:"🔥", n:"Heating Up",     d:"3-day streak" },
+  { id:"streak7",  ic:"☄️", n:"Full Week",      d:"7-day streak" },
+  { id:"half",     ic:"🛤️", n:"Halfway There",  d:"Clear 4 stations" },
+  { id:"line",     ic:"🏁", n:"End of the Line", d:"Clear all 7 stations" },
+  { id:"noogler",  ic:"🎓", n:"Noogler",        d:"Reach the top rank" },
+];
+
+/* Quiz bank. t: pat|bug|line|cx · ph: graphs|bt|dp|ds · a is index into o BEFORE shuffle */
+const Q = [
+{ id:"q1", t:"pat", ph:"graphs", q:"A grid of 0s and 1s. Count the groups of connected 1s.",
+  o:["Flood fill (DFS/BFS) from each unvisited land cell","Topological sort","Sliding window","Binary search on the answer"], a:0,
+  x:"Connected components on a grid: scan, flood every unseen island, count the floods." },
+{ id:"q2", t:"pat", ph:"graphs", q:"Accounts must be merged whenever they share an email address.",
+  o:["Union-Find with emails as the nodes","A trie over the emails","Dijkstra","Sort + two pointers"], a:0,
+  x:"Union everything inside a row, then group by root — your Accounts Merge move." },
+{ id:"q3", t:"pat", ph:"graphs", q:"Order the courses so every prerequisite comes first.",
+  o:["Topological sort (Kahn's or DFS post-order)","Plain BFS from course 0","Union-Find","Greedy by node degree"], a:0,
+  x:"Dependencies form a DAG; topo order is its sorted spine. Cycle ⇒ impossible." },
+{ id:"q4", t:"pat", ph:"graphs", q:"Cheapest route from a to b using at most k hops.",
+  o:["Bellman-Ford, k+1 rounds over a frozen prev snapshot","Heap Dijkstra as-is","0-1 BFS","DFS memoised on node only"], a:0,
+  x:"Dijkstra commits greedily and can't respect a hop budget — you hit this exact wall on Cheapest Flights." },
+{ id:"q5", t:"pat", ph:"graphs", q:"Reach the corner while minimising the single largest step you ever take.",
+  o:["Dijkstra where relaxation is max(effort so far, step size)","Plain BFS","Kahn's algorithm","Enumerate every path"], a:0,
+  x:"Minimax relaxation: same heap loop, max() instead of +. Path With Minimum Effort." },
+{ id:"q6", t:"pat", ph:"graphs", q:"Shortest path where every edge costs exactly 0 or 1.",
+  o:["0-1 BFS: a deque, free edges go appendleft","Bellman-Ford","Plain DFS","Union-Find"], a:0,
+  x:"Free edges jump the queue; a deque keeps it O(V+E). Your grid-arrows finisher." },
+{ id:"q7", t:"pat", ph:"bt", q:"Generate every subset of a list of distinct numbers.",
+  o:["Backtracking with a start index","BFS level by level","A 2D DP table","A heap"], a:0,
+  x:"Include/exclude tree, 2^n leaves; the start index gives each subset one spelling." },
+{ id:"q8", t:"pat", ph:"bt", q:"Generate every ordering of distinct items.",
+  o:["Backtracking with a used set (or in-place swaps)","Backtracking with a start index","Sort, then two pointers","Kahn's algorithm"], a:0,
+  x:"A start index forbids going back — that's for combinations. Order matters here, so track used." },
+{ id:"q9", t:"pat", ph:"dp", q:"Can the array be split into two piles with equal sums?",
+  o:["0/1 knapsack: can any subset hit total/2","Greedy: sort desc, feed the smaller pile","Two pointers","Union-Find"], a:0,
+  x:"Partition Equal Subset Sum. Greedy balancing has counterexamples; feasibility DP doesn't." },
+{ id:"q10", t:"pat", ph:"dp", q:"Fewest coins to reach an amount, unlimited supply of each coin.",
+  o:["1D DP over amounts (unbounded knapsack)","Greedy: always take the largest coin","Two pointers","Sorting"], a:0,
+  x:"Greedy dies on coins {1,3,4}, amount 6 (3+3 beats 4+1+1). dp[a] = min(dp[a−c])+1." },
+{ id:"q11", t:"pat", ph:"dp", q:"Length of the longest strictly increasing subsequence — not necessarily contiguous.",
+  o:["DP: dp[i] = 1 + best dp[j] over smaller-valued j < i","Sliding window","Kadane's algorithm","Sort and dedupe"], a:0,
+  x:"Window and Kadane need contiguity; subsequences can skip. O(n²) DP first, patience later." },
+{ id:"q12", t:"pat", ph:"dp", q:"Can the string be segmented entirely into dictionary words?",
+  o:["DP over prefixes / memoised DFS on the start index","A trie alone is enough","Greedy longest match","Union-Find"], a:0,
+  x:"Greedy longest match backfires; try every split point with a cache. Word Break." },
+{ id:"q13", t:"pat", ph:"dp", q:"Largest all-1 square in a grid — the O(n²) one-pass recurrence.",
+  o:["dp[r][c] = 1 + min(top, left, top-left) on 1-cells","Max rectangle via histograms","Flood fill","2D prefix sums + binary search"], a:0,
+  x:"The farmer's field, finished: a square grows only as far as its three neighbours allow." },
+{ id:"q14", t:"pat", ph:"ds", q:"Return the k most frequent elements of a big array.",
+  o:["Count, then a size-k min-heap (or bucket by count)","Sort the raw array and scan","A DP table","DFS"], a:0,
+  x:"Count first; then n log k beats sorting everything. Bucket-by-count is the O(n) flex." },
+{ id:"q15", t:"pat", ph:"ds", q:"Report the kth largest value after every insert of a stream.",
+  o:["Keep a min-heap of size k — the root is the answer","Max-heap of everything, pop k per query","Re-sort on every insert","Quickselect on every query"], a:0,
+  x:"Small things fall out of the heap; the gatekeeper at the root is exactly kth. O(log k) per insert." },
+{ id:"q16", t:"pat", ph:"bt", q:"Find which of 10,000 words appear in a letter grid.",
+  o:["Build a trie of the words, backtrack once from each cell","Run Word Search once per word","BFS per word","Hash every possible path"], a:0,
+  x:"One traversal serves all words at once; prune the instant no trie child matches." },
+{ id:"q17", t:"pat", ph:"graphs", q:"Fewest one-letter mutations from one word to another through a dictionary.",
+  o:["BFS over the implicit word graph","DFS with memoisation","Dijkstra with weights","Backtracking all paths"], a:0,
+  x:"Unweighted shortest path ⇒ BFS, never DFS. You parent-mapped this on Word Ladder II." },
+{ id:"q18", t:"pat", ph:"graphs", q:"Does this directed graph contain a cycle?",
+  o:["Three-colour DFS — grey means on the current stack","Union-Find on the edges","One shared visited set, flag any revisit","Sort the nodes"], a:0,
+  x:"Union-Find ignores direction; revisiting a black node is fine. Only grey-hits-grey is a cycle." },
+{ id:"q19", t:"pat", ph:"dp", q:"Max loot from houses on a circle, no two adjacent hits.",
+  o:["Run the linear robber twice: once without the first house, once without the last","One linear pass is fine","A 2D DP table","Greedy alternate"], a:0,
+  x:"The circle welds house 0 to house n−1; break it by excluding one end each run." },
+{ id:"q20", t:"pat", ph:"dp", q:"Minimum path sum top-left to bottom-right, moving only right or down.",
+  o:["Grid DP: cell + min(top, left)","Dijkstra","BFS","Backtracking every path"], a:0,
+  x:"Dijkstra works but is a fire truck for a candle — the move rule makes it a DAG with a two-term recurrence." },
+
+{ id:"q21", t:"bug", ph:"bt", q:"Subsets via include/exclude — but the output is garbage. Why?",
+  code:"def dfs(i):\n    if i == len(nums):\n        res.append(path[:]); return\n    dfs(i + 1)              # exclude\n    path.append(nums[i])    # include\n    dfs(i + 1)",
+  o:["path is never popped after the include branch","res should append path itself, not a copy","The exclude call must come second","Base case should be i > len(nums)"], a:0,
+  x:"Every choose needs its un-choose: pop after the second dfs, or the path leaks into sibling branches." },
+{ id:"q22", t:"bug", ph:"graphs", q:"This BFS is correct but explodes on big graphs. The flaw?",
+  code:"while q:\n    u = q.popleft()\n    seen.add(u)\n    for v in adj[u]:\n        if v not in seen:\n            q.append(v)",
+  o:["Marks too late — mark when you enqueue, not when you pop","seen should be a list","popleft should be pop","Neighbours need sorting"], a:0,
+  x:"Between enqueue and pop a node is invisible to the check, so duplicates flood the queue. Mark on enqueue." },
+{ id:"q23", t:"bug", ph:"graphs", q:"A heap Dijkstra that mysteriously does far too much work.",
+  code:"while h:\n    d, u = heappop(h)\n    for v, w in adj[u]:\n        if d + w < dist[v]:\n            dist[v] = d + w\n            heappush(h, (dist[v], v))",
+  o:["No stale guard — add `if d > dist[u]: continue` right after the pop","heappush needs (v, dist) order","dist must start at 0 everywhere","It should be a for loop"], a:0,
+  x:"Lazy deletion: outdated heap entries must be skipped on pop, not re-expanded. Your Network Delay Time guard." },
+{ id:"q24", t:"bug", ph:"graphs", q:"Kahn's algorithm that 'works' on every input. What's missing?",
+  code:"order = []\nwhile q:\n    u = q.popleft(); order.append(u)\n    for v in adj[u]:\n        indeg[v] -= 1\n        if indeg[v] == 0: q.append(v)\nreturn order",
+  o:["Never checks len(order) == n, so cycles slip through silently","indeg should increase","The queue must be a stack","order needs reversing"], a:0,
+  x:"In a cycle nobody's in-degree ever reaches 0 — those nodes just never appear. Short output = cycle." },
+{ id:"q25", t:"bug", ph:"dp", q:"A memoised fib that is still exponential.",
+  code:"def fib(n):\n    if n < 2: return n\n    if n in memo: return memo[n]\n    return fib(n-1) + fib(n-2)",
+  o:["The result is never stored in memo before returning","The base case is wrong","The memo lookup must come before the base case","It needs a while loop"], a:0,
+  x:"A cache that's read but never written is a rumour. Store, then return." },
+{ id:"q26", t:"bug", ph:"dp", q:"House Robber II submitted as the plain linear DP over the whole array. Why wrong?",
+  o:["House 0 and house n−1 are adjacent on the circle — run the line twice, excluding each end","Linear DP is always fine here","It needs Dijkstra","The houses should be sorted"], a:0,
+  x:"The circle welds the two ends together; the linear pass happily robs both." },
+{ id:"q27", t:"bug", ph:"dp", q:"Coin Change returning 0 for amounts it can't even make.",
+  code:"dp = [0] * (amount + 1)\nfor a in range(1, amount + 1):\n    for c in coins:\n        if c <= a:\n            dp[a] = min(dp[a], dp[a-c] + 1)",
+  o:["Unreached amounts start at 0, so min() collapses to nonsense — seed with inf, dp[0] = 0","The loops are swapped","dp[0] should be 1","min should be max"], a:0,
+  x:"0 must mean 'zero coins', not 'no idea yet'. Impossible states are inf until proven cheap." },
+{ id:"q28", t:"bug", ph:"ds", q:"This trie claims 'app' is a word right after inserting only 'apple'.",
+  code:"def search(word):\n    node = root\n    for ch in word:\n        if ch not in node.kids:\n            return False\n        node = node.kids[ch]\n    return True",
+  o:["Missing the end-of-word check — prefixes pass as full words","kids should be a list","It needs recursion","It should return node"], a:0,
+  x:"Reaching a node only proves a prefix exists. Words carry a flag; return node.end." },
+{ id:"q29", t:"bug", ph:"bt", q:"Word Search finds some words but misses others that clearly exist.",
+  code:"def dfs(r, c, i):\n    if i == len(w): return True\n    if bad(r, c) or (r, c) in seen: return False\n    if grid[r][c] != w[i]: return False\n    seen.add((r, c))\n    return any(dfs(r+dr, c+dc, i+1)\n               for dr, dc in DIRS)",
+  o:["(r, c) never leaves seen — discard it after exploring so other paths can reuse the cell","seen.add happens too early","any() should be all()","The length check is off by one"], a:0,
+  x:"Your own rule: the seen set is borrowed, not kept. Discard on the way out." },
+{ id:"q30", t:"bug", ph:"graphs", q:"Bellman-Ford under a k-hop limit, but answers use too many hops.",
+  code:"for _ in range(k + 1):\n    for u, v, w in edges:\n        if dist[u] + w < dist[v]:\n            dist[v] = dist[u] + w",
+  o:["One shared array lets a single round chain several new hops — relax from a frozen prev copy","range should be k","The edges must be sorted","min should be max"], a:0,
+  x:"The prev/cur snapshot you used on Cheapest Flights: read last round, write this round." },
+{ id:"q31", t:"bug", ph:"bt", q:"An N-Queens attempt rejects a square only when its column is taken. Missing?",
+  o:["Both diagonals — track r−c and r+c sets too","Rows must also be tracked","Nothing, columns suffice","Knight-move conflicts"], a:0,
+  x:"Placing row by row makes rows free; queens still see each other along both diagonals." },
+{ id:"q32", t:"bug", ph:"bt", q:"Combination Sum II on a sorted array still emits duplicate combinations.",
+  code:"for i in range(start, len(nums)):\n    path.append(nums[i])\n    bt(i + 1)\n    path.pop()",
+  o:["Add: if i > start and nums[i] == nums[i-1]: continue","Recurse with i, not i + 1","Don't sort the input","Pop before recursing"], a:0,
+  x:"Equal values at the same tree level spell the same set twice. Skip repeats at the level, not in the branch." },
+{ id:"q33", t:"bug", ph:"dp", q:"Plain recursive Climbing Stairs times out at n = 45. Root cause?",
+  o:["Overlapping subproblems recomputed exponentially — cache it or go bottom-up","Python recursion is just slow","n is too large for any method","The branching is random"], a:0,
+  x:"fib-shaped recursion revisits the same n astronomically often. One dict ends it." },
+{ id:"q34", t:"bug", ph:"dp", q:"This LIS returns weirdly small answers.",
+  code:"for i in range(n):\n    dp[i] = 1\n    for j in range(i):\n        if nums[j] < nums[i]:\n            dp[i] = dp[j] + 1",
+  o:["Overwrites instead of keeping the best — needs max(dp[i], dp[j] + 1)","j must iterate past i","The strictness is wrong","dp should start at 0"], a:0,
+  x:"The last qualifying j wins instead of the best one. max() or nothing." },
+{ id:"q35", t:"bug", ph:"graphs", q:"A DSU whose components silently merge wrong.",
+  code:"def union(a, b):\n    parent[a] = b",
+  o:["It unions the nodes, not their roots — find() both first","It should be parent[b] = a","It needs recursion","Nothing is wrong"], a:0,
+  x:"Re-pointing a mid-chain node splices its subtree away. Always operate on roots." },
+
+{ id:"q36", t:"line", ph:"bt", q:"Complete the skeleton.",
+  code:"path.append(nums[i])\nbt(i + 1, path)\n____",
+  o:["path.pop()","path.clear()","return path","res.append(path)"], a:0,
+  x:"The un-choose. Symmetry or death." },
+{ id:"q37", t:"line", ph:"dp", q:"First line inside a memoised solver.",
+  code:"def solve(state):\n    ____",
+  o:["if state in memo: return memo[state]","memo[state] = 0","return solve(state)","state += 1"], a:0,
+  x:"Check the cache before doing any work — that's the entire speed-up." },
+{ id:"q38", t:"line", ph:"graphs", q:"Fill the BFS blank.",
+  code:"if v not in seen:\n    ____\n    q.append(v)",
+  o:["seen.add(v)","seen.remove(v)","q.popleft()","dist[v] = 0"], a:0,
+  x:"Mark on enqueue — the invariant that kept your Pacific Atlantic BFS honest." },
+{ id:"q39", t:"line", ph:"dp", q:"Climbing Stairs, bottom-up.",
+  code:"dp[i] = ____",
+  o:["dp[i-1] + dp[i-2]","dp[i-1] * dp[i-2]","max(dp[i-1], dp[i-2])","i"], a:0,
+  x:"Every route arrives from one step below or two. Counting ⇒ add." },
+{ id:"q40", t:"line", ph:"dp", q:"Maximal Square, on a 1-cell.",
+  code:"dp[r][c] = ____",
+  o:["1 + min(dp[r-1][c], dp[r][c-1], dp[r-1][c-1])","1 + max(dp[r-1][c], dp[r][c-1], dp[r-1][c-1])","dp[r-1][c-1] + 1, neighbours ignored","Sum of the three neighbours"], a:0,
+  x:"A square is only as big as its weakest supporting corner: min, plus this cell." },
+{ id:"q41", t:"line", ph:"graphs", q:"DSU find with path halving.",
+  code:"while parent[x] != x:\n    ____\n    x = parent[x]",
+  o:["parent[x] = parent[parent[x]]","x = x + 1","parent[x] = x","x = parent[parent[parent[x]]]"], a:0,
+  x:"Hop to the grandparent as you walk — trees stay near-flat for free." },
+{ id:"q42", t:"line", ph:"dp", q:"Coin Change relaxation.",
+  code:"dp[a] = min(dp[a], ____)",
+  o:["dp[a - c] + 1","dp[a - 1] + c","dp[c] + a","dp[a] + 1"], a:0,
+  x:"One coin c on top of the best answer for what's left." },
+{ id:"q43", t:"line", ph:"graphs", q:"0-1 BFS, on a zero-cost edge.",
+  code:"if w == 0:\n    ____\nelse:\n    q.append((v, d + 1))",
+  o:["q.appendleft((v, d))","q.append((v, d))","heappush(q, v)","continue"], a:0,
+  x:"Free moves cut the queue line — that's what makes the deque a poor man's heap." },
+{ id:"q44", t:"line", ph:"graphs", q:"Dijkstra, right after improving dist[v].",
+  code:"dist[v] = nd\n____",
+  o:["heappush(h, (nd, v))","heappush(h, (v, nd))","q.append(v)","h.sort()"], a:0,
+  x:"Distance first in the tuple — the heap sorts by slot 0." },
+{ id:"q45", t:"line", ph:"dp", q:"Word Break inner update, for a split point j < i.",
+  code:"dp[i] = dp[i] or ____",
+  o:["dp[j] and s[j:i] in words","s[i] in words","dp[i-1]","len(s) == i"], a:0,
+  x:"A good prefix up to j, plus one dictionary word to bridge j→i." },
+
+{ id:"q46", t:"cx", ph:"bt", q:"How many subsets does an n-element set have?",
+  o:["2^n","n²","n!","n log n"], a:0, x:"Each element is in or out: two choices, n times." },
+{ id:"q47", t:"cx", ph:"bt", q:"Time to build all permutations of n distinct items?",
+  o:["O(n · n!)","O(2^n)","O(n²)","O(n log n)"], a:0, x:"n! outputs, each of length n. The copy costs too." },
+{ id:"q48", t:"cx", ph:"graphs", q:"Dijkstra with a binary heap?",
+  o:["O(E log V)","O(V²) always","O(E + V)","O(E · V)"], a:0, x:"Every edge can push once; every push is a log." },
+{ id:"q49", t:"cx", ph:"dp", q:"The classic two-loop LIS?",
+  o:["O(n²) time, O(n) space","O(n log n) time","O(n) time","O(2^n)"], a:0, x:"The n log n patience version exists — it's a different algorithm, tails + binary search." },
+{ id:"q50", t:"cx", ph:"ds", q:"Building a heap from n unsorted items (heapify)?",
+  o:["O(n)","O(n log n)","O(log n)","O(n²)"], a:0, x:"The classic gotcha: sifting down from the middle amortises to linear." },
+{ id:"q51", t:"cx", ph:"dp", q:"Memoised Fibonacci?",
+  o:["O(n) time, O(n) space","O(2^n) time","O(n²) time","O(1) space"], a:0, x:"Each n computed once, each answer stored once." },
+{ id:"q52", t:"cx", ph:"dp", q:"Subset-sum DP, n items, target T?",
+  o:["O(n·T) — pseudo-polynomial","O(2^n) only","O(n log T)","O(T²)"], a:0,
+  x:"Polynomial in the value of T, not its bit-length — hence 'pseudo'." },
+
+{ id:"q53", t:"pat", ph:"ds", q:"Merge k sorted lists into one sorted stream, efficiently.",
+  o:["A min-heap seeded with each list's head","Concatenate, then bubble sort","DFS","Two pointers across all k lists"], a:0,
+  x:"Pop the global smallest, push its successor: O(N log k)." },
+{ id:"q54", t:"bug", ph:"ds", q:"Trie insert — but search never finds complete words.",
+  code:"def insert(w):\n    node = root\n    for ch in w:\n        node = node.kids.setdefault(ch, Node())",
+  o:["The terminal node is never marked — set node.end = True after the loop","setdefault is the wrong method","It needs recursion","w must be lowercased"], a:0,
+  x:"Without the end flag, the trie only knows prefixes exist — not where words stop." },
+{ id:"q55", t:"cx", ph:"ds", q:"Pushing then popping n items through a binary heap?",
+  o:["O(n log n)","O(n)","O(log n)","O(n²)"], a:0, x:"2n operations, each O(log n). Heapsort in a trench coat." },
+{ id:"q56", t:"pat", ph:"bt", q:"Return every root-to-leaf path itself — not just the count.",
+  o:["DFS carrying a path list: copy at the leaf, pop on the way out","BFS with a counter","Morris traversal","Level-order with a queue"], a:0,
+  x:"The whole point of Day 1: the path is a live object your recursion edits and repairs." },
+];
+
+/* Templates for the dojo */
+const TPL = [
+{ g:"This week's spine", id:"t1", n:"Root-to-leaf paths (DFS)", tag:"Day 1",
+  note:"One list, mutated. The only copy happens at a leaf. Alternative: pass path + [v] and never pop — more allocations, nothing to forget.",
+  code:"def dfs(node, path, res):\n    if not node: return\n    path.append(node.val)\n    if not node.left and not node.right:\n        res.append(path[:])   # copy at the leaf\n    else:\n        dfs(node.left, path, res)\n        dfs(node.right, path, res)\n    path.pop()                # un-choose on the way out" },
+{ g:"This week's spine", id:"t2", n:"Backtracking skeleton (start index)", tag:"Day 2",
+  note:"The start index gives each combination one canonical spelling. The dup-skip line only fires across the same tree level.",
+  code:"def bt(start, path):\n    res.append(path[:])       # or: if goal, record\n    for i in range(start, len(nums)):\n        # dups (sorted): if i > start and nums[i] == nums[i-1]: continue\n        path.append(nums[i])\n        bt(i + 1, path)       # pass i instead -> element reuse allowed\n        path.pop()" },
+{ g:"This week's spine", id:"t3", n:"Permutations (used set)", tag:"Day 3",
+  note:"Order matters, so no start index — a used array instead. Un-choose restores both the path and the flag.",
+  code:"def bt(path):\n    if len(path) == len(nums):\n        res.append(path[:]); return\n    for i, x in enumerate(nums):\n        if used[i]: continue\n        used[i] = True; path.append(x)\n        bt(path)\n        path.pop(); used[i] = False" },
+{ g:"This week's spine", id:"t4", n:"Grid backtracking (Word Search shape)", tag:"Day 3",
+  note:"The seen set is borrowed, not kept: discard on the way out or other paths die. Your own hard-won rule.",
+  code:"def dfs(r, c, i):\n    if i == len(word): return True\n    if not (0 <= r < R and 0 <= c < C): return False\n    if (r, c) in seen or grid[r][c] != word[i]: return False\n    seen.add((r, c))\n    ok = any(dfs(r+dr, c+dc, i+1) for dr, dc in DIRS)\n    seen.discard((r, c))\n    return ok" },
+{ g:"This week's spine", id:"t5", n:"Memoised DFS (top-down DP)", tag:"Day 4",
+  note:"Five beats: look up, base, recurse, STORE, return. Skip the store and it's still exponential.",
+  code:"def solve(state):\n    if state in memo: return memo[state]\n    if base(state): return base_value\n    best = combine(solve(s) for s in nexts(state))\n    memo[state] = best\n    return best" },
+{ g:"This week's spine", id:"t6", n:"Bottom-up 1D table", tag:"Day 5",
+  note:"Three decisions before any code: what dp[i] means, the seeds, the fill order.",
+  code:"dp = [0] * (n + 1)\ndp[0], dp[1] = seed0, seed1\nfor i in range(2, n + 1):\n    dp[i] = f(dp[i-1], dp[i-2])\nreturn dp[n]" },
+{ g:"This week's spine", id:"t7", n:"2D grid DP (padded)", tag:"Day 6",
+  note:"A padding row and column delete every boundary if — the same halo trick you used on Island Perimeter.",
+  code:"dp = [[INF] * (C + 1) for _ in range(R + 1)]\ndp[0][1] = 0                  # unlocks the real corner\nfor r in range(1, R + 1):\n    for c in range(1, C + 1):\n        dp[r][c] = grid[r-1][c-1] + min(dp[r-1][c], dp[r][c-1])\nreturn dp[R][C]" },
+{ g:"Graph recall", id:"t8", n:"BFS shortest path", tag:"unweighted",
+  note:"Mark on enqueue, not on pop — the invariant from your Pacific Atlantic rewrite.",
+  code:"q, seen = deque([src]), {src}\nwhile q:\n    u = q.popleft()\n    for v in adj[u]:\n        if v not in seen:\n            seen.add(v)\n            q.append(v)" },
+{ g:"Graph recall", id:"t9", n:"Three-colour DFS", tag:"cycle detect",
+  note:"Grey = on the current stack. Only grey-hits-grey is a back edge; black revisits are harmless.",
+  code:"def dfs(u):\n    color[u] = GREY\n    for v in adj[u]:\n        if color[v] == GREY: return False\n        if color[v] == WHITE and not dfs(v): return False\n    color[u] = BLACK\n    return True" },
+{ g:"Graph recall", id:"t10", n:"Kahn's algorithm", tag:"topo sort",
+  note:"Leftover nodes are the cycle — the length check is the detector.",
+  code:"q = deque(u for u in range(n) if indeg[u] == 0)\norder = []\nwhile q:\n    u = q.popleft(); order.append(u)\n    for v in adj[u]:\n        indeg[v] -= 1\n        if indeg[v] == 0: q.append(v)\nreturn order if len(order) == n else CYCLE" },
+{ g:"Graph recall", id:"t11", n:"Dijkstra (lazy deletion)", tag:"weighted",
+  note:"The stale guard on pop is the whole trick — outdated heap entries get skipped, never re-expanded.",
+  code:"dist = {src: 0}; h = [(0, src)]\nwhile h:\n    d, u = heappop(h)\n    if d > dist.get(u, INF): continue   # stale\n    for v, w in adj[u]:\n        nd = d + w\n        if nd < dist.get(v, INF):\n            dist[v] = nd\n            heappush(h, (nd, v))" },
+{ g:"Graph recall", id:"t12", n:"0-1 BFS", tag:"0/1 weights",
+  note:"Here marking on pop is correct — a node may sit in the deque twice, and the cheaper copy must win.",
+  code:"dq = deque([(src, 0)])\nwhile dq:\n    u, d = dq.popleft()\n    if u in seen: continue\n    seen.add(u)\n    for v, w in adj[u]:\n        if v not in seen:\n            (dq.appendleft if w == 0 else dq.append)((v, d + w))" },
+{ g:"Graph recall", id:"t13", n:"Union-Find (DSU)", tag:"components",
+  note:"Find with path halving; union only ever touches roots. Union returning False = 'already connected' — your Redundant Connection detector.",
+  code:"def find(x):\n    while parent[x] != x:\n        parent[x] = parent[parent[x]]\n        x = parent[x]\n    return x\n\ndef union(a, b):\n    ra, rb = find(a), find(b)\n    if ra == rb: return False\n    parent[ra] = rb\n    return True" },
+{ g:"Structures", id:"t14", n:"Top-k with a min-heap", tag:"heaps",
+  note:"The heap is a bouncer for the k biggest; the root is the weakest member — i.e. the kth largest.",
+  code:"h = []\nfor x in stream:\n    heappush(h, x)\n    if len(h) > k:\n        heappop(h)\n# h[0] is the kth largest" },
+{ g:"Structures", id:"t15", n:"Trie (dict-of-dicts)", tag:"tries",
+  note:"Nodes prove prefixes; only the '$' flag proves a word. Days 5–7 lean on this.",
+  code:"root = {}\ndef insert(w):\n    node = root\n    for ch in w:\n        node = node.setdefault(ch, {})\n    node['$'] = True\n\ndef search(w):\n    node = root\n    for ch in w:\n        if ch not in node: return False\n        node = node[ch]\n    return '$' in node" },
+];
+</script>
+<script>
+"use strict";
+/* ============================== ENGINE ============================== */
+const KEY = "onsite-express-v1";
+const blank = () => ({
+  v: 1, xp: 0,
+  done: {},
+  rituals: {},
+  quiz: { answered: 0, correct: 0, perQ: {}, missed: [], bestStreak: 0, sessions: 0, perfect: 0, bugRight: 0 },
+  badges: {},
+  streak: { last: "", cur: 0, best: 0 },
+});
+
+const store = {
+  mode: "mem",
+  async load() {
+    try {
+      if (typeof window !== "undefined" && window.storage && typeof window.storage.get === "function") {
+        this.mode = "claude";
+        const r = await window.storage.get(KEY).catch(() => null);
+        return r && r.value ? JSON.parse(r.value) : null;
+      }
+    } catch (e) {}
+    try {
+      const t = "__oe_probe";
+      localStorage.setItem(t, "1"); localStorage.removeItem(t);
+      this.mode = "local";
+      const raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {}
+    this.mode = "mem";
+    return null;
+  },
+  async persist(s) {
+    const raw = JSON.stringify(s);
+    try {
+      if (this.mode === "claude") { await window.storage.set(KEY, raw); return; }
+      if (this.mode === "local") { localStorage.setItem(KEY, raw); return; }
+    } catch (e) {}
+  },
+};
+
+let S = blank();
+let saveT = null;
+function save() { clearTimeout(saveT); saveT = setTimeout(() => store.persist(S), 350); }
+
+/* ---------- helpers ---------- */
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const todayStr = () => {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+};
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const PROBS = {};
+PLAN.forEach(day => day.probs.forEach(p => { PROBS[p.id] = p; p.day = day; }));
+const probXP = p => p.xp || XPD[p.diff];
+const TOTAL = PLAN.reduce((a, d) => a + d.probs.length, 0);
+const dayDone = day => day.probs.every(p => S.done[p.id]);
+const focusDay = () => PLAN.find(d => !dayDone(d)) || PLAN[PLAN.length - 1];
+const stationsCleared = () => PLAN.filter(dayDone).length;
+const DIFFN = { E: "EASY", M: "MED", H: "HARD" };
+
+/* ---------- feedback ---------- */
+function toast(msg, gold) {
+  const t = document.createElement("div");
+  t.className = "toast" + (gold ? " gold" : "");
+  t.textContent = msg;
+  $("#toasts").appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+function confetti(n) {
+  if (REDUCED) return;
+  n = n || 26;
+  const cols = ["#1a73e8", "#d93025", "#f9ab00", "#1e8e3e"];
+  const wrap = document.createElement("div");
+  wrap.className = "confetti";
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("i");
+    p.className = "cf";
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.background = cols[i % 4];
+    p.style.animationDuration = (0.9 + Math.random() * 1.2) + "s";
+    p.style.animationDelay = (Math.random() * 0.3) + "s";
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 2800);
+}
+
+/* ---------- streak / xp / rank / badges ---------- */
+function touchStreak() {
+  const t = todayStr(), st = S.streak;
+  if (st.last === t) return;
+  st.cur = (st.last && daysBetween(st.last, t) === 1) ? st.cur + 1 : 1;
+  st.last = t;
+  if (st.cur > st.best) st.best = st.cur;
+  if (st.cur >= 3) award("streak3");
+  if (st.cur >= 7) award("streak7");
+}
+const rankIdx = xp => { let i = 0; for (let k = 0; k < RANKS.length; k++) if (xp >= RANKS[k][1]) i = k; return i; };
+function addXP(n, why, quiet) {
+  const before = rankIdx(S.xp);
+  S.xp = Math.max(0, S.xp + n);
+  const after = rankIdx(S.xp);
+  if (n > 0) {
+    touchStreak();
+    if (!quiet) toast("+" + n + " XP" + (why ? " · " + why : ""));
+  }
+  if (after > before) {
+    toast("Rank up — " + RANKS[after][0], true);
+    confetti(60);
+    if (after === RANKS.length - 1) award("noogler");
+  }
+  renderHeader();
+  save();
+}
+function award(id) {
+  if (S.badges[id]) return;
+  S.badges[id] = Date.now();
+  const b = BADGES.find(x => x.id === id);
+  if (b) toast(b.ic + " Badge — " + b.n, true);
+  save();
+}
+
+/* ---------- header ---------- */
+const RANKCOL = ["var(--blue)", "var(--red)", "var(--yellow)", "var(--green)", "var(--blue)", "var(--red)", "var(--yellow)"];
+function renderHeader() {
+  const i = rankIdx(S.xp);
+  $("#rankName").textContent = RANKS[i][0];
+  $("#rankDot").style.background = RANKCOL[i];
+  $("#xpNow").textContent = S.xp;
+  $("#streakChip").innerHTML = "🔥 <b>" + S.streak.cur + "</b>";
+  const next = RANKS[i + 1], lo = RANKS[i][1];
+  $("#xpFill").style.width = (next ? Math.min(100, Math.round((S.xp - lo) / (next[1] - lo) * 100)) : 100) + "%";
+  $("#xpNext").textContent = next ? (next[1] - S.xp) + " XP to " + next[0] : "Terminus rank reached";
+  const f = focusDay();
+  $("#dayChip").textContent = "Day " + f.d + " · " + f.stn;
+}
+
+/* ---------- line tab ---------- */
+let openDays = new Set();
+function renderLine() {
+  const f = focusDay();
+  const doneN = Object.keys(S.done).filter(id => PROBS[id]).length;
+  $("#heroProg").textContent = doneN + " / " + TOTAL + " problems · " + stationsCleared() + " / 7 stations cleared";
+  let html = "";
+  PLAN.forEach(day => {
+    const dn = day.probs.filter(p => S.done[p.id]).length;
+    const pct = Math.round(dn / day.probs.length * 100);
+    const isDone = dn === day.probs.length;
+    const isNow = day.id === f.id && !isDone;
+    const isOpen = openDays.has(day.id);
+    const rDone = !!S.rituals[day.id];
+    html += '<div class="stn' + (isDone ? " done" : "") + (isNow ? " now" : "") + (isOpen ? " open" : "") + '" style="--seg:' + day.color + '">'
+      + '<div class="rail"><div class="stop">' + (isDone ? "✓" : "") + '</div></div>'
+      + '<div class="stn-body"><div class="daycard">'
+      + '<button class="dayhead" data-action="day" data-day="' + day.id + '">'
+      + '<div><div class="eyebrow">Day ' + day.d + " · " + esc(day.stn) + '</div><h2>' + esc(day.name) + '</h2></div>'
+      + '<span class="chev">▾</span></button>'
+      + '<div class="dayprog"><i style="width:' + pct + '%"></i></div>'
+      + '<div class="daybody"><p class="daynote">' + esc(day.note) + '</p>'
+      + '<button class="ritual' + (rDone ? " done" : "") + '" data-action="ritual" data-day="' + day.id + '">'
+      + '<span class="pcheck" style="' + (rDone ? "background:" + day.color + ";border-color:" + day.color + ";color:#fff" : "") + '">✓</span>'
+      + '<span style="flex:1;text-align:left">' + esc(day.ritual) + '</span><span class="xpv">+' + RITUAL_XP + '</span></button>'
+      + '<ul class="plist">'
+      + day.probs.map(p => {
+          const done = !!S.done[p.id];
+          const url = p.url || LC(p.slug);
+          return '<li class="prow' + (done ? " done" : "") + '">'
+            + '<button class="pcheck" data-action="prob" data-id="' + p.id + '" aria-pressed="' + done + '">✓</button>'
+            + '<div class="pmain"><span class="pname">' + esc(p.n) + '</span>'
+            + '<div class="pmeta"><span class="diff ' + p.diff + '">' + DIFFN[p.diff] + '</span>'
+            + (p.warm ? '<span class="tag">warm-up</span>' : "")
+            + '<span class="xpv">+' + probXP(p) + ' XP</span></div></div>'
+            + '<a class="golink" href="' + url + '" target="_blank" rel="noopener" aria-label="Open problem">↗</a></li>';
+        }).join("")
+      + '</ul>'
+      + (day.id === "d7"
+          ? '<div class="timer" id="mockTimer"><b id="timerVal">' + fmtT(timer.left) + '</b>'
+            + '<button class="tbtn" id="timerStart" data-action="timer-start">' + (timer.run ? "Pause" : "Start") + '</button>'
+            + '<button class="tbtn" data-action="timer-reset">Reset</button>'
+            + '<span class="xpv" style="margin-left:auto">the mock clock</span></div>'
+          : "")
+      + '</div></div></div></div>';
+  });
+  const cleared = stationsCleared();
+  html += '<div class="stn terminus" style="--seg:var(--line)">'
+    + '<div class="rail"><div class="stop"></div></div>'
+    + '<div class="stn-body"><div class="terminus-card"><h2>GOOGLE</h2>'
+    + '<p>' + (cleared === 7
+        ? "All seven stations cleared. Walk in like you own the whiteboard."
+        : cleared + " of 7 stations behind you. The terminus isn't going anywhere — you are.") + '</p>'
+    + '</div></div></div>';
+  $("#stations").innerHTML = html;
+  syncTimerUI();
+}
+function toggleProb(id) {
+  const p = PROBS[id];
+  if (!p) return;
+  if (S.done[id]) {
+    delete S.done[id];
+    addXP(-probXP(p), "", true);
+  } else {
+    S.done[id] = true;
+    addXP(probXP(p), p.n.length > 26 ? p.n.slice(0, 24) + "…" : p.n);
+    award("first");
+    if (dayDone(p.day)) {
+      toast("🚉 " + p.day.stn + " cleared", true);
+      confetti(50);
+      const c = stationsCleared();
+      if (c >= 4) award("half");
+      if (c === 7) { award("line"); confetti(90); }
+    } else confetti(12);
+  }
+  renderLine(); renderMe();
+}
+function toggleRitual(dayId) {
+  if (S.rituals[dayId]) {
+    delete S.rituals[dayId];
+    addXP(-RITUAL_XP, "", true);
+  } else {
+    S.rituals[dayId] = todayStr();
+    addXP(RITUAL_XP, "ritual");
+    if (Object.keys(S.rituals).length >= 5) award("ritual5");
+  }
+  renderLine(); renderDojo(); renderMe();
+}
+
+/* ---------- day 7 timer ---------- */
+const timer = { left: 25 * 60, run: null };
+function fmtT(s) { return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+function syncTimerUI() {
+  const el = $("#timerVal");
+  if (!el) return;
+  el.textContent = fmtT(timer.left);
+  const box = $("#mockTimer");
+  if (box) box.classList.toggle("low", timer.left <= 300);
+  const b = $("#timerStart");
+  if (b) b.textContent = timer.run ? "Pause" : (timer.left === 25 * 60 ? "Start" : (timer.left === 0 ? "Done" : "Resume"));
+}
+function timerToggle() {
+  if (timer.run) { clearInterval(timer.run); timer.run = null; }
+  else if (timer.left > 0) {
+    timer.run = setInterval(() => {
+      timer.left--;
+      if (timer.left <= 0) {
+        timer.left = 0;
+        clearInterval(timer.run); timer.run = null;
+        toast("⏰ Pencils down.", true);
+        confetti(40);
+      }
+      syncTimerUI();
+    }, 1000);
+  }
+  syncTimerUI();
+}
+function timerReset() {
+  if (timer.run) clearInterval(timer.run);
+  timer.run = null;
+  timer.left = 25 * 60;
+  syncTimerUI();
+}
+
+/* ---------- metro mode ---------- */
+const DECKS = [
+  { id: "mix", n: "Mix" }, { id: "graphs", n: "Graphs" }, { id: "bt", n: "Backtracking" },
+  { id: "dp", n: "DP" }, { id: "ds", n: "Heaps & tries" }, { id: "redo", n: "Redemption" },
+];
+let deckSel = "mix";
+let sess = null;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function pickWeighted(pool, n) {
+  const scored = pool.map(q => {
+    const s = S.quiz.perQ[q.id] || { seen: 0, right: 0 };
+    return [(s.right + 1) / (s.seen + 2) + Math.random() * 0.55, q.id];
+  });
+  scored.sort((a, b) => a[0] - b[0]);
+  return scored.slice(0, n).map(x => x[1]);
+}
+function buildSession(deckId) {
+  const N = 10;
+  if (deckId === "redo") return shuffle(S.quiz.missed).slice(0, N);
+  if (deckId === "mix") {
+    const ph = focusDay().ph;
+    const missed = shuffle(S.quiz.missed).slice(0, 3);
+    const rest = Q.filter(q => missed.indexOf(q.id) === -1);
+    const focus = ph === "mix" ? [] : rest.filter(q => q.ph === ph);
+    const others = ph === "mix" ? rest : rest.filter(q => q.ph !== ph);
+    const wantF = Math.min(focus.length, Math.ceil((N - missed.length) / 2));
+    const idsF = pickWeighted(focus, wantF);
+    const idsO = pickWeighted(others, N - missed.length - wantF);
+    return shuffle(missed.concat(idsF, idsO));
+  }
+  return shuffle(pickWeighted(Q.filter(q => q.ph === deckId), N));
+}
+function startSession(deckId) {
+  const ids = buildSession(deckId);
+  if (!ids.length) { toast("That deck is empty right now"); return; }
+  sess = { deck: deckId, ids: ids, i: 0, streak: 0, best: 0, right: 0, xp: 0, phase: "ask", results: [], order: [], picked: null };
+  prepCard();
+  renderMetro();
+}
+function prepCard() {
+  sess.order = shuffle([0, 1, 2, 3]);
+  sess.picked = null;
+}
+function answer(slot) {
+  if (!sess || sess.phase !== "ask") return;
+  const q = Q.find(x => x.id === sess.ids[sess.i]);
+  const ok = sess.order[slot] === q.a;
+  const st = S.quiz;
+  st.answered++;
+  const pq = st.perQ[q.id] = st.perQ[q.id] || { seen: 0, right: 0 };
+  pq.seen++;
+  if (ok) {
+    pq.right++; st.correct++;
+    sess.streak++;
+    if (sess.streak > sess.best) sess.best = sess.streak;
+    if (sess.streak > st.bestStreak) st.bestStreak = sess.streak;
+    const mult = sess.streak >= 6 ? 3 : sess.streak >= 3 ? 2 : 1;
+    const gain = 2 * mult;
+    sess.xp += gain;
+    sess.right++;
+    if (q.t === "bug") {
+      st.bugRight = (st.bugRight || 0) + 1;
+      if (st.bugRight >= 20) award("bugs20");
+    }
+    st.missed = st.missed.filter(id => id !== q.id);
+    addXP(gain, "", true);
+  } else {
+    sess.streak = 0;
+    if (st.missed.indexOf(q.id) === -1) st.missed.push(q.id);
+  }
+  if (st.answered >= 100) award("metro100");
+  sess.results.push(ok);
+  sess.phase = "reveal";
+  sess.picked = slot;
+  save();
+  renderMetro();
+}
+function nextCard() {
+  if (!sess) return;
+  if (sess.i + 1 >= sess.ids.length) {
+    sess.phase = "done";
+    S.quiz.sessions++;
+    if (sess.right === sess.ids.length && sess.ids.length >= 10) {
+      S.quiz.perfect++;
+      award("perfect");
+      addXP(20, "perfect run");
+      confetti(70);
+    }
+    save();
+  } else {
+    sess.i++;
+    sess.phase = "ask";
+    prepCard();
+  }
+  renderMetro();
+}
+const CATN = { pat: "Pattern", bug: "Bug hunt", line: "Missing line", cx: "Complexity" };
+function renderMetro() {
+  const el = $("#quizArea");
+  if (!sess) {
+    const redo = S.quiz.missed.length;
+    el.innerHTML =
+      '<div class="decks">' + DECKS.map(d => {
+        const dis = d.id === "redo" && redo === 0;
+        const lbl = d.id === "redo" ? d.n + " (" + redo + ")" : d.n;
+        return '<button class="deck' + (deckSel === d.id ? " sel" : "") + '" data-action="deck" data-deck="' + d.id + '"' + (dis ? " disabled" : "") + '>' + lbl + "</button>";
+      }).join("") + "</div>"
+      + '<button class="board" data-action="board">🚇 Board — 10 stops</button>'
+      + (S.quiz.answered
+        ? '<p class="storenote">' + S.quiz.correct + "/" + S.quiz.answered + " lifetime · best streak " + S.quiz.bestStreak + " · " + S.quiz.sessions + " runs</p>"
+        : '<p class="storenote">Patterns, bug hunts, missing lines, complexity. Tap the right answer — streaks multiply the XP (×2 at 3, ×3 at 6). Wrong ones go to the Redemption deck.</p>');
+    return;
+  }
+  if (sess.phase === "done") {
+    const n = sess.ids.length, miss = sess.results.filter(r => !r).length;
+    el.innerHTML = '<div class="qwrap result">'
+      + '<div class="big">' + sess.right + "/" + n + '</div>'
+      + '<div class="sub">' + (sess.right === n ? "Perfect run. The doors open at Google." : sess.right >= n * 0.7 ? "Solid. The missed ones went to Redemption." : "Rough stop — Redemption deck is waiting.") + '</div>'
+      + '<div class="row"><span><b>+' + sess.xp + '</b>XP</span><span><b>' + sess.best + '</b>best streak</span><span><b>' + miss + '</b>to redemption</span></div>'
+      + '<div class="mrow" style="justify-content:center;margin-top:18px"><button class="mbtn" data-action="board">Run it again</button><button class="mbtn" data-action="quit">Decks</button></div>'
+      + '</div>';
+    return;
+  }
+  const q = Q.find(x => x.id === sess.ids[sess.i]);
+  const mult = sess.streak >= 6 ? "×3" : sess.streak >= 3 ? "×2" : "";
+  let html = '<div class="qwrap">'
+    + '<div class="qtop"><span class="qcat ' + q.t + '">' + CATN[q.t] + '</span>'
+    + '<span class="qmeta"><span>' + (sess.i + 1) + "/" + sess.ids.length + '</span>'
+    + (sess.streak >= 2 ? "<span>🔥" + sess.streak + "</span>" : "")
+    + (mult ? '<span class="mult">' + mult + "</span>" : "")
+    + "<span>+" + sess.xp + "</span></span></div>"
+    + '<p class="qtext">' + esc(q.q) + "</p>"
+    + (q.code ? '<pre class="code">' + esc(q.code).replace(/____/g, '<span class="blank">____</span>') + "</pre>" : "");
+  html += '<div class="opts">' + sess.order.map((orig, slot) => {
+    let cls = "opt", dis = "";
+    if (sess.phase === "reveal") {
+      dis = " disabled";
+      if (orig === q.a) cls += " right";
+      else if (slot === sess.picked) cls += " wrong";
+      else cls += " dim";
+    }
+    return '<button class="' + cls + '" data-action="opt" data-slot="' + slot + '"' + dis + '><span class="k">' + "ABCD"[slot] + "</span>" + esc(q.o[orig]) + "</button>";
+  }).join("") + "</div>";
+  if (sess.phase === "reveal") {
+    html += '<div class="explain">' + esc(q.x) + "</div>"
+      + '<div class="qnav"><button class="quit" data-action="quit">End run</button>'
+      + '<button class="next" data-action="next">' + (sess.i + 1 >= sess.ids.length ? "Finish" : "Next stop →") + "</button></div>";
+  } else {
+    html += '<div class="qnav"><button class="quit" data-action="quit">End run</button><span></span></div>';
+  }
+  html += '<div class="stops-track">' + sess.ids.map((_, k) =>
+    "<i class=\"" + (k < sess.results.length ? (sess.results[k] ? "ok" : "ko") : "") + "\"></i>").join("") + "</div>";
+  html += "</div>";
+  el.innerHTML = html;
+}
+
+/* ---------- dojo ---------- */
+const openTpl = new Set(), shownTpl = new Set();
+function renderDojo() {
+  const f = focusDay();
+  const logged = !!S.rituals[f.id];
+  let html = '<div class="dojo-log' + (logged ? " logged" : "") + '">'
+    + '<p><b>Day ' + f.d + " ritual:</b> " + esc(f.ritual) + "</p>"
+    + '<button data-action="ritual" data-day="' + f.id + '">' + (logged ? "Logged ✓" : "Done · +15 XP") + "</button></div>";
+  let g = "";
+  TPL.forEach(t => {
+    if (t.g !== g) { g = t.g; html += '<div class="sectionlabel">' + g + "</div>"; }
+    const open = openTpl.has(t.id), shown = shownTpl.has(t.id);
+    html += '<div class="tcard' + (open ? " open" : "") + '">'
+      + '<button class="thead" data-action="tpl" data-tpl="' + t.id + '"><h3>' + esc(t.n) + '</h3><span class="ttag">' + esc(t.tag) + '</span><span class="chev">▾</span></button>'
+      + '<div class="tbody"><p class="tnote">' + esc(t.note) + "</p>"
+      + '<div class="tcode' + (shown ? "" : " hidden") + '" id="tc-' + t.id + '">'
+      + '<pre class="code">' + esc(t.code) + "</pre>"
+      + '<div class="veil"><span>Write yours from a blank page first.</span><button data-action="reveal" data-tpl="' + t.id + '">Reveal &amp; diff</button></div>'
+      + "</div></div></div>";
+  });
+  $("#dojoArea").innerHTML = html;
+}
+
+/* ---------- me ---------- */
+const statCell = (v, l) => '<div class="stat"><b>' + v + "</b><span>" + l + "</span></div>";
+function renderMe() {
+  const doneN = Object.keys(S.done).filter(id => PROBS[id]).length;
+  const acc = S.quiz.answered ? Math.round(S.quiz.correct / S.quiz.answered * 100) : 0;
+  const i = rankIdx(S.xp);
+  let html = '<div class="statgrid">'
+    + statCell(doneN + "/" + TOTAL, "problems") + statCell(stationsCleared() + "/7", "stations")
+    + statCell(Object.keys(S.rituals).length + "/7", "rituals")
+    + statCell(S.quiz.answered, "cards") + statCell(acc + "%", "accuracy") + statCell(S.streak.best, "best streak")
+    + "</div>";
+  html += '<div class="sectionlabel">Rank ladder</div><ul class="ladder">'
+    + RANKS.map((r, k) => '<li class="' + (k < i ? "past" : k === i ? "cur" : "") + '">'
+      + (k < i ? "✓ " : k === i ? "→ " : "· ") + r[0] + '<span class="lxp">' + r[1] + " XP</span></li>").join("") + "</ul>";
+  html += '<div class="sectionlabel">Hardware</div><div class="badges">'
+    + BADGES.map(b => '<div class="badge' + (S.badges[b.id] ? "" : " locked") + '" title="' + esc(b.d) + '"><span class="ic">' + b.ic + '</span><span>' + b.n + "</span></div>").join("") + "</div>";
+  html += '<div class="sectionlabel">Data</div><div class="mrow">'
+    + '<button class="mbtn" data-action="export">Export progress</button>'
+    + '<button class="mbtn" data-action="import">Import</button>'
+    + '<button class="mbtn danger" data-action="reset">Reset</button></div>'
+    + '<textarea class="io" id="ioBox" spellcheck="false" placeholder="Paste an export here, then tap Import again."></textarea>'
+    + '<p class="storenote">' + storeNoteText() + "</p>";
+  $("#meArea").innerHTML = html;
+}
+function storeNoteText() {
+  if (store.mode === "claude") return "Progress saves with this artifact in Claude. Moving to a deployed copy? Export here, Import there.";
+  if (store.mode === "local") return "Progress saves in this browser (localStorage). Export to move it between devices.";
+  return "Storage isn't available here, so progress lives only in this session — export before closing.";
+}
+function doExport() {
+  const box = $("#ioBox");
+  box.classList.add("on");
+  box.value = JSON.stringify(S);
+  box.focus(); box.select();
+  try {
+    if (navigator.clipboard) { navigator.clipboard.writeText(box.value); toast("Copied to clipboard"); }
+  } catch (e) {}
+}
+function doImport() {
+  const box = $("#ioBox");
+  if (!box.classList.contains("on") || !box.value.trim()) {
+    box.classList.add("on"); box.focus();
+    toast("Paste your export, then tap Import again");
+    return;
+  }
+  try {
+    const obj = JSON.parse(box.value);
+    if (!obj || obj.v !== 1) throw new Error("bad");
+    S = Object.assign(blank(), obj);
+    S.quiz = Object.assign(blank().quiz, S.quiz);
+    S.streak = Object.assign(blank().streak, S.streak);
+    save(); renderAll();
+    toast("Progress imported", true);
+  } catch (e) {
+    toast("That didn't parse — paste a full export");
+  }
+}
+function doReset() {
+  if (!confirm("Wipe all progress, XP and badges?")) return;
+  S = blank();
+  save(); renderAll();
+  toast("Fresh line. Day 1 awaits.");
+}
+
+/* ---------- tabs & events ---------- */
+function switchTab(name) {
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "view-" + name));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.tab === name));
+  if (name === "line") renderLine();
+  else if (name === "metro") renderMetro();
+  else if (name === "dojo") renderDojo();
+  else if (name === "me") renderMe();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-action]");
+  if (!b) return;
+  const a = b.dataset.action;
+  if (a === "prob") toggleProb(b.dataset.id);
+  else if (a === "day") {
+    const id = b.dataset.day;
+    if (openDays.has(id)) openDays.delete(id); else openDays.add(id);
+    renderLine();
+  }
+  else if (a === "ritual") toggleRitual(b.dataset.day);
+  else if (a === "deck") { if (!b.disabled) { deckSel = b.dataset.deck; renderMetro(); } }
+  else if (a === "board") startSession(deckSel);
+  else if (a === "opt") answer(parseInt(b.dataset.slot, 10));
+  else if (a === "next") nextCard();
+  else if (a === "quit") { sess = null; renderMetro(); }
+  else if (a === "tpl") {
+    const id = b.dataset.tpl, card = b.closest(".tcard");
+    card.classList.toggle("open");
+    if (card.classList.contains("open")) openTpl.add(id); else openTpl.delete(id);
+  }
+  else if (a === "reveal") {
+    const id = b.dataset.tpl;
+    shownTpl.add(id);
+    const tc = document.getElementById("tc-" + id);
+    if (tc) tc.classList.remove("hidden");
+  }
+  else if (a === "export") doExport();
+  else if (a === "import") doImport();
+  else if (a === "reset") doReset();
+  else if (a === "timer-start") timerToggle();
+  else if (a === "timer-reset") timerReset();
+});
+
+/* ---------- init ---------- */
+function renderAll() { renderHeader(); renderLine(); renderMetro(); renderDojo(); renderMe(); }
+(async function init() {
+  let loaded = null;
+  try { loaded = await store.load(); } catch (e) {}
+  if (loaded && loaded.v === 1) {
+    S = Object.assign(blank(), loaded);
+    S.quiz = Object.assign(blank().quiz, S.quiz);
+    S.streak = Object.assign(blank().streak, S.streak);
+  }
+  openDays = new Set([focusDay().id]);
+  renderAll();
+})();
+</script>
+</body>
+</html>
