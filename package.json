@@ -1,0 +1,23 @@
+{
+  "name": "onsite-express",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A 7-day Google onsite study plan, ridden like a metro line.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  }
+}
