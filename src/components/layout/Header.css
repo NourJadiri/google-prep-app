@@ -1,0 +1,14 @@
+.hdr {
+  position: sticky; top: 0; z-index: 30; background: var(--bg);
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.hdr-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 720px; margin: 0 auto; }
+.rank { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rank-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.rank-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdr-stats { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--ink2); flex: none; }
+.hdr-stats b { color: var(--ink); font-weight: 700; }
+.xp-track { height: 4px; border-radius: 2px; background: var(--sunken); margin: 8px auto 0; max-width: 720px; overflow: hidden; }
+.xp-fill { height: 100%; width: 0%; border-radius: 2px; background: linear-gradient(90deg, var(--blue), var(--red), var(--yellow), var(--green)); transition: width .4s ease; }
+.xp-sub { max-width: 720px; margin: 4px auto 0; font-family: var(--mono); font-size: 10.5px; color: var(--ink2); display: flex; justify-content: space-between; }

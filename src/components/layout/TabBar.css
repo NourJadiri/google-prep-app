@@ -1,0 +1,10 @@
+.tabs {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line); display: flex;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: 10px; color: var(--ink2); font-size: 10.5px; font-weight: 600; }
+.tab .ic { font-size: 19px; line-height: 1; }
+.tab.on { color: var(--blue); }
