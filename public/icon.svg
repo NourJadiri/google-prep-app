@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- The app icon: the terminus dot as a roundel, four logo colours on dark. -->
+  <rect width="512" height="512" fill="#202124"/>
+  <g fill="none" stroke-width="46">
+    <path d="M256 126A130 130 0 0 1 386 256" stroke="#1a73e8"/>
+    <path d="M386 256A130 130 0 0 1 256 386" stroke="#d93025"/>
+    <path d="M256 386A130 130 0 0 1 126 256" stroke="#f9ab00"/>
+    <path d="M126 256A130 130 0 0 1 256 126" stroke="#1e8e3e"/>
+  </g>
+</svg>
