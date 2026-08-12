@@ -11,13 +11,6 @@ export that puts you on Day 5 and the line still shows Day 1 expanded until you 
 reference behaves the same way, which is why it's still here. One line in the `IMPORT` and
 `RESET` cases of the reducer.
 
-**The dojo's chevron is dead.**
-Template cards render `<span class="chev">▾</span>`, but the only rules for `.chev` are
-scoped to `.dayhead .chev` and `.stn.open .chev`. So in the dojo it never rotates when the
-card opens, and it inherits `--ink` instead of the `--ink2` its counterpart on the line
-uses. Faithful to the reference, but it reads as a bug. Fix by promoting the two rules to
-bare `.chev` / `.open .chev`.
-
 **Nothing warns before Reset wipes an unexported run.**
 `window.confirm` asks, but doesn't mention that the progress is unrecoverable if it was
 never exported. Offering "Export first?" in that dialog would cost one branch.

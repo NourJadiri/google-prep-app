@@ -1,7 +1,10 @@
 .tcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); margin-top: 12px; overflow: hidden; }
-.thead { width: 100%; text-align: left; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+.thead { width: 100%; text-align: left; padding: 12px 14px; display: flex; align-items: center; gap: 10px; transition: background .15s; }
+.thead:active { background: var(--sunken); }
 .thead h3 { margin: 0; font-size: 14.5px; font-weight: 600; flex: 1; }
-.ttag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; background: var(--sunken); color: var(--ink2); flex: none; }
+.thead .chev { color: var(--ink2); flex: none; transition: transform .2s; }
+.tcard.open .chev { transform: rotate(180deg); }
+.ttag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; background: var(--sunken); border: 1px solid color-mix(in srgb, var(--line) 60%, transparent); color: var(--ink2); flex: none; }
 .tbody { display: none; border-top: 1px solid var(--line); padding: 12px 14px 14px; }
 .tcard.open .tbody { display: block; }
 .tnote { font-size: 12.5px; color: var(--ink2); margin: 0 0 10px; }
@@ -12,11 +15,19 @@
   position: absolute; inset: 0; display: flex; flex-direction: column; gap: 6px;
   align-items: center; justify-content: center; text-align: center; padding: 10px;
 }
+.veil .vlock { color: var(--ink2); }
 .veil span { font-size: 12px; color: var(--ink2); max-width: 30ch; }
-.veil button { padding: 8px 16px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; }
+.veil button { padding: 8px 16px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; transition: transform .12s, box-shadow .15s; }
+.veil button:active { transform: scale(.97); }
 .tcode:not(.hidden) .veil { display: none; }
 .dojo-log { margin-top: 14px; padding: 13px 14px; border-radius: 14px; border: 1.5px dashed var(--yellow); display: flex; align-items: center; gap: 12px; background: var(--surface); }
 .dojo-log p { margin: 0; font-size: 13px; flex: 1; }
-.dojo-log button { padding: 9px 15px; border-radius: 999px; background: var(--yellow); color: #202124; font-weight: 700; font-size: 13px; flex: none; }
+.dojo-log button { padding: 9px 15px; border-radius: 999px; background: var(--yellow); color: #202124; font-weight: 700; font-size: 13px; flex: none; display: inline-flex; align-items: center; gap: 6px; transition: transform .12s, box-shadow .15s; }
+.dojo-log button:active { transform: scale(.97); }
+.dojo-log .bdot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .6; }
 .dojo-log.logged { border-style: solid; }
 .dojo-log.logged button { background: var(--sunken); color: var(--ink2); }
+@media (hover: hover) {
+  .thead:hover { background: color-mix(in srgb, var(--sunken) 55%, transparent); }
+  .veil button:hover, .dojo-log button:hover { box-shadow: var(--shadow); }
+}

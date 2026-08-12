@@ -4,6 +4,7 @@ import { focusDay, stationsCleared } from "../../lib/engine";
 import Station from "./Station";
 import DayCard from "./DayCard";
 import Terminus from "./Terminus";
+import Icon from "../shared/Icon";
 import "./line.css";
 
 export default function TransitLine() {
@@ -26,7 +27,7 @@ export default function TransitLine() {
             done={isDone}
             now={isNow}
             open={isOpen}
-            mark={isDone ? "✓" : null}
+            mark={isDone ? <Icon name="check" size={12} strokeWidth={3.5} /> : null}
           >
             <DayCard day={day} doneN={doneN} open={isOpen} />
           </Station>

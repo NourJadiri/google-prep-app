@@ -234,5 +234,13 @@ change a pixel:
   permission is denied; here it's caught, and the textarea stays selected to copy by hand.
 - **Favicon.** An inlined `data:` URI of the terminus dot, so the browser stops probing
   `/favicon.ico` and the console stays clean. Still no network request.
+- **The visual-polish pass.** A deliberate break from pixel parity, made after the port:
+  every emoji and text glyph doing UI work (tab icons, badges, checkmarks, chevrons,
+  arrows, toast prefixes) was replaced with a shared inline-SVG icon set
+  (`src/components/shared/Icon.tsx`), and controls gained hover/press states, tabular
+  numerals and small state refinements. Content, layout structure, tokens and behaviour
+  are unchanged, but `computed.mjs` and `screenshots.mjs` now report real differences on
+  the restyled surfaces — the reference is still ground truth for *content*, no longer
+  for every pixel.
 
 Anything else worth doing is written down in `FOLLOW-UPS.md` rather than built.

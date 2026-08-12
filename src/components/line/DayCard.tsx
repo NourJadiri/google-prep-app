@@ -2,6 +2,7 @@ import { useApp } from "../../state/AppState";
 import ProblemRow from "./ProblemRow";
 import RitualRow from "./RitualRow";
 import MockTimer from "./MockTimer";
+import Icon from "../shared/Icon";
 import type { Day } from "../../types";
 
 /* A day's card: eyebrow, title, hairline progress, then the collapsible body.
@@ -30,7 +31,9 @@ export default function DayCard({ day, doneN, open }: DayCardProps) {
           <div className="eyebrow">{"Day " + day.d + " · " + day.stn}</div>
           <h2>{day.name}</h2>
         </div>
-        <span className="chev">▾</span>
+        <span className="chev">
+          <Icon name="chevron-down" size={18} />
+        </span>
       </button>
 
       <div className="dayprog">

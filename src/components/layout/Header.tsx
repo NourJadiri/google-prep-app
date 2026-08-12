@@ -1,6 +1,7 @@
 import { useApp } from "../../state/AppState";
 import { focusDay, rankProgress } from "../../lib/engine";
 import { RANKCOL } from "../../data/meta";
+import Icon from "../shared/Icon";
 import "./Header.css";
 
 /* Always-on status bar: who you are, how hot the streak is, and how far the
@@ -20,8 +21,9 @@ export default function Header() {
           <span className="rank-name">{rank.name}</span>
         </div>
         <div className="hdr-stats">
-          <span>
-            🔥 <b>{data.streak.cur}</b>
+          <span aria-label={"Streak " + data.streak.cur}>
+            <Icon name="flame" size={13} className="flame" />
+            <b>{data.streak.cur}</b>
           </span>
           <span>
             XP <b>{data.xp}</b>
@@ -32,7 +34,11 @@ export default function Header() {
         <div className="xp-fill" style={{ width: rank.pct + "%" }} />
       </div>
       <div className="xp-sub">
-        <span>{"Day " + day.d + " · " + day.stn}</span>
+        <span className="xp-day">
+          {"Day " + day.d}
+          <i className="xp-dot" aria-hidden="true" />
+          <span className="xp-stn">{day.stn}</span>
+        </span>
         <span>{rank.nextLabel}</span>
       </div>
     </header>

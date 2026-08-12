@@ -20,7 +20,7 @@ export default function LineView() {
           Onsite <b>Express</b>
         </h1>
         <p>Two rounds between you and the terminus. Seven stations, one line. Board anywhere.</p>
-        <p style={{ fontFamily: "var(--mono)", fontSize: "12px", marginTop: "6px" }}>
+        <p className="linestats">
           {problemsDone(data) +
             " / " +
             TOTAL +

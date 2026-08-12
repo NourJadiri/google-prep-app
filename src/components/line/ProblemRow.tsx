@@ -1,5 +1,6 @@
 import { useApp } from "../../state/AppState";
 import { DIFFN, probURL, probXP } from "../../data/plan";
+import Icon from "../shared/Icon";
 import type { Problem } from "../../types";
 
 /* Check toggle, name, difficulty chip, XP, and a jump to LeetCode.
@@ -21,7 +22,7 @@ export default function ProblemRow({ prob, done }: ProblemRowProps) {
         aria-pressed={done}
         aria-label={(done ? "Uncheck " : "Check ") + prob.n}
       >
-        ✓
+        <Icon name="check" size={14} strokeWidth={3} />
       </button>
       <div className="pmain">
         <span className="pname">{prob.n}</span>
@@ -38,7 +39,7 @@ export default function ProblemRow({ prob, done }: ProblemRowProps) {
         rel="noopener"
         aria-label={"Open " + prob.n}
       >
-        ↗
+        <Icon name="arrow-up-right" size={16} />
       </a>
     </li>
   );

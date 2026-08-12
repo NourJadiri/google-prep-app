@@ -5,6 +5,22 @@
   border-top: 1px solid var(--line); display: flex;
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
 }
-.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: 10px; color: var(--ink2); font-size: 10.5px; font-weight: 600; }
-.tab .ic { font-size: 19px; line-height: 1; }
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 0; border-radius: 10px; color: var(--ink2);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+  transition: color .15s ease;
+}
+/* M3-style indicator: a quiet pill that tints only behind the glyph. */
+.tab .ic {
+  display: flex; align-items: center; justify-content: center;
+  width: 46px; height: 26px; border-radius: 999px;
+  transition: background-color .15s ease, transform .15s ease;
+}
 .tab.on { color: var(--blue); }
+.tab.on .ic { background: color-mix(in srgb, var(--blue) 14%, transparent); }
+.tab:active .ic { transform: scale(.94); }
+@media (hover: hover) {
+  .tab:not(.on):hover { color: var(--ink); }
+  .tab:not(.on):hover .ic { background: color-mix(in srgb, var(--ink2) 10%, transparent); }
+}

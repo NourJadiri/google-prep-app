@@ -1,4 +1,5 @@
 import { useApp } from "../../state/AppState";
+import Icon from "../shared/Icon";
 import type { Day } from "../../types";
 
 /* The same toggle as the Line's ritual row — one piece of state, two doors. */
@@ -20,7 +21,18 @@ export default function RitualLog({ day, logged }: RitualLogProps) {
         {" " + day.ritual}
       </p>
       <button onClick={() => actions.toggleRitual(day.id)} aria-pressed={logged}>
-        {logged ? "Logged ✓" : "Done · +15 XP"}
+        {logged ? (
+          <>
+            Logged
+            <Icon name="check" size={13} strokeWidth={2.5} />
+          </>
+        ) : (
+          <>
+            Done
+            <i className="bdot" />
+            +15 XP
+          </>
+        )}
       </button>
     </div>
   );

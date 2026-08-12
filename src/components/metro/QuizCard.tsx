@@ -2,6 +2,7 @@ import { useApp } from "../../state/AppState";
 import { CATN } from "../../data/questions";
 import { currentCard } from "../../lib/engine";
 import CodeBlock from "../shared/CodeBlock";
+import Icon from "../shared/Icon";
 import StopsTrack from "./StopsTrack";
 import type { Session } from "../../types";
 
@@ -24,7 +25,12 @@ export default function QuizCard({ session: s }: { session: Session }) {
         <span className={"qcat " + q.t}>{CATN[q.t]}</span>
         <span className="qmeta">
           <span>{s.i + 1 + "/" + s.ids.length}</span>
-          {s.streak >= 2 && <span>{"🔥" + s.streak}</span>}
+          {s.streak >= 2 && (
+            <span className="streak">
+              <Icon name="flame" size={12} />
+              {s.streak}
+            </span>
+          )}
           {mult && <span className="mult">{mult}</span>}
           <span>{"+" + s.xp}</span>
         </span>
@@ -63,7 +69,8 @@ export default function QuizCard({ session: s }: { session: Session }) {
               End run
             </button>
             <button className="next" onClick={actions.next}>
-              {last ? "Finish" : "Next stop →"}
+              {last ? "Finish" : "Next stop"}
+              <Icon name="arrow-right" size={15} />
             </button>
           </div>
         </>

@@ -1,16 +1,21 @@
 .statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 10px; text-align: center; }
-.stat b { display: block; font-family: var(--mono); font-size: 20px; font-weight: 700; }
-.stat span { font-size: 11px; color: var(--ink2); }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 13px 10px 11px; text-align: center; }
+.stat b { display: block; font-family: var(--mono); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.stat span { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
 .ladder { list-style: none; margin: 10px 0 0; padding: 0; }
 .ladder li { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); font-size: 13.5px; }
 .ladder li.past { color: var(--ink2); }
 .ladder li.cur { font-weight: 700; }
-.ladder .lxp { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink2); }
+/* Fixed-width marker column: check = climbed, coloured dot = you are here. */
+.lmark { width: 18px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--ink2); }
+.lmark .ldot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent); }
+.lmark .ldot.dim { width: 6px; height: 6px; background: var(--line); box-shadow: none; }
+.ladder .lxp { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink2); font-variant-numeric: tabular-nums; }
 .badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
-.badge { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 6px; text-align: center; }
-.badge .ic { font-size: 22px; display: block; }
-.badge span { font-size: 10px; color: var(--ink2); display: block; margin-top: 3px; line-height: 1.25; }
+.badge { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 6px 10px; text-align: center; }
+.badge .ic { width: 38px; height: 38px; margin: 0 auto; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, currentColor 12%, transparent); }
+.badge span { font-size: 10px; color: var(--ink2); display: block; margin-top: 6px; line-height: 1.25; }
 .badge.locked { opacity: .35; filter: grayscale(1); }
-.io { width: 100%; margin-top: 10px; font-family: var(--mono); font-size: 11px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-height: 70px; display: none; }
+.io { width: 100%; margin-top: 10px; font-family: var(--mono); font-size: 11px; line-height: 1.55; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-height: 70px; display: none; resize: vertical; }
 .io.on { display: block; }
+.io:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }

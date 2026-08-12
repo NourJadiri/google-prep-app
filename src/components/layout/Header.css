@@ -6,9 +6,14 @@
 .hdr-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 720px; margin: 0 auto; }
 .rank { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .rank-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.rank-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hdr-stats { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--ink2); flex: none; }
+.rank-name { font-weight: 600; font-size: 14px; letter-spacing: -0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdr-stats { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 12px; color: var(--ink2); flex: none; font-variant-numeric: tabular-nums; }
+.hdr-stats > span { display: inline-flex; align-items: center; gap: 4px; }
 .hdr-stats b { color: var(--ink); font-weight: 700; }
-.xp-track { height: 4px; border-radius: 2px; background: var(--sunken); margin: 8px auto 0; max-width: 720px; overflow: hidden; }
-.xp-fill { height: 100%; width: 0%; border-radius: 2px; background: linear-gradient(90deg, var(--blue), var(--red), var(--yellow), var(--green)); transition: width .4s ease; }
-.xp-sub { max-width: 720px; margin: 4px auto 0; font-family: var(--mono); font-size: 10.5px; color: var(--ink2); display: flex; justify-content: space-between; }
+.hdr-stats .flame { color: var(--med); }
+.xp-track { height: 4px; border-radius: 999px; background: var(--sunken); margin: 8px auto 0; max-width: 720px; overflow: hidden; }
+.xp-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--red), var(--yellow), var(--green)); transition: width .4s ease; }
+.xp-sub { max-width: 720px; margin: 5px auto 0; font-family: var(--mono); font-size: 10.5px; color: var(--ink2); display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; }
+.xp-day { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.xp-stn { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xp-dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .55; flex: none; }

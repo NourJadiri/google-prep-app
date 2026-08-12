@@ -22,7 +22,7 @@ export default function RunResult({ session: s }: { session: Session }) {
           <b>{missed}</b>to redemption
         </span>
       </div>
-      <div className="mrow" style={{ justifyContent: "center", marginTop: "18px" }}>
+      <div className="mrow">
         <button className="mbtn" onClick={actions.startRun}>
           Run it again
         </button>

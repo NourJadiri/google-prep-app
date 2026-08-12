@@ -1,12 +1,13 @@
 import { useApp } from "../../state/AppState";
 import type { Tab } from "../../types";
+import Icon, { type IconName } from "../shared/Icon";
 import "./TabBar.css";
 
-const TABS: ReadonlyArray<{ id: Tab; ic: string; label: string }> = [
-  { id: "line", ic: "🚇", label: "Line" },
-  { id: "metro", ic: "🎮", label: "Metro" },
-  { id: "dojo", ic: "🥋", label: "Dojo" },
-  { id: "me", ic: "📈", label: "Me" },
+const TABS: ReadonlyArray<{ id: Tab; ic: IconName; label: string }> = [
+  { id: "line", ic: "route", label: "Line" },
+  { id: "metro", ic: "train", label: "Metro" },
+  { id: "dojo", ic: "code", label: "Dojo" },
+  { id: "me", ic: "chart", label: "Me" },
 ];
 
 export default function TabBar() {
@@ -24,7 +25,9 @@ export default function TabBar() {
             window.scrollTo(0, 0);
           }}
         >
-          <span className="ic">{t.ic}</span>
+          <span className="ic">
+            <Icon name={t.ic} size={20} strokeWidth={1.8} />
+          </span>
           {t.label}
         </button>
       ))}
