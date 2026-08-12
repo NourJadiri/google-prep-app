@@ -17,11 +17,6 @@ never exported. Offering "Export first?" in that dialog would cost one branch.
 
 ## Polish
 
-**`apple-touch-icon` for Add to Home Screen.**
-The favicon is an inlined SVG data URI, which covers the browser tab. iOS wants a PNG for
-the home-screen icon and currently falls back to a screenshot of the page. Needs a real
-PNG committed (or a tiny build step), so it was out of scope for a no-new-deps port.
-
 **The blurred template code is only visually hidden.**
 `filter: blur(7px)` plus `user-select: none` stops a casual peek, but the text is still in
 the accessibility tree and still copyable via keyboard. If the point is "no peeking", the

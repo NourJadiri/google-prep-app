@@ -232,8 +232,11 @@ change a pixel:
   discarding the last 350 ms of debounced progress when it reclaims a backgrounded tab.
 - **Clipboard.** The reference's export throws an unhandled rejection when clipboard
   permission is denied; here it's caught, and the textarea stays selected to copy by hand.
-- **Favicon.** An inlined `data:` URI of the terminus dot, so the browser stops probing
-  `/favicon.ico` and the console stays clean. Still no network request.
+- **App icon.** The terminus dot as a roundel — the four logo colours ringing a dark
+  tile — as a real icon set:
+  `public/icon.svg` for the browser tab, a 180px PNG for iOS Add to Home Screen, and a
+  `manifest.webmanifest` with 192/512 PNGs (plus a maskable variant) for Android installs.
+  All same-origin static files — still nothing fetched off-site.
 - **The visual-polish pass.** A deliberate break from pixel parity, made after the port:
   every emoji and text glyph doing UI work (tab icons, badges, checkmarks, chevrons,
   arrows, toast prefixes) was replaced with a shared inline-SVG icon set
