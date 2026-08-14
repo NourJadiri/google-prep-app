@@ -110,23 +110,12 @@ export const RANKCOL: string[] = [
 `
 );
 
-fs.writeFileSync(
-  "src/data/questions.ts",
-  banner("The 56-card quiz bank", "Deck, QType, Question") +
-    q +
-    `
-export const DECKS: Deck[] = [
-  { id: "mix", n: "Mix" }, { id: "graphs", n: "Graphs" }, { id: "bt", n: "Backtracking" },
-  { id: "dp", n: "DP" }, { id: "ds", n: "Heaps & tries" }, { id: "redo", n: "Redemption" },
-];
-
-export const CATN: Record<QType, string> = { pat: "Pattern", bug: "Bug hunt", line: "Missing line", cx: "Complexity" };
-
-export const Q_BY_ID: Record<string, Question> = {};
-Q.forEach((q) => { Q_BY_ID[q.id] = q; });
-`
-);
+/* questions.ts is deliberately NOT written any more: the live bank was
+   hand-rebalanced (length-bias removed) and extended past the reference's 56
+   cards. Regenerating it would silently resurrect the old bank. The extracted
+   `q` block is kept in scope so this note has a body to explain. */
+void q;
 
 fs.writeFileSync("src/data/templates.ts", banner("Dojo templates", "Template") + tpl);
 
-console.log("wrote src/data/{plan,meta,questions,templates}.ts");
+console.log("wrote src/data/{plan,meta,templates}.ts — questions.ts is hand-authored now, skipped");

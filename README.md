@@ -7,7 +7,7 @@ Four tabs:
 
 - **Line** — the week as a transit line in Google's four logo colours. Check problems, log
   the morning ritual, run the Day-7 mock clock.
-- **Metro** — thumb-only quiz mode for the commute or the plane. 56 hand-written cards,
+- **Metro** — thumb-only quiz mode for the commute or the plane. 104 hand-written cards,
   ten stops a run, streaks multiply the XP. No typing, ever.
 - **Dojo** — 15 algorithm templates, blurred until you've written yours from memory.
 - **Me** — stats, the rank ladder, badges, export/import.
@@ -66,7 +66,7 @@ src/
                 base.css        reset, and the 44px touch-target overlays
                 layout.css      page frame + classes more than one tab uses
   data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (7 days, 28 problems)
-                questions.ts    Q (56 cards), DECKS, CATN
+                questions.ts    Q (104 cards), DECKS, CATN — hand-authored, see below
                 templates.ts    TPL (15 templates in 3 groups)
                 meta.ts         RANKS, BADGES, RANKCOL
   lib/          engine.ts       every rule, as pure functions
@@ -112,13 +112,13 @@ Nothing in there reads the clock, the DOM or `localStorage` unless you hand it o
 callers inject `today`, `now` and `rng`. That is why toasts and confetti fire in exactly
 the reference's order without a reducer ever performing a side effect.
 
-### Content is extracted, not retyped
+### Content is extracted, not retyped — except the quiz bank
 
-Every problem, question, template, note and piece of microcopy comes out of
+Every problem, template, note and piece of microcopy comes out of
 `reference/onsite-express.html` mechanically:
 
 ```bash
-node scripts/extract-data.mjs      # rewrites src/data/{plan,meta,questions,templates}.ts
+node scripts/extract-data.mjs      # rewrites src/data/{plan,meta,templates}.ts
 ```
 
 The generator copies each literal byte for byte and adds only a type annotation on the
@@ -127,9 +127,14 @@ contextually types the data underneath it, so `diff:"M"` narrows to `Diff` and
 `ph:"graphs"` to `Phase` without a character of the reference's content being rewritten.
 Anything the generator emits without a declared type is an error, not an `any`.
 
+`src/data/questions.ts` is the exception: the bank was hand-rebalanced after the port —
+the reference's cards let the longest option give the answer away 88% of the time — and
+extended from 56 to 104 cards. The generator deliberately no longer writes that file;
+regenerating would resurrect the old bank.
+
 ### Quiz options are always shuffled
 
-Every card in `Q` stores its correct answer at `o[0]` — `a` is `0` for all 56. A run
+Every card in `Q` stores its correct answer at `o[0]` — `a` is `0` for all 104. A run
 therefore carries its own display permutation, redealt for each card:
 
 ```ts
@@ -232,6 +237,12 @@ change a pixel:
   discarding the last 350 ms of debounced progress when it reclaims a backgrounded tab.
 - **Clipboard.** The reference's export throws an unhandled rejection when clipboard
   permission is denied; here it's caught, and the textarea stays selected to copy by hand.
+- **The quiz bank.** In the reference's 56 cards the correct option was the longest 88%
+  of the time — guessable without reading. All 56 were rebalanced (correct answers
+  trimmed, distractors grown into specific, plausible misconceptions) and 48 new cards
+  added, taking the bank to 104. The correct answer now lands at each length rank at
+  chance level. Old card ids are unchanged, so existing per-card stats and exports
+  carry over.
 - **App icon.** The terminus dot as a roundel — the four logo colours ringing a dark
   tile — as a real icon set:
   `public/icon.svg` for the browser tab, a 180px PNG for iOS Add to Home Screen, and a
