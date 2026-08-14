@@ -1,9 +1,14 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html { height: 100%; }
+/* Metro is the only tab shorter than the viewport, so it's the only tab where
+   iOS can rubber-band the document — and the fixed tab bar rides the bounce.
+   Killing overscroll pins it; 100dvh keeps the page covering the viewport as
+   Safari's toolbar grows and shrinks (100% is the plain-100% fallback). */
+html { height: 100%; overscroll-behavior-y: none; }
 body {
-  margin: 0; min-height: 100%; background: var(--bg); color: var(--ink);
+  margin: 0; min-height: 100%; min-height: 100dvh; background: var(--bg); color: var(--ink);
   font-family: var(--sans); line-height: 1.5; -webkit-font-smoothing: antialiased;
   padding-bottom: calc(74px + env(safe-area-inset-bottom));
+  overscroll-behavior-y: none;
 }
 button { font-family: inherit; font-size: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
