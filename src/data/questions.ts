@@ -1,7 +1,10 @@
-// The 104-card quiz bank. The original 56 cards were ported from
+// The 120-card quiz bank. The original 56 cards were ported from
 // reference/onsite-express.html, then hand-rebalanced so option length gives
-// nothing away; q57+ are new. This file is authored by hand now — do NOT
-// regenerate it with scripts/extract-data.mjs, that would resurrect the old bank.
+// nothing away; q57+ are new. q105–q120 are the complexity-analysis set: on
+// several of those every option quotes the same bound and only one justification
+// holds, so knowing the answer without the why scores nothing. This file is
+// authored by hand now — do NOT regenerate it with scripts/extract-data.mjs,
+// that would resurrect the old bank.
 
 import type { Deck, QType, Question } from "../types";
 
@@ -113,6 +116,18 @@ export const Q: Question[] = [
 { id:"q68", t:"cx", ph:"graphs", q:"n mixed union/find ops, union by rank plus path compression — tight amortised cost per op?",
   o:["O(α(n)) — inverse Ackermann, near-flat","O(log n) — union by rank's bound","O(log* n) — the iterated-logarithm bound","O(1) — trees flatten to depth one"], a:0,
   x:"Inverse Ackermann: at most 4 for any n that fits in the universe, yet provably not O(1) — compression never quite finishes flattening. log n is rank without compression; log* n was the bound before Tarjan tightened it. All real, none tight." },
+{ id:"q105", t:"cx", ph:"graphs", q:"Number of Islands sinks cells in place and runs O(m·n) total. What actually bounds it?",
+  o:["Amortisation — no cell is ever flooded twice, across all the fills","Each single fill is O(1), and the scan launches at most m·n of them","The recursion never stacks deeper than four — one frame per direction","Four neighbours per cell keep every fill frontier constant-sized"], a:0,
+  x:"The argument is aggregate: the scan touches each cell once, and sinking means all the fills combined re-enter a cell O(1) times. No single fill is O(1) — one island can be the whole grid, which is also why the recursion can stack m·n deep, not four." },
+{ id:"q106", t:"cx", ph:"graphs", q:"Kruskal's MST on E edges and V nodes, DSU with rank + path compression?",
+  o:["O(E log E) — the edge sort; compressed finds are near-constant","O(E log E) — the E finds dominate it, one log-height walk apiece","O(E · α(V)) — the flattened DSU alone is the entire bill here","O(E + V log V) — a heap streams the edges out in sorted order"], a:0,
+  x:"The sort is the bill: E log E up front, then E finds at α(V) each — near-constant, thanks to compression. The second option quotes the right bound for the wrong reason, and here the reason is the card. E·α(V) forgets the sort exists; the heap answer is Prim wearing Kruskal's coat." },
+{ id:"q107", t:"cx", ph:"graphs", q:"Word Ladder BFS over n words of length L, mutating one letter at a time?",
+  o:["O(n · L²) — 26·L candidates per popped word, each hashed in O(L)","O(n² · L) — every pair of dictionary words compared, letter by letter","O(n · L) — each word enqueues once and is scanned once","O(26^L) — the alphabet fans out at every position of the word"], a:0,
+  x:"Per visited word: L positions × 26 letters, and each candidate costs O(L) to build and hash — n·26·L² in all. Pairwise comparison is how you'd build the adjacency list without the mutation trick, and it loses once n dwarfs L. Enqueue-once only prices the queue, not the neighbour generation." },
+{ id:"q108", t:"cx", ph:"graphs", q:"Worst-case extra space: BFS frontier vs DFS stack, V nodes?",
+  o:["Both can reach O(V) — a fat frontier, or one deep path","BFS O(V); DFS O(1), holding only the current node","Both O(E) — the seen set records every crossed edge","BFS O(log V) — each ring is half the one before it"], a:0,
+  x:"A star graph hands BFS a V−1 frontier; a path graph hands DFS a V-deep stack — both linear, on top of the O(V) seen set either way. DFS's 'current path' IS its stack, seen stores vertices rather than edges, and rings grow however the graph pleases." },
 
 { id:"q7", t:"pat", ph:"bt", q:"Generate every subset of a list of distinct numbers.",
   o:["Include/exclude DFS moving a start index only forward","Permutation-style backtracking around a shared used set","A 2D DP over (index, size) tallying subsets by size","Sort, then slide a window across every contiguous stretch"], a:0,
@@ -194,6 +209,18 @@ export const Q: Question[] = [
 { id:"q80", t:"cx", ph:"bt", q:"Palindrome Partitioning, worst case — a length-n string of one repeated letter?",
   o:["O(n · 2^n) — 2^(n−1) partitions, each copied out","O(n³) — n² substrings, each checked in O(n)","O(2^n) — enumeration only, the copies amortise away","O(n² · 2^n) — a fresh palindrome scan at every node"], a:0,
   x:"Every cut point is free, so 2^(n−1) partitions exist, and emitting each costs O(n) — O(n·2^n). The n³ figure only prices the palindrome table, forgetting the exponential enumeration it feeds; the copies never amortise away." },
+{ id:"q109", t:"cx", ph:"bt", q:"Enumerating all subsets is O(n · 2^n), not O(2^n). Where does the extra n live?",
+  o:["In the output — 2^n subsets, each copied out at up to n elements","In the tree — include/exclude builds n · 2^n internal call frames","In the un-choose — every pop rescans the path to keep it honest","In the branching — each level multiplies the work by n, not by 2"], a:0,
+  x:"The recursion tree holds about 2^(n+1) nodes, each doing O(1) of choosing — it's the copy at every leaf that pays up to n. Pops are O(1), that's the whole point of a stack; and the branching factor is exactly 2 — multiply levels by n and you'd be pricing factorials." },
+{ id:"q110", t:"cx", ph:"bt", q:"N-Queens with O(1) set probes still runs about O(n!). What drives the bound?",
+  o:["Branching — row k offers at most the n−k columns the sets let by","Output — there are n! distinct solutions that must all be emitted","The safety test — each probe walks down every queen placed so far","The undo — clearing the three sets rebuilds them from scratch"], a:0,
+  x:"Even with free probes the tree keeps its shape: at most n live columns in row 0, then n−1, then n−2 — a factorial product. Solutions are far rarer than n! (n = 8 has 92), the sets exist precisely so probes aren't walks, and the undo is three O(1) discards." },
+{ id:"q111", t:"cx", ph:"bt", q:"Word Search: one word of length L, an m × n board?",
+  o:["O(m·n · 3^L) — every start cell, three fresh directions per letter","O(m·n · L) — from each start the word is matched letter by letter","O(3^(m·n)) — the whole board branches three ways at every cell","O((m·n)^L) — any cell of the board can host any letter"], a:0,
+  x:"Anchor anywhere — m·n starts — then each further letter tries at most three directions, since the fourth is where you came from: depth L, so 3^L per start. The linear guess pretends the path never branches; the other two exponentiate the wrong quantity." },
+{ id:"q112", t:"cx", ph:"bt", q:"Bolt a memo onto subsets or permutations enumeration. The new complexity?",
+  o:["Unchanged — outputs are all distinct, so no subproblem repeats","O(n²) — overlapping prefixes collapse into shared cache entries","Halved — every exclude branch turns into a cache hit","Better on average, though the worst case keeps its exponent"], a:0,
+  x:"Memoisation pays when identical subproblems recur and one stored answer serves them all. Enumeration's cost IS its output — 2^n subsets, n! orderings, each emitted exactly once — so nothing ever repeats, in any case, average or worst. The cautious-sounding hedge is the trap." },
 
 { id:"q9", t:"pat", ph:"dp", q:"Can the array be split into two piles with equal sums?",
   o:["0/1 knapsack: can any subset hit total/2","Greedy: sort desc, keep feeding the lighter pile","Prefix sums + binary search on the split point","Two heaps, balanced to within one element"], a:0,
@@ -305,6 +332,18 @@ export const Q: Question[] = [
 { id:"q92", t:"cx", ph:"dp", q:"Unique Paths on an m×n grid, filled with a single rolling row?",
   o:["O(m·n) time, O(n) space","O(m·n) time, O(m·n) space","O(m + n) time, O(1) space","O(m·n) time, O(m + n) space"], a:0,
   x:"One row of width n, refreshed m times — every cell computed once. O(m + n) is real but belongs to the closed form C(m+n−2, m−1), not to any table fill; and nothing needs a row and a column both." },
+{ id:"q113", t:"cx", ph:"dp", q:"Patience LIS runs in O(n log n). What is the log actually paying for?",
+  o:["One bisect per element into the sorted tails array","The up-front sort of the input before the scan begins","Re-sorting the tails array after every patched-in value","A heap that keeps the best subsequence endings on top"], a:0,
+  x:"tails stays sorted for free — each element overwrites the first entry not below it, which can't break the order — so the log is one binary search per element, full stop. Sorting the input first would destroy the very sequence you're measuring; no heap, no re-sort, anywhere." },
+{ id:"q114", t:"cx", ph:"dp", q:"Bottom-up fib runs in O(1) space. Why can't memoised top-down match it?",
+  o:["The first descent stacks n frames before the memo has one entry","Dict overhead — hashing n keys costs more than the values held","It can — evict all but the last two memo entries as you return","Both branches stay live at once, so frames peak near 2^n"], a:0,
+  x:"Top-down must hit the base case before anything is cached — n live frames on the way down, and no eviction policy touches the stack. Only one branch is ever live at a time, which is why the depth is n and never 2^n; bottom-up wins by trading the stack for two rolling variables." },
+{ id:"q115", t:"cx", ph:"dp", q:"Coin Change — fewest coins for amount A from k kinds, the 1D table?",
+  o:["O(k·A) time, O(A) space","O(A log k) time, O(A) space","O(k·A) time, O(k·A) space","O(k^A) time, O(A) space"], a:0,
+  x:"Every amount up to A auditions every coin — k·A relaxations at O(1) each — and dp[a] only ever reads smaller amounts, so one row is plenty. The min over k coins is a scan, not a binary search, and the full 2D table buys nothing the row didn't." },
+{ id:"q116", t:"cx", ph:"dp", q:"Word Break has 2^n possible splits, yet the memoised solver is polynomial. Why?",
+  o:["Only n distinct suffixes exist, and every split is built from them","The dictionary set answers membership in O(1), capping the branching","Sorting the dictionary lets each prefix commit to at most one word","The recursion is tail-position, so the frames collapse into a loop"], a:0,
+  x:"Exponentially many splits, assembled from just n suffix subproblems — the memo folds the call tree into a DAG with n nodes and O(n²) edges. O(1) lookups shrink the constant, never the shape; and committing each prefix to one word is exactly the greed Word Break punishes." },
 
 { id:"q14", t:"pat", ph:"ds", q:"Return the k most frequent elements of a big array.",
   o:["Count into a hash map, then a size-k min-heap","Sort the raw array and scan runs for winners","A size-k max-heap, popping the root on overflow","Quickselect the raw values around the kth largest"], a:0,
@@ -371,6 +410,18 @@ export const Q: Question[] = [
 { id:"q104", t:"cx", ph:"ds", q:"Sliding Window Maximum with a deque — n elements, window k?",
   o:["O(n)","O(n log k)","O(n k)","O(n log n)"], a:0,
   x:"Each index enters the deque once and leaves once — two O(1) touches per element, whatever k is. The log k bill belongs to the heap version; n·k is the rescan-every-window baseline." },
+{ id:"q117", t:"cx", ph:"ds", q:"Hash map get() is 'O(1)'. Which reading of that claim survives scrutiny?",
+  o:["Expected O(1) — a decent hash keeps each bucket O(1) on average","Guaranteed O(1) — the index is pure arithmetic on the key","Amortised O(1) — resizes spread collision costs across the gets","Worst-case O(1) — once the table has been sized to fit the data"], a:0,
+  x:"An expected-time claim, resting entirely on the hash spreading keys: everything can still pile into one bucket — hash flooding does it on purpose — and that is the O(n) worst case. Amortisation is insert's resize story; it never rescues a bad bucket, however large the table." },
+{ id:"q118", t:"cx", ph:"ds", q:"Daily Temperatures: one step can pop the whole stack, yet the pass is O(n). The accounting?",
+  o:["n pushes total, so at most n pops total — charge pops to their push","Warm streaks are rare in practice, so the while loop seldom fires","The stack never holds more than O(1) indices, bounding each step","Each while iteration is O(1) and runs exactly once per element"], a:0,
+  x:"Aggregate accounting: an index enters the stack once, so all pops across the whole scan can't outnumber n — one violent step just spends credit banked earlier. Arguments from friendly inputs are not bounds; the stack can hold n−1 indices, and a single step's while can run that long." },
+{ id:"q119", t:"cx", ph:"ds", q:"Quickselect for the kth largest, pivots chosen at random?",
+  o:["O(n) expected, O(n²) worst","O(n log n) expected, O(n²) worst","O(n) worst — half the array is discarded every round","O(k log n) expected, O(n log n) worst"], a:0,
+  x:"Recursing into one side only, n + n/2 + n/4 + … converges to O(n) in expectation; adversarial pivots still degrade it to n². Guaranteed halves need median-of-medians, which nobody writes on a whiteboard — and k log n is the heap solution's bill, not this one's." },
+{ id:"q120", t:"cx", ph:"ds", q:"Top k frequent elements: count into a map, then a size-k min-heap?",
+  o:["O(n log k)","O(n log n)","O(n + k)","O(k log n)"], a:0,
+  x:"Counting is O(n); then each distinct value passes a heap that never grows past k, paying log k — not log n. O(n + k) belongs to bucket-by-count, real but a different solution; k log n prices a heap of the wrong size doing the wrong number of pushes." },
 ];
 
 export const DECKS: Deck[] = [

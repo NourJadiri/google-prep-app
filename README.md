@@ -7,7 +7,7 @@ Four tabs:
 
 - **Line** — the week as a transit line in Google's four logo colours. Check problems, log
   the morning ritual, run the Day-7 mock clock.
-- **Metro** — thumb-only quiz mode for the commute or the plane. 104 hand-written cards,
+- **Metro** — thumb-only quiz mode for the commute or the plane. 120 hand-written cards,
   ten stops a run, streaks multiply the XP. No typing, ever.
 - **Dojo** — 15 algorithm templates, blurred until you've written yours from memory.
 - **Me** — stats, the rank ladder, badges, export/import.
@@ -66,7 +66,7 @@ src/
                 base.css        reset, and the 44px touch-target overlays
                 layout.css      page frame + classes more than one tab uses
   data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (7 days, 28 problems)
-                questions.ts    Q (104 cards), DECKS, CATN — hand-authored, see below
+                questions.ts    Q (120 cards), DECKS, CATN — hand-authored, see below
                 templates.ts    TPL (15 templates in 3 groups)
                 meta.ts         RANKS, BADGES, RANKCOL
   lib/          engine.ts       every rule, as pure functions
@@ -129,12 +129,13 @@ Anything the generator emits without a declared type is an error, not an `any`.
 
 `src/data/questions.ts` is the exception: the bank was hand-rebalanced after the port —
 the reference's cards let the longest option give the answer away 88% of the time — and
-extended from 56 to 104 cards. The generator deliberately no longer writes that file;
-regenerating would resurrect the old bank.
+extended from 56 to 104 cards, then to 120 with the complexity-analysis set. The
+generator deliberately no longer writes that file; regenerating would resurrect the old
+bank.
 
 ### Quiz options are always shuffled
 
-Every card in `Q` stores its correct answer at `o[0]` — `a` is `0` for all 104. A run
+Every card in `Q` stores its correct answer at `o[0]` — `a` is `0` for all 120. A run
 therefore carries its own display permutation, redealt for each card:
 
 ```ts
@@ -242,7 +243,11 @@ change a pixel:
   trimmed, distractors grown into specific, plausible misconceptions) and 48 new cards
   added, taking the bank to 104. The correct answer now lands at each length rank at
   chance level. Old card ids are unchanged, so existing per-card stats and exports
-  carry over.
+  carry over. A later pass added the complexity-analysis set (q105–q120): sixteen more
+  `cx` cards, several of which quote the same Big-O on every option so that only the
+  justification separates right from wrong — knowing the answer without the why scores
+  nothing. The length discipline holds across the set: the correct option is
+  (co-)longest 4 times in 16, exactly chance.
 - **App icon.** The terminus dot as a roundel — the four logo colours ringing a dark
   tile — as a real icon set:
   `public/icon.svg` for the browser tab, a 180px PNG for iOS Add to Home Screen, and a
