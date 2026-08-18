@@ -1,6 +1,8 @@
-// Ranks and badges — ported verbatim from reference/onsite-express.html.
-// Content is ground truth: do not rewrite, reword or reorder.
-// Regenerate with: node scripts/extract-data.mjs
+// Ranks and badges. Ported from reference/onsite-express.html, then the two
+// station badges were re-worded when the line grew to 14 stations — their
+// thresholds live in engine.toggleProb and derive from PLAN.length. This file
+// is no longer written by scripts/extract-data.mjs; regenerating would revert
+// the badge copy to the 7-station line.
 
 import type { Badge, NonEmpty, Rank } from "../types";
 
@@ -17,8 +19,8 @@ export const BADGES: Badge[] = [
   { id:"bugs20",   ic:"🐞", n:"Exterminator",   d:"20 bug hunts right" },
   { id:"streak3",  ic:"🔥", n:"Heating Up",     d:"3-day streak" },
   { id:"streak7",  ic:"☄️", n:"Full Week",      d:"7-day streak" },
-  { id:"half",     ic:"🛤️", n:"Halfway There",  d:"Clear 4 stations" },
-  { id:"line",     ic:"🏁", n:"End of the Line", d:"Clear all 7 stations" },
+  { id:"half",     ic:"🛤️", n:"Halfway There",  d:"Clear 7 stations" },
+  { id:"line",     ic:"🏁", n:"End of the Line", d:"Clear all 14 stations" },
   { id:"noogler",  ic:"🎓", n:"Noogler",        d:"Reach the top rank" },
 ];
 

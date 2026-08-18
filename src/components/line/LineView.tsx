@@ -19,7 +19,7 @@ export default function LineView() {
         <h1>
           Onsite <b>Express</b>
         </h1>
-        <p>Two rounds between you and the terminus. Seven stations, one line. Board anywhere.</p>
+        <p>Two rounds between you and the terminus. Fourteen stations, one line. Board anywhere.</p>
         <p className="linestats">
           {problemsDone(data) +
             " / " +

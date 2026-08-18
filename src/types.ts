@@ -21,7 +21,8 @@ export type NonEmpty<T> = readonly [T, ...T[]];
 /** Difficulty chip on a problem row. */
 export type Diff = "E" | "M" | "H";
 
-/** The topic a day drills and a quiz card belongs to. Day 7 is "mix". */
+/** The topic a day drills and a quiz card belongs to. Mock days, and week-2
+ *  pattern days with no quiz deck of their own, are "mix". */
 export type Phase = "graphs" | "bt" | "dp" | "ds" | "mix";
 
 /** Quiz card flavour: pattern match, bug hunt, missing line, complexity. */
@@ -31,25 +32,28 @@ export interface Problem {
   id: string;
   n: string;
   diff: Diff;
-  /** Every problem but the Day-7 mock links to LeetCode by slug. */
+  /** Every problem but the timed mocks links to LeetCode by slug. */
   slug?: string;
-  /** The Day-7 mock carries a full url instead. */
+  /** The timed mocks carry a full url instead. */
   url?: string;
-  /** Overrides the difficulty's XP; only the Day-7 mock sets it. */
+  /** Overrides the difficulty's XP; only the timed mocks set it. */
   xp?: number;
-  /** Marks the day's fourth problem as a warm-up. */
+  /** Marks the day's last problem as a warm-up. Week 1 warms seed the heaps
+   *  and tries to come; week 2 warms re-drill a week-1 pattern. */
   warm?: true;
 }
 
 export interface Day {
   id: string;
-  /** Day number, 1-7. */
+  /** Day number, 1-14. */
   d: number;
   /** Station name on the line. */
   stn: string;
   /** CSS custom property reference, e.g. "var(--blue)". */
   color: string;
   ph: Phase;
+  /** Marks a station that ends in the timed mock; DayCard mounts the clock. */
+  mock?: true;
   name: string;
   note: string;
   ritual: string;

@@ -5,9 +5,10 @@
 // annotation on each `const`, which is why the annotations sit on the binding
 // rather than inside the data.
 //
-// This script is the only thing keeping src/data honest against the reference:
-// re-run it and `git diff src/data` should be empty. A non-empty diff means
-// someone hand-edited the ported content.
+// Only templates.ts is still written: plan, meta and questions have all grown
+// past the reference by hand (see the note at the bottom). For templates.ts
+// the old contract holds — re-run this and `git diff src/data/templates.ts`
+// should be empty; a non-empty diff means someone hand-edited ported content.
 import fs from "node:fs";
 
 const html = fs.readFileSync("reference/onsite-express.html", "utf8");
@@ -67,55 +68,16 @@ const tpl = exported(seg(iTPL));
 
 fs.mkdirSync("src/data", { recursive: true });
 
-fs.writeFileSync(
-  "src/data/plan.ts",
-  banner("The 7-day plan", "Day, Diff, NonEmpty, Problem") +
-    head +
-    "\n" +
-    plan +
-    `
-/* Derived lookups. The ported literals above are never mutated — the reference
-   hung a back-reference off each problem, which would make PLAN cyclic.
-
-   Keyed by string rather than a union of the 28 known ids on purpose: these are
-   read with ids off the persisted blob, which a stale export can populate with
-   anything. Under noUncheckedIndexedAccess every lookup therefore has to admit
-   it can miss, which is exactly the check a stale id needs. */
-export const PROBS: Record<string, Problem> = {};
-export const DAY_OF: Record<string, Day> = {};
-PLAN.forEach((day) => day.probs.forEach((p) => { PROBS[p.id] = p; DAY_OF[p.id] = day; }));
-
-export const TOTAL: number = PLAN.reduce((a, d) => a + d.probs.length, 0);
-export const DIFFN: Record<Diff, string> = { E: "EASY", M: "MED", H: "HARD" };
-export const probXP = (p: Problem): number => p.xp || XPD[p.diff];
-
-/* Where a problem's \u2197 goes. Every problem in the reference carries a slug or a
-   url \u2014 only the Day-7 mock uses the latter \u2014 so the "" is unreachable. */
-export const probURL = (p: Problem): string => p.url ?? (p.slug ? LC(p.slug) : "");
-`
-);
-
-fs.writeFileSync(
-  "src/data/meta.ts",
-  banner("Ranks and badges", "Badge, NonEmpty, Rank") +
-    ranks +
-    "\n" +
-    badges +
-    `
-/* Rank dot colours, cycling the four logo colours up the ladder. */
-export const RANKCOL: string[] = [
-  "var(--blue)", "var(--red)", "var(--yellow)", "var(--green)",
-  "var(--blue)", "var(--red)", "var(--yellow)",
-];
-`
-);
-
-/* questions.ts is deliberately NOT written any more: the live bank was
-   hand-rebalanced (length-bias removed) and extended past the reference's 56
-   cards. Regenerating it would silently resurrect the old bank. The extracted
-   `q` block is kept in scope so this note has a body to explain. */
-void q;
+/* plan.ts, meta.ts and questions.ts are deliberately NOT written any more:
+   - questions.ts was hand-rebalanced (length-bias removed) and extended far
+     past the reference's 56 cards;
+   - plan.ts grew a hand-authored second week (d8–d14) past the reference's
+     seven days;
+   - meta.ts re-worded the two station badges to match the 14-station line.
+   Regenerating any of them would silently resurrect the 7-day app. The
+   extracted blocks are kept in scope so this note has a body to explain. */
+void head; void plan; void ranks; void badges; void q;
 
 fs.writeFileSync("src/data/templates.ts", banner("Dojo templates", "Template") + tpl);
 
-console.log("wrote src/data/{plan,meta,templates}.ts — questions.ts is hand-authored now, skipped");
+console.log("wrote src/data/templates.ts — plan, meta and questions are hand-authored now, skipped");

@@ -273,8 +273,8 @@ export function toggleProb(data: PersistedData, id: string, opts?: EngineOpts): 
     toast(c, day.stn + " cleared", true);
     confetti(c, 50);
     const cleared = stationsCleared(c.d);
-    if (cleared >= 4) _award(c, "half");
-    if (cleared === 7) {
+    if (cleared >= Math.ceil(PLAN.length / 2)) _award(c, "half");
+    if (cleared === PLAN.length) {
       _award(c, "line");
       confetti(c, 90);
     }
@@ -489,7 +489,8 @@ export function runResultCopy(right: number, n: number): string {
 }
 
 export function terminusCopy(cleared: number): string {
-  return cleared === 7
-    ? "All seven stations cleared. Walk in like you own the whiteboard."
-    : cleared + " of 7 stations behind you. The terminus isn't going anywhere — you are.";
+  return cleared === PLAN.length
+    ? "All " + PLAN.length + " stations cleared. Walk in like you own the whiteboard."
+    : cleared + " of " + PLAN.length +
+      " stations behind you. The terminus isn't going anywhere — you are.";
 }

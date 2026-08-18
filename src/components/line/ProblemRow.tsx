@@ -4,7 +4,7 @@ import Icon from "../shared/Icon";
 import type { Problem } from "../../types";
 
 /* Check toggle, name, difficulty chip, XP, and a jump to LeetCode.
-   The Day-7 mock carries its own url instead of a slug. */
+   The timed mocks carry their own url instead of a slug. */
 
 interface ProblemRowProps {
   prob: Problem;

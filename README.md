@@ -1,7 +1,8 @@
 # Onsite Express
 
-A 7-day Google onsite study plan, ridden like a metro line. Graphs → backtracking → DP,
-seven stations, terminus called GOOGLE.
+A 14-day Google onsite study plan, ridden like a metro line. Week one: graphs →
+backtracking → DP. Week two: heaps, windows, binary search, intervals, monotonic
+stacks and Google's design regulars. Fourteen stations, terminus called GOOGLE.
 
 Four tabs:
 
@@ -65,7 +66,7 @@ src/
   styles/       tokens.css      the ported custom properties, light and dark
                 base.css        reset, and the 44px touch-target overlays
                 layout.css      page frame + classes more than one tab uses
-  data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (7 days, 28 problems)
+  data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (14 days, 59 problems) — see below
                 questions.ts    Q (120 cards), DECKS, CATN — hand-authored, see below
                 templates.ts    TPL (15 templates in 3 groups)
                 meta.ts         RANKS, BADGES, RANKCOL
@@ -112,26 +113,29 @@ Nothing in there reads the clock, the DOM or `localStorage` unless you hand it o
 callers inject `today`, `now` and `rng`. That is why toasts and confetti fire in exactly
 the reference's order without a reducer ever performing a side effect.
 
-### Content is extracted, not retyped — except the quiz bank
+### Content is extracted, not retyped — except where it has grown
 
-Every problem, template, note and piece of microcopy comes out of
-`reference/onsite-express.html` mechanically:
+The dojo's templates still come out of `reference/onsite-express.html` mechanically:
 
 ```bash
-node scripts/extract-data.mjs      # rewrites src/data/{plan,meta,templates}.ts
+node scripts/extract-data.mjs      # rewrites src/data/templates.ts
 ```
 
 The generator copies each literal byte for byte and adds only a type annotation on the
-binding — `export const PLAN: NonEmpty<Day> = [...]`. Annotating the binding is what
+binding — `export const TPL: Template[] = [...]`. Annotating the binding is what
 contextually types the data underneath it, so `diff:"M"` narrows to `Diff` and
 `ph:"graphs"` to `Phase` without a character of the reference's content being rewritten.
 Anything the generator emits without a declared type is an error, not an `any`.
 
-`src/data/questions.ts` is the exception: the bank was hand-rebalanced after the port —
-the reference's cards let the longest option give the answer away 88% of the time — and
-extended from 56 to 104 cards, then to 120 with the complexity-analysis set. The
-generator deliberately no longer writes that file; regenerating would resurrect the old
-bank.
+The other three data files have grown past the reference by hand, and the generator
+deliberately no longer writes them — regenerating would resurrect the 7-day app:
+
+- `questions.ts` — the bank was hand-rebalanced after the port (the reference's cards
+  let the longest option give the answer away 88% of the time) and extended from 56 to
+  104 cards, then to 120 with the complexity-analysis set.
+- `plan.ts` — week 2 (days 8–14) is hand-authored; week 1 is still the reference's,
+  verbatim.
+- `meta.ts` — the two station badges are re-worded for the 14-station line.
 
 ### Quiz options are always shuffled
 
@@ -177,7 +181,7 @@ window or a cookie-blocked embed degrades instead of crashing.
 
 | | |
 |---|---|
-| XP | Easy 10 · Medium 20 · Hard 40 · Day-7 mock 30 · ritual 15 |
+| XP | Easy 10 · Medium 20 · Hard 40 · timed mocks 30 · ritual 15 |
 | Quiz XP | 2 per correct card, ×2 at streak ≥3, ×3 at ≥6, awarded silently |
 | Perfect run | 10/10 on a full ten-card run: +20 XP, badge, confetti |
 | Ranks | Wanderer 0 · Pathfinder 100 · Backtracker 250 · Memoizer 450 · Tabulator 700 · Pattern Oracle 1000 · Noogler 1350 |
@@ -185,7 +189,7 @@ window or a cookie-blocked embed degrades instead of crashing.
 | Unchecking | refunds the same XP, silently; XP floors at 0; badges are never revoked |
 | Deck weighting | weakest cards first: `(right+1)/(seen+2) + random()*0.55`, ascending |
 | Mix deck | up to 3 Redemption cards + `ceil(remaining/2)` from the focus phase + the rest |
-| Focus phase | Day 1 graphs · Days 2–3 backtracking · Days 4–6 DP · Day 7 none |
+| Focus phase | Day 1 graphs · Days 2–3 backtracking · Days 4–6 DP · Days 8 & 12 heaps/stacks (ds) · all other days none |
 
 ## Verification
 
@@ -248,6 +252,15 @@ change a pixel:
   justification separates right from wrong — knowing the answer without the why scores
   nothing. The length discipline holds across the set: the correct option is
   (co-)longest 4 times in 16, exactly chance.
+- **Week two.** Days 8–14 are not in the reference: seven more hand-authored stations —
+  heaps, sliding windows and two pointers, binary search on the answer, intervals,
+  monotonic stacks, a day of design questions Google actually asked in the last year
+  (Snapshot Array, Random Pick with Weight, Text Justification), and a second timed
+  mock. Problems come from Google-tagged frequency lists and 2024–25 interview reports;
+  each pattern day ramps easy → hard, and the week-2 warm-ups re-drill week-1 patterns
+  instead of seeding new ones. Station badges and the terminus copy now derive from
+  `PLAN.length`, and the Line tab's content no longer matches the reference — the
+  parity harness is ground truth for week 1 only.
 - **App icon.** The terminus dot as a roundel — the four logo colours ringing a dark
   tile — as a real icon set:
   `public/icon.svg` for the browser tab, a 180px PNG for iOS Add to Home Screen, and a

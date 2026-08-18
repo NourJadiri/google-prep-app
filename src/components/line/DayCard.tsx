@@ -48,7 +48,7 @@ export default function DayCard({ day, doneN, open }: DayCardProps) {
             <ProblemRow key={p.id} prob={p} done={!!state.data.done[p.id]} />
           ))}
         </ul>
-        {day.id === "d7" && <MockTimer />}
+        {day.mock && <MockTimer />}
       </div>
     </div>
   );
