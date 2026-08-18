@@ -1,9 +1,10 @@
 // The 14-day plan. Week 1 (d1–d7) is ported verbatim from
 // reference/onsite-express.html — do not rewrite, reword or reorder it.
-// Week 2 (d8–d14) is hand-authored: Google-tagged patterns and problems from
-// 2024–25 interview reports, each pattern day ramping easy in, hard out, with
-// week-1 patterns re-drilled as the warm-ups. This file is no longer written
-// by scripts/extract-data.mjs — regenerating would amputate the second week.
+// Week 2 (d8–d14) is hand-authored: one pattern a day, easy in, hard out, with
+// week-1 patterns re-drilled as the warm-ups. Problem picks are cross-checked
+// against liquidslr/leetcode-company-wise-problems' Google lists (30-day and
+// 3-month CSVs — the same repo the timed mocks link to). This file is no longer
+// written by scripts/extract-data.mjs — regenerating would amputate the week.
 
 import type { Day, Diff, NonEmpty, Problem } from "../types";
 
@@ -84,12 +85,12 @@ export const PLAN: NonEmpty<Day> = [
     ]},
   { id:"d8", d:8, stn:"Priority Yard", color:"var(--red)", ph:"ds",
     name:"Heaps — the warm-ups grow up",
-    note:"Every warm-up last week was secretly this station. The size-k invariant: keep k on the heap, evict from the root. When the input is a timeline, the heap is what pops the clock forward.",
+    note:"Every warm-up last week was secretly this station. Feed counts through a heap and the scheduler falls out; two heaps facing each other pin the median; k sorted heads merge through one small heap.",
     ritual:"Write from memory: a size-k top-k loop with heappushpop.",
     probs:[
-      { id:"kcp",  n:"K Closest Points to Origin", slug:"k-closest-points-to-origin", diff:"M" },
-      { id:"stc",  n:"Single-Threaded CPU", slug:"single-threaded-cpu", diff:"M" },
+      { id:"tsch", n:"Task Scheduler", slug:"task-scheduler", diff:"M" },
       { id:"fmd",  n:"Find Median from Data Stream", slug:"find-median-from-data-stream", diff:"H" },
+      { id:"mkl",  n:"Merge k Sorted Lists (if time)", slug:"merge-k-sorted-lists", diff:"H" },
       { id:"isl",  n:"Number of Islands", slug:"number-of-islands", diff:"M", warm:true },
     ]},
   { id:"d9", d:9, stn:"Window Seat", color:"var(--yellow)", ph:"mix",
@@ -132,35 +133,37 @@ export const PLAN: NonEmpty<Day> = [
     probs:[
       { id:"vpar",  n:"Valid Parentheses", slug:"valid-parentheses", diff:"E" },
       { id:"dtemp", n:"Daily Temperatures", slug:"daily-temperatures", diff:"M" },
-      { id:"mrvp",  n:"Minimum Remove to Make Valid Parentheses", slug:"minimum-remove-to-make-valid-parentheses", diff:"M" },
+      { id:"dstr",  n:"Decode String", slug:"decode-string", diff:"M" },
       { id:"trap",  n:"Trapping Rain Water", slug:"trapping-rain-water", diff:"H" },
       { id:"hr1",   n:"House Robber", slug:"house-robber", diff:"M", warm:true },
     ]},
-  { id:"d13", d:13, stn:"Design Depot", color:"var(--yellow)", ph:"mix",
-    name:"What Google actually asked",
-    note:"Three regulars from the last year of interview reports. One trick underneath: pick the representation that makes the awkward operation cheap — a version list per index, a prefix-sum ruler, a greedy line builder.",
-    ritual:"Sketch SnapshotArray's API and its per-index version lists before you code.",
+  { id:"d13", d:13, stn:"Hash Junction", color:"var(--yellow)", ph:"mix",
+    name:"Arrays & hashing — the daily bread",
+    note:"The 30-day Google frequency list is loudest about this station. One map, three disguises: store the complement you still need, sort + two pointers to shrink 3Sum into Two Sum, and read prefix sums as hashed history.",
+    ritual:"Write Two Sum and the prefix-sum count loop from memory.",
     probs:[
-      { id:"snap", n:"Snapshot Array", slug:"snapshot-array", diff:"M" },
-      { id:"rpw",  n:"Random Pick with Weight", slug:"random-pick-with-weight", diff:"M" },
-      { id:"tj",   n:"Text Justification", slug:"text-justification", diff:"H" },
-      { id:"ws1",  n:"Word Search", slug:"word-search", diff:"M", warm:true },
+      { id:"tsum",  n:"Two Sum", slug:"two-sum", diff:"E" },
+      { id:"tsum3", n:"3Sum", slug:"3sum", diff:"M" },
+      { id:"lcsq",  n:"Longest Consecutive Sequence", slug:"longest-consecutive-sequence", diff:"M" },
+      { id:"ssk",   n:"Subarray Sum Equals K", slug:"subarray-sum-equals-k", diff:"M" },
+      { id:"ws1",   n:"Word Search", slug:"word-search", diff:"M", warm:true },
     ]},
   { id:"d14", d:14, stn:"Final Approach", color:"var(--blue)", ph:"mix", mock:true,
     name:"Fusion, round two — then the clock",
-    note:"A grid that is graphs and memo in one breath, a BFS you can do in your sleep by now, then 25:00 with a stranger's medium. Talk while you code, and state the complexity at the end without being asked.",
+    note:"The two-array partition trick, a grid that is graphs and memo in one breath, a BFS you can do in your sleep by now — then 25:00 with a stranger's medium. Talk while you code, and state the complexity at the end without being asked.",
     ritual:"Write multi-source BFS from memory — seed every source, advance ring by ring.",
     probs:[
       { id:"ro",    n:"Rotting Oranges", slug:"rotting-oranges", diff:"M" },
-      { id:"lip",   n:"Longest Increasing Path in a Matrix", slug:"longest-increasing-path-in-a-matrix", diff:"H" },
-      { id:"mock2", n:"Timed mock — Google-tagged medium + follow-up", url:"https://github.com/liquidslr/leetcode-company-wise-problems", diff:"M", xp:30 },
+      { id:"m2sa",  n:"Median of Two Sorted Arrays", slug:"median-of-two-sorted-arrays", diff:"H" },
+      { id:"lip",   n:"Longest Increasing Path in a Matrix (if time)", slug:"longest-increasing-path-in-a-matrix", diff:"H" },
+      { id:"mock2", n:"Timed mock — Google-tagged medium + follow-up", url:"https://github.com/liquidslr/leetcode-company-wise-problems/tree/main/Google", diff:"M", xp:30 },
     ]},
 ];
 
 /* Derived lookups. The ported literals above are never mutated — the reference
    hung a back-reference off each problem, which would make PLAN cyclic.
 
-   Keyed by string rather than a union of the 59 known ids on purpose: these are
+   Keyed by string rather than a union of the 61 known ids on purpose: these are
    read with ids off the persisted blob, which a stale export can populate with
    anything. Under noUncheckedIndexedAccess every lookup therefore has to admit
    it can miss, which is exactly the check a stale id needs. */

@@ -2,7 +2,7 @@
 
 A 14-day Google onsite study plan, ridden like a metro line. Week one: graphs →
 backtracking → DP. Week two: heaps, windows, binary search, intervals, monotonic
-stacks and Google's design regulars. Fourteen stations, terminus called GOOGLE.
+stacks and the arrays-and-hashing staples. Fourteen stations, terminus called GOOGLE.
 
 Four tabs:
 
@@ -66,7 +66,7 @@ src/
   styles/       tokens.css      the ported custom properties, light and dark
                 base.css        reset, and the 44px touch-target overlays
                 layout.css      page frame + classes more than one tab uses
-  data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (14 days, 59 problems) — see below
+  data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (14 days, 61 problems) — see below
                 questions.ts    Q (120 cards), DECKS, CATN — hand-authored, see below
                 templates.ts    TPL (15 templates in 3 groups)
                 meta.ts         RANKS, BADGES, RANKCOL
@@ -254,12 +254,14 @@ change a pixel:
   (co-)longest 4 times in 16, exactly chance.
 - **Week two.** Days 8–14 are not in the reference: seven more hand-authored stations —
   heaps, sliding windows and two pointers, binary search on the answer, intervals,
-  monotonic stacks, a day of design questions Google actually asked in the last year
-  (Snapshot Array, Random Pick with Weight, Text Justification), and a second timed
-  mock. Problems come from Google-tagged frequency lists and 2024–25 interview reports;
-  each pattern day ramps easy → hard, and the week-2 warm-ups re-drill week-1 patterns
-  instead of seeding new ones. Station badges and the terminus copy now derive from
-  `PLAN.length`, and the Line tab's content no longer matches the reference — the
+  monotonic stacks, an arrays-and-hashing day straight off the top of the frequency
+  list (Two Sum, 3Sum, Longest Consecutive Sequence, Subarray Sum Equals K), and a
+  second timed mock. Problem picks are cross-checked against
+  [liquidslr/leetcode-company-wise-problems](https://github.com/liquidslr/leetcode-company-wise-problems/tree/main/Google)'
+  Google lists (30-day and 3-month CSVs, pulled 2026-08 — the same repo the timed mocks
+  link to); each pattern day ramps easy → hard, and the week-2 warm-ups re-drill week-1
+  patterns instead of seeding new ones. Station badges and the terminus copy now derive
+  from `PLAN.length`, and the Line tab's content no longer matches the reference — the
   parity harness is ground truth for week 1 only.
 - **App icon.** The terminus dot as a roundel — the four logo colours ringing a dark
   tile — as a real icon set:
