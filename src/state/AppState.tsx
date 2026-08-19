@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useReducer, useRef } fro
 import type { ReactNode } from "react";
 import * as engine from "../lib/engine";
 import * as storage from "../lib/storage";
+import * as sync from "../lib/sync";
 import { todayStr } from "../lib/dates";
 import type { DeckId, Fx, PersistedData, Session, StampedFx, Tab } from "../types";
 
@@ -53,6 +54,7 @@ export type Action =
   | { type: "TOGGLE_TPL"; id: string }
   | { type: "REVEAL_TPL"; id: string }
   | { type: "IMPORT"; data: PersistedData }
+  | { type: "SYNC_ADOPT"; data: PersistedData }
   | { type: "RESET" }
   | { type: "FX"; fx: Fx[] }
   | { type: "FX_CONSUMED" };
@@ -144,6 +146,13 @@ function reducer(state: AppStateShape, action: Action): AppStateShape {
         { kind: "toast", msg: "Progress imported", gold: true },
       ]);
 
+    /* A newer copy arrived from another device. It replaces the world, so a
+       run computed against the old world can't keep scoring into the new one. */
+    case "SYNC_ADOPT":
+      return withFx(state, { data: action.data, session: null }, [
+        { kind: "toast", msg: "Progress synced from the cloud", gold: true },
+      ]);
+
     case "RESET":
       return withFx(state, { data: engine.blank(), session: null }, [
         { kind: "toast", msg: "Fresh line. Day 1 awaits.", gold: false },
@@ -192,24 +201,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, boot);
 
   /* Debounced persistence. The first render is the blob we just loaded, so
-     there is nothing to write back yet. */
+     there is nothing to write back yet — sync only needs to know about it. */
   const firstSave = useRef(true);
   useEffect(() => {
     if (firstSave.current) {
       firstSave.current = false;
+      sync.trackData(state.data, false);
       return;
     }
     storage.save(state.data);
+    sync.trackData(state.data, true);
   }, [state.data]);
 
-  /* iOS can discard a backgrounded tab without ever firing unload. */
+  /* Cloud sync. The callback is sync's only path into the store: it vets the
+     raw cloud blob exactly the way Import does, then adopts it. Returning
+     false (a payload some future version wrote) parks sync instead of letting
+     either side overwrite the other. */
   useEffect(() => {
-    const flush = () => storage.flush();
+    sync.start((raw) => {
+      if (!raw || typeof raw !== "object" || (raw as { v?: unknown }).v !== 1) {
+        return false;
+      }
+      const data = engine.normalize(raw);
+      sync.markAdopted(data);
+      dispatch({ type: "SYNC_ADOPT", data });
+      return true;
+    });
+    return () => sync.stop();
+  }, []);
+
+  /* iOS can discard a backgrounded tab without ever firing unload. Coming
+     back is the moment to look for another device's progress — but never
+     mid-run, or the adoption would yank the deck out from under the reader. */
+  const inRun = useRef(state.session !== null);
+  inRun.current = state.session !== null;
+  useEffect(() => {
+    const flush = () => {
+      storage.flush();
+      sync.flush();
+    };
+    const onVisibility = () => {
+      flush();
+      if (!document.hidden && !inRun.current) sync.wake();
+    };
     window.addEventListener("pagehide", flush);
-    document.addEventListener("visibilitychange", flush);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("pagehide", flush);
-      document.removeEventListener("visibilitychange", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

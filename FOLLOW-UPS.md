@@ -33,6 +33,42 @@ just need adding to the persisted schema (which would mean a `v: 2` migration).
 Reload mid-mock and the clock is back at 25:00. Fine for a 25-minute sitting, but a
 backgrounded iOS tab that gets reclaimed loses it too.
 
+## Sync
+
+Cloud sync (D1 + the `/api/state` function) shipped after the port, deliberately as a
+dumb mirror. What was deliberately *not* built, and the edges that are real:
+
+**Conflicts are last-write-wins on the whole blob.** Two devices that both edit while
+apart don't merge — the later `updatedAt` wins and the earlier session's progress is
+gone. A field-wise merge (union of `done`, max of counters) sounds easy but XP is a sum
+of events, not a derivable value, so an honest merge needs an event log the schema
+doesn't have. If sync ever grows a merge, it starts there, not with object spreads.
+
+**Stamps are wall clocks.** `editedAt` is monotonic per device (`max(now, prev+1)`), but
+*across* devices LWW trusts the clocks. A device a few minutes slow can lose a race it
+actually won. Fine for one person; the fix (a Lamport counter carried in the row) is
+cheap if it ever bites.
+
+**The sync code is a bearer token.** Anyone holding it can read and write that one row.
+No rate limit, no hashing of the code server-side. For a personal study plan that's
+proportionate; rotating means turning sync off and on (new code) — the old row lingers
+in D1, and only `curl -X DELETE /api/state/<code>` cleans it up (the endpoint exists,
+the UI doesn't).
+
+**Adoption kills an active quiz run.** `SYNC_ADOPT` nulls `session`, because a run
+scoring into a replaced world would double-count. Boot pulls and the wake-pull are gated
+to never fire mid-run, so this only triggers when a *push* loses a race mid-run — rare,
+but it will read as "sync ate my run" the day it happens.
+
+**Two tabs in one browser still race.** Both tabs write the same localStorage key and
+now both push; last writer wins, same as before sync existed. A `storage` event listener
+would reconcile them and is probably the cheapest item in this section.
+
+**`normalize` is the only gate on adopted data.** The client vets a cloud blob exactly
+like an Import (`v === 1`, then field-by-field). A blob some future schema wrote parks
+sync (`held`) rather than letting either side overwrite the other — but "parked" surfaces
+as the generic error line, which will confuse whoever hits it mid-migration.
+
 ## Sharper edges
 
 **Streaks use the device's local calendar day.**

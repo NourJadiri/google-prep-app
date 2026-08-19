@@ -19,3 +19,10 @@
 .io { width: 100%; margin-top: 10px; font-family: var(--mono); font-size: 11px; line-height: 1.55; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-height: 70px; display: none; resize: vertical; }
 .io.on { display: block; }
 .io:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+
+/* Sync panel. The code is a button so one tap copies it; dashed border says
+   "this is a credential, not a stat". */
+.synccode { display: block; width: 100%; margin-top: 10px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .02em; padding: 9px 12px; border-radius: 12px; border: 1px dashed var(--line); background: var(--surface); color: var(--ink); text-align: center; cursor: pointer; user-select: all; overflow-wrap: anywhere; }
+.synccode:active { background: var(--sunken); }
+.syncinput { flex: 1; min-width: 0; font-family: var(--mono); font-size: 11px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.syncinput:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
