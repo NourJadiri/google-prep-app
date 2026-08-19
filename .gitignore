@@ -7,3 +7,6 @@ npm-debug.log*
 
 # tsc -b writes these even under noEmit
 *.tsbuildinfo
+
+# wrangler's local state (miniflare D1, logs) from `wrangler pages dev`
+.wrangler/

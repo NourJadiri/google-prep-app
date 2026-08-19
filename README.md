@@ -11,9 +11,11 @@ Four tabs:
 - **Metro** — thumb-only quiz mode for the commute or the plane. 120 hand-written cards,
   ten stops a run, streaks multiply the XP. No typing, ever.
 - **Dojo** — 15 algorithm templates, blurred until you've written yours from memory.
-- **Me** — stats, the rank ladder, badges, export/import.
+- **Me** — stats, the rank ladder, badges, export/import, cloud sync.
 
-Everything runs offline. No network requests at runtime, no webfonts, no analytics.
+Everything runs offline. No webfonts, no analytics, and the only network requests at
+runtime are the optional cloud sync's — progress lives in localStorage first, and the
+cloud copy is a mirror, never a dependency.
 
 ## Running it
 
@@ -46,7 +48,53 @@ typechecks before it bundles, so a type error fails the build rather than reachi
 Pushes to `main` deploy to production; every other branch gets its own preview URL.
 
 No `_redirects` file is needed — the app is a single route, so there is no client-side
-routing for Pages to rewrite. `dist/` is fully static and can be hosted anywhere.
+routing for Pages to rewrite. `dist/` is fully static and can be hosted anywhere; the
+`functions/` directory is picked up by Pages automatically and only matters if you want
+cloud sync (below).
+
+## Cloud sync (optional, free tier)
+
+Progress can mirror across devices through a Pages Function backed by Cloudflare D1.
+One-time setup, all in the dashboard:
+
+1. **Create the database**: dashboard → **Storage & Databases** → **D1** →
+   **Create database** — any name, e.g. `onsite-express`.
+2. **Bind it to the Pages project**: your Pages project → **Settings** → **Bindings**
+   (older UI: Functions → D1 database bindings) → **Add** → type **D1 database**,
+   variable name **`DB`**, pick the database. Add it for **Production** and **Preview**.
+3. **Redeploy** (retry the latest deployment or push any commit) so the binding takes.
+
+There is no schema step — the function creates its one table on first contact. The CLI
+equivalent of step 1 is `npx wrangler d1 create onsite-express`; the binding still
+happens in the project's settings.
+
+Then, in the app: **Me → Sync → Turn on sync** on one device, and **I have a code →
+Connect** with that code on the next. The code is the only credential — anyone holding
+it can read and write that one blob, so treat it like the bearer token it is.
+
+How it behaves:
+
+- **Offline-first.** localStorage stays the source of truth; edits stamp a local
+  timestamp and are pushed on a 4s debounce, on tab-hide, when the network returns, and
+  on the next boot if the session ended offline.
+- **Conflicts are last-write-wins on the whole blob**, judged server-side and
+  atomically; the losing device adopts the winner. Two devices edited apart? The later
+  save wins, the earlier one is gone.
+- **Joining a code adopts the cloud copy** — export first if the joining device has
+  progress worth keeping (the panel warns).
+- **Without the binding** (or on a fork that never sets it up) the sync panel still
+  renders, pushes fail quietly, and the app is exactly the local-only app it was.
+
+Free-tier arithmetic: D1 allows 100k row writes/day and 5M reads/day; one keen day of
+studying is a few hundred writes. Not a concern.
+
+To develop against the function locally (`npm run dev` has no functions — sync just
+reports the cloud as unreachable there):
+
+```bash
+npm run build
+npx wrangler pages dev dist --d1=DB   # local Miniflare D1, no account needed
+```
 
 On an iPhone, **Share → Add to Home Screen** gives a standalone window: the
 `apple-mobile-web-app-*` meta tags, `viewport-fit=cover` and the safe-area insets are all
@@ -58,6 +106,8 @@ in place.
 reference/onsite-express.html   the original single-file app — ground truth for all content
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
+
+functions/api/state/[id].ts     the sync endpoint: one D1 row per code, last-write-wins
 
 src/
   main.tsx
@@ -72,6 +122,7 @@ src/
                 meta.ts         RANKS, BADGES, RANKCOL
   lib/          engine.ts       every rule, as pure functions
                 storage.ts      localStorage with an in-memory fallback
+                sync.ts         mirrors the blob to /api/state; offline-first
                 dates.ts        calendar-day helpers
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
@@ -86,7 +137,7 @@ format). Three of them carry real weight:
 
 - **`Fx`** is a discriminated union of `ToastFx | ConfettiFx`. `Celebrations` splits the
   queue by `kind`, and a toast can no longer be handed to the confetti renderer.
-- **`Action`** is a union over the reducer's fifteen cases, so `action.slot` exists only
+- **`Action`** is a union over the reducer's sixteen cases, so `action.slot` exists only
   in `ANSWER` and a new case can't be added without handling it.
 - **`PersistedData`** is the export format, so it is a compatibility promise. `normalize`
   is the only function in the app that takes `unknown`; everything downstream is real.

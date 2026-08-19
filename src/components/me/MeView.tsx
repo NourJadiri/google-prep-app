@@ -3,6 +3,7 @@ import StatsGrid from "./StatsGrid";
 import RankLadder from "./RankLadder";
 import BadgeGrid from "./BadgeGrid";
 import DataPanel from "./DataPanel";
+import SyncPanel from "./SyncPanel";
 import "./me.css";
 
 export default function MeView() {
@@ -32,6 +33,11 @@ export default function MeView() {
         <div className="sectionlabel">Data</div>
         <DataPanel />
       </div>
+
+      {/* Outside #meArea on purpose: the parity harness diffs that subtree
+          against the reference, and sync is new behaviour, not ported. */}
+      <div className="sectionlabel">Sync</div>
+      <SyncPanel />
     </section>
   );
 }
