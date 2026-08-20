@@ -6,8 +6,8 @@
  * whatever the encoder happened to do.
  *
  * Like the parity harness, the reference is installed on demand and never lands
- * in package.json. Two runtime dependencies is the whole point of the app; the
- * tools that check it are not among them.
+ * in package.json. A dependency list short enough to read is the point of the
+ * app; the tools that check it are not on it.
  *
  *   npm install --no-save --no-package-lock qrcode && node scripts/qr-verify.mjs
  *

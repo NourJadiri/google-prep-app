@@ -1,10 +1,13 @@
 /* A QR encoder, written out by hand.
  *
  * Linking a second device means handing it a URL, and a URL you have to retype
- * on a phone keyboard is a URL nobody links with — so, a QR code. Every library
- * that draws one is a runtime dependency, and this app has exactly two of those
- * on purpose. A few hundred lines of ISO/IEC 18004 is the cheaper price: the
- * code has to render with the tab open on a plane, same as everything else here.
+ * on a phone keyboard is a URL nobody links with — so, a QR code. Drawing one is
+ * the frozen half of QR — fixed tables, and an answer checkable against a
+ * reference module for module — which is what makes hand-rolling it honest
+ * rather than merely thrifty. (Reading one back out of a camera frame is the
+ * other half, and ScanOverlay buys jsqr for it.) A few hundred lines of
+ * ISO/IEC 18004 is the cheaper price here: the code has to render with the tab
+ * open on a plane, same as everything else in this app.
  *
  * Deliberately partial. Byte mode only, error level M only, versions 1 to 10 —
  * no numeric, alphanumeric or kanji modes, no other correction levels, nothing
