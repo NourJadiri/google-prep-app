@@ -72,6 +72,30 @@ Then, in the app: **Me → Sync → Turn on sync** on one device, and **I have a
 Connect** with that code on the next. The code is the only credential — anyone holding
 it can read and write that one blob, so treat it like the bearer token it is.
 
+With both devices in front of you there is a second way round: **Me → Sync → Link by
+QR** (the button reads **Link a device** once sync is on). The two modes are named for
+what the device *showing* the code wants. **Get progress** is the fresh machine — it
+puts a QR on screen, you scan it with the phone that has the progress, the phone's
+consent card asks, and a poll tick later the progress is here; WhatsApp-Web-shaped.
+Nothing is switched on until the other device actually writes, so a code nobody scans
+leaves no row and no trace. **Send progress** is the mirror: this device holds the code
+up and the device that scans adopts.
+
+- **The QR is a plain link to the app** — `…/#sync=<code>&do=send|recv` — so a phone's
+  own camera app is the scanner and there is nothing to install. The code rides in the
+  fragment deliberately: it is a bearer token, and a fragment never reaches server logs.
+- **No link ever acts on its own.** However a directive arrives — camera app, in-app
+  scan, pasted code — it lands on the same consent card, which states what is about to
+  be replaced in this device's own numbers and does nothing until you say yes.
+- **A "Scan a code" button appears only where `BarcodeDetector` does** (Chromium-family
+  browsers); it is what lets a laptop read a phone's screen. Everywhere else the
+  camera-app route, the code printed under the square and the paste row cover it.
+
+One iOS wrinkle: a home-screen install keeps its storage separate from Safari's, so a
+camera-app scan opens Safari, where the progress you meant to send may not be. The
+consent card says so and points you back to the installed app: open that one and scan
+from there, or type the code in.
+
 How it behaves:
 
 - **Offline-first.** localStorage stays the source of truth; edits stamp a local
@@ -106,6 +130,7 @@ in place.
 reference/onsite-express.html   the original single-file app — ground truth for all content
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
+scripts/qr-verify.mjs           diffs lib/qr.ts module-for-module against npm qrcode
 
 functions/api/state/[id].ts     the sync endpoint: one D1 row per code, last-write-wins
 
@@ -123,6 +148,8 @@ src/
   lib/          engine.ts       every rule, as pure functions
                 storage.ts      localStorage with an in-memory fallback
                 sync.ts         mirrors the blob to /api/state; offline-first
+                link.ts         the link a QR carries: #sync=<code>&do=send|recv
+                qr.ts           hand-rolled QR encoder: byte mode, level M, v1–10
                 dates.ts        calendar-day helpers
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
@@ -245,9 +272,11 @@ window or a cookie-blocked embed degrades instead of crashing.
 ## Verification
 
 There is no unit-test suite — this is a personal app and the tests were removed on
-purpose. What remains is the parity harness below, which is the check that actually
-matters here: it compares this app against `reference/onsite-express.html` in a real
-browser rather than asserting against assumptions.
+purpose. What remains are the two harnesses below, and they are the checks that actually
+matter here, because both compare against something real rather than asserting against
+assumptions: one drives this app against `reference/onsite-express.html` in a real
+browser, the other diffs the hand-rolled QR encoder against the library the rest of the
+world uses.
 
 `npm run build` typechecks first, so a type error fails the build.
 
@@ -279,6 +308,26 @@ the next. Solid fills always match exactly. `screenshots.mjs` prints the counts 
 context and judges on rendered text instead.
 
 `CHROMIUM_PATH` and `APP_URL` override the browser binary and the dev-server URL.
+
+### QR encoder
+
+`src/lib/qr.ts` is written out by hand — every library that draws a QR would be a third
+runtime dependency, and there are exactly two on purpose. Hand-rolled is only worth
+anything if it is also *right*, so every symbol it draws is diffed module for module
+against the npm `qrcode` package, installed on demand like Playwright and never landing
+in `package.json`:
+
+```bash
+npm install --no-save --no-package-lock qrcode && node scripts/qr-verify.mjs
+```
+
+Ten versions × three payload lengths each (one byte, half full, exactly full) × all
+eight masks forced on both sides, plus the automatic version pick and the automatic
+symbol: **300 comparisons, every module identical**, and the auto mask agrees with the
+reference's **30/30**. The forced-mask half is the one that has to be perfect — it
+isolates the encoding from the judgement call about which mask is prettiest, which is
+scored by four penalty rules and is where two correct encoders may legitimately part
+company. `QR_BUNDLE` overrides where the esbuild bundle of the encoder is written.
 
 ## Departures from the reference
 
