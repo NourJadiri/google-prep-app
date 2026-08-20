@@ -109,11 +109,11 @@ on `BarcodeDetector`, which Safari and Firefox don't ship, so on those the butto
 wasn't rendered and computer-reads-phone fell back to typing the code across. The gate is
 a camera and nothing else now: `BarcodeDetector` is still taken first where it exists —
 it is the browser's own and often the camera hardware's — and jsQR reads the frames
-everywhere else. The price is the app's third runtime dependency and about 132 kB
-minified — 48 kB over the wire — which is 40% on top of everything the app weighed before
-it. Nothing else in here that isn't React is remotely that size. The trade was made with
-that number in hand: the alternative on Safari was no scanner at all, and on an iOS
-home-screen install no scanner means no way in at all (below).
+everywhere else. It costs about 132 kB minified — 48 kB over the wire — which was 40% on
+top of everything the app weighed before it, and nothing else in the bundle that isn't
+React is remotely that size. The trade was made with that number in hand: the alternative
+on Safari was no scanner at all, and on an iOS home-screen install no scanner means no way
+in at all (below).
 
 **The jsQR path is not free, and the two decoders are not the same decoder.** Every tick
 it pulls a frame off a canvas (~1 ms) and walks all of it (~8 ms on a blank frame, ~11 ms
@@ -151,13 +151,6 @@ last resort now rather than the only one. Nothing to fix app-side: standalone we
 their own storage bucket there, iOS gives a web app no way to claim its own links either,
 so no camera-app scan can ever be made to land in the right copy, and that is the
 platform.
-
-**The encoder stops at version 10.** 213 bytes at level M, above which `qrMatrix` returns
-`null` rather than guessing. `linkUrl` output runs 80–150 bytes everywhere this app is
-actually hosted, landing around versions 5 to 8 with room to spare; a fork served from a
-very deep path would lose the square and get the code as text, which every panel prints
-underneath it anyway. Versions 11 to 40 are more tables, not more logic — the 16-bit
-character count and the version-information block are both already handled.
 
 ## Sharper edges
 

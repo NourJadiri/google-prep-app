@@ -27,12 +27,9 @@ npm run preview  # serve the build
 npm run typecheck  # tsc, no emit
 ```
 
-Runtime dependencies are `react`, `react-dom` and `jsqr`. Nothing else — no router (tabs
-are component state), no CSS framework, no state library. `jsqr` is the third and the only
-one that had to argue its way in: the in-app scanner has to turn camera pixels into a
-symbol, Safari ships no `BarcodeDetector` to do that, and it is computer vision rather
-than a table anyone should retype. Drawing the square is still hand-rolled — the two
-halves get opposite answers on purpose, and the reasoning is under **QR encoder** below.
+Runtime dependencies are `react` and `react-dom`, plus `jsqr` for the scanner and `qrcode`
+for the square itself. No router (tabs are component state), no CSS framework, no state
+library.
 
 Written in TypeScript under `strict` plus `noUncheckedIndexedAccess`. `npm run build`
 typechecks before it bundles, so a type error fails the build rather than reaching Pages.
@@ -140,7 +137,6 @@ in place.
 reference/onsite-express.html   the original single-file app — ground truth for all content
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
-scripts/qr-verify.mjs           diffs lib/qr.ts module-for-module against npm qrcode
 
 functions/api/state/[id].ts     the sync endpoint: one D1 row per code, last-write-wins
 
@@ -159,7 +155,7 @@ src/
                 storage.ts      localStorage with an in-memory fallback
                 sync.ts         mirrors the blob to /api/state; offline-first
                 link.ts         the link a QR carries: #sync=<code>&do=send|recv
-                qr.ts           hand-rolled QR encoder: byte mode, level M, v1–10
+                qr.ts           the QR matrix, via the qrcode package
                 dates.ts        calendar-day helpers
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
@@ -282,11 +278,10 @@ window or a cookie-blocked embed degrades instead of crashing.
 ## Verification
 
 There is no unit-test suite — this is a personal app and the tests were removed on
-purpose. What remains are the two harnesses below, and they are the checks that actually
-matter here, because both compare against something real rather than asserting against
-assumptions: one drives this app against `reference/onsite-express.html` in a real
-browser, the other diffs the hand-rolled QR encoder against the library the rest of the
-world uses.
+purpose. What remains is the harness below, and it is the check that actually matters
+here, because it compares against something real rather than asserting against
+assumptions: it drives this app against `reference/onsite-express.html` in a real browser
+and diffs the two.
 
 `npm run build` typechecks first, so a type error fails the build.
 
@@ -318,35 +313,6 @@ the next. Solid fills always match exactly. `screenshots.mjs` prints the counts 
 context and judges on rendered text instead.
 
 `CHROMIUM_PATH` and `APP_URL` override the browser binary and the dev-server URL.
-
-### QR encoder
-
-The two halves of a QR get opposite answers here, and the split is the argument rather
-than an accident. Drawing one is frozen work: ISO/IEC 18004 hasn't moved in years, the job
-is fixed tables and a bit shuffle, and — decisively — the result is checkable against a
-reference module for module, so "did I get this right" is a question with a yes. That half
-is written out by hand, in `src/lib/qr.ts`. Reading one back out of a camera frame is not
-that job at all: binarising a lit surface, finding three finder patterns in noise, fitting
-a grid to a curled bit of paper held at an angle. That is computer vision, it is tuned by
-whoever has stared at the most bad frames, and there is no table to check it against. So
-that half is bought — `jsqr`, the third runtime dependency, imported by `ScanOverlay`,
-which says the same thing where it imports it.
-
-Hand-rolled is only worth anything if it is also *right*, so every symbol the encoder
-draws is diffed module for module against the npm `qrcode` package, installed on demand
-like Playwright and never landing in `package.json`:
-
-```bash
-npm install --no-save --no-package-lock qrcode && node scripts/qr-verify.mjs
-```
-
-Ten versions × three payload lengths each (one byte, half full, exactly full) × all
-eight masks forced on both sides, plus the automatic version pick and the automatic
-symbol: **300 comparisons, every module identical**, and the auto mask agrees with the
-reference's **30/30**. The forced-mask half is the one that has to be perfect — it
-isolates the encoding from the judgement call about which mask is prettiest, which is
-scored by four penalty rules and is where two correct encoders may legitimately part
-company. `QR_BUNDLE` overrides where the esbuild bundle of the encoder is written.
 
 ## Departures from the reference
 

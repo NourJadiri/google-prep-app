@@ -14,9 +14,8 @@ import { parseLink } from "../../lib/link";
    Two decoders, one gate. `BarcodeDetector` is the browser's own — often the
    camera hardware's — and it is taken wherever it exists, which today means
    Chromium. Everywhere else, Safari above all, the frames go through jsQR in
-   JavaScript. That is the app's third runtime dependency and it was argued for:
-   reading a QR out of a camera frame is computer vision, not table lookup, and
-   the browser that most needs this is the one that will never ship it.
+   JavaScript — a real weight in the bundle, taken because the browser that most
+   needs an in-app scanner is the one that will never ship a decoder of its own.
 
    Nothing is acted on here either. A hit becomes a directive in the store and
    the consent card asks, exactly as if the link had been opened by hand. */
