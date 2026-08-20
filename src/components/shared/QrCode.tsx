@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { qrMatrix } from "../../lib/qr";
 
-/* The link as a square, drawn from the hand-rolled encoder in lib/qr.ts. One
+/* The link as a square, drawn from the matrix lib/qr.ts gets out of `qrcode`. One
    path of 1x1 squares rather than a rect per module — a version 5 symbol is
    ~600 dark modules, and 600 elements is a real cost on a phone.
 

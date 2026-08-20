@@ -104,27 +104,53 @@ forgotten, while its card says "devices linked". Rare and self-healing — a fre
 re-links — but worth knowing. (With sync already on the code is the persisted one, and
 the next `syncNow` picks the row up regardless, so this is a fresh-device-only edge.)
 
-**The in-app scanner is Chromium-only today.** `scanSupported()` gates the "Scan a code"
-button on `BarcodeDetector`, which Safari and Firefox don't ship, so on those the button
-simply isn't rendered. Phone-reads-computer is unaffected — that path is the camera app
-opening a link — but computer-reads-phone falls back to typing the code across. The fix
-is a JS QR *decoder*, a fatter dependency than the encoder that was hand-rolled to avoid
-exactly that.
+**The in-app scanner reads everywhere now, and `jsqr` is what that cost.** It used to gate
+on `BarcodeDetector`, which Safari and Firefox don't ship, so on those the button simply
+wasn't rendered and computer-reads-phone fell back to typing the code across. The gate is
+a camera and nothing else now: `BarcodeDetector` is still taken first where it exists —
+it is the browser's own and often the camera hardware's — and jsQR reads the frames
+everywhere else. It costs about 132 kB minified — 48 kB over the wire — which was 40% on
+top of everything the app weighed before it, and nothing else in the bundle that isn't
+React is remotely that size. The trade was made with that number in hand: the alternative
+on Safari was no scanner at all, and on an iOS home-screen install no scanner means no way
+in at all (below).
+
+**The jsQR path is not free, and the two decoders are not the same decoder.** Every tick
+it pulls a frame off a canvas (~1 ms) and walks all of it (~8 ms on a blank frame, ~11 ms
+on a hit, measured in Chromium at 640×480 on the machine this was written on; a phone is
+some multiple of that). At 250 ms a tick that is a few percent of a core, and the frame is
+downscaled to a 640px long edge precisely so it stays that way — which does cost reach:
+below roughly two pixels per module in the downscaled frame it stops decoding, so the
+square has to fill about an eighth of the frame's width. The behavioural gaps matter more
+than the cost. `BarcodeDetector` returns every code in the frame; jsQR returns at most
+one, so with two squares on the table the jsQR path reads whichever it locates first. jsQR
+also runs with `inversionAttempts: "dontInvert"`, so a light-on-dark QR is invisible to it
+— safe here only because `QrCode` deliberately ignores the theme and always draws
+dark-on-light, and worth remembering before anything else is ever pointed at that camera.
+One free surprise in the other direction: jsQR reads a *mirrored* square as happily as a
+straight one, so a front camera that flips its frames costs nothing.
+
+**Standalone iOS is where this all has to work, and it has two edges of its own.**
+`getUserMedia` only reaches a home-screen web app in iOS 14.3; below that the accounts
+differ on whether `navigator.mediaDevices` is missing outright (so the launcher never
+renders) or present and refusing (launcher, then the "No camera here" line). Both ends are
+survivable — the code and the paste row are still under the square — but which one an old
+iPhone actually does has not been checked on a device. The other edge is that iOS tends to
+ask for camera permission again every session in a home-screen app instead of remembering
+the grant the way Safari proper does. Nothing to fix app-side; it just reads as a bug the
+third time it happens.
 
 **An iOS home-screen install has its own storage.** A camera-app scan opens Safari, not
 the installed copy, so "send from the phone" on a device whose progress lives in the
 home-screen app sends whatever Safari holds — usually nothing. The consent card says as
-much when it is asked to send from a device with no progress, and the way through is to
-open the installed app and scan (or paste the code) from inside it. Nothing to fix
-app-side: standalone web apps get their own storage bucket there, and that is the
+much when it is asked to send from a device with no progress. The way through is the
+installed app's own scanner: open that copy, tap **Scan a code**, and read the other
+device's square from inside the container that actually holds the progress — which is the
+whole reason the scanner had to work on Safari's engine. Typing the code across is the
+last resort now rather than the only one. Nothing to fix app-side: standalone web apps get
+their own storage bucket there, iOS gives a web app no way to claim its own links either,
+so no camera-app scan can ever be made to land in the right copy, and that is the
 platform.
-
-**The encoder stops at version 10.** 213 bytes at level M, above which `qrMatrix` returns
-`null` rather than guessing. `linkUrl` output runs 80–150 bytes everywhere this app is
-actually hosted, landing around versions 5 to 8 with room to spare; a fork served from a
-very deep path would lose the square and get the code as text, which every panel prints
-underneath it anyway. Versions 11 to 40 are more tables, not more logic — the 16-bit
-character count and the version-information block are both already handled.
 
 ## Sharper edges
 

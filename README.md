@@ -27,8 +27,9 @@ npm run preview  # serve the build
 npm run typecheck  # tsc, no emit
 ```
 
-Runtime dependencies are `react` and `react-dom`. Nothing else — no router (tabs are
-component state), no CSS framework, no state library.
+Runtime dependencies are `react` and `react-dom`, plus `jsqr` for the scanner and `qrcode`
+for the square itself. No router (tabs are component state), no CSS framework, no state
+library.
 
 Written in TypeScript under `strict` plus `noUncheckedIndexedAccess`. `npm run build`
 typechecks before it bundles, so a type error fails the build rather than reaching Pages.
@@ -87,14 +88,20 @@ up and the device that scans adopts.
 - **No link ever acts on its own.** However a directive arrives — camera app, in-app
   scan, pasted code — it lands on the same consent card, which states what is about to
   be replaced in this device's own numbers and does nothing until you say yes.
-- **A "Scan a code" button appears only where `BarcodeDetector` does** (Chromium-family
-  browsers); it is what lets a laptop read a phone's screen. Everywhere else the
-  camera-app route, the code printed under the square and the paste row cover it.
+- **A "Scan a code" button appears anywhere there's a camera** — `BarcodeDetector` where
+  the browser has one (Chromium, so Android and most desktops), `jsqr` in the bundle
+  everywhere else, Safari included. It is what lets a laptop read a phone's screen, and
+  the only way into an iOS home-screen install. Where there is no camera at all — or an
+  insecure origin, which hides the API — the camera-app route, the code printed under the
+  square and the paste row cover it.
 
-One iOS wrinkle: a home-screen install keeps its storage separate from Safari's, so a
-camera-app scan opens Safari, where the progress you meant to send may not be. The
-consent card says so and points you back to the installed app: open that one and scan
-from there, or type the code in.
+One iOS wrinkle: a home-screen install keeps its storage separate from Safari's, and iOS
+gives a web app no way to make a scanned link open the installed copy — so a camera-app
+scan lands in Safari, where the progress you meant to send may not be. Open the installed
+app and use its own **Scan a code** instead: the camera works there (iOS 14.3 and up) and
+the decoding rides in the bundle, so the whole exchange stays inside the copy that holds
+the progress. Typing the code across still works and is the last resort. The consent card
+says as much when it is asked to send from a device with nothing to send.
 
 How it behaves:
 
@@ -130,7 +137,6 @@ in place.
 reference/onsite-express.html   the original single-file app — ground truth for all content
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
-scripts/qr-verify.mjs           diffs lib/qr.ts module-for-module against npm qrcode
 
 functions/api/state/[id].ts     the sync endpoint: one D1 row per code, last-write-wins
 
@@ -149,7 +155,7 @@ src/
                 storage.ts      localStorage with an in-memory fallback
                 sync.ts         mirrors the blob to /api/state; offline-first
                 link.ts         the link a QR carries: #sync=<code>&do=send|recv
-                qr.ts           hand-rolled QR encoder: byte mode, level M, v1–10
+                qr.ts           the QR matrix, via the qrcode package
                 dates.ts        calendar-day helpers
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
@@ -272,11 +278,10 @@ window or a cookie-blocked embed degrades instead of crashing.
 ## Verification
 
 There is no unit-test suite — this is a personal app and the tests were removed on
-purpose. What remains are the two harnesses below, and they are the checks that actually
-matter here, because both compare against something real rather than asserting against
-assumptions: one drives this app against `reference/onsite-express.html` in a real
-browser, the other diffs the hand-rolled QR encoder against the library the rest of the
-world uses.
+purpose. What remains is the harness below, and it is the check that actually matters
+here, because it compares against something real rather than asserting against
+assumptions: it drives this app against `reference/onsite-express.html` in a real browser
+and diffs the two.
 
 `npm run build` typechecks first, so a type error fails the build.
 
@@ -308,26 +313,6 @@ the next. Solid fills always match exactly. `screenshots.mjs` prints the counts 
 context and judges on rendered text instead.
 
 `CHROMIUM_PATH` and `APP_URL` override the browser binary and the dev-server URL.
-
-### QR encoder
-
-`src/lib/qr.ts` is written out by hand — every library that draws a QR would be a third
-runtime dependency, and there are exactly two on purpose. Hand-rolled is only worth
-anything if it is also *right*, so every symbol it draws is diffed module for module
-against the npm `qrcode` package, installed on demand like Playwright and never landing
-in `package.json`:
-
-```bash
-npm install --no-save --no-package-lock qrcode && node scripts/qr-verify.mjs
-```
-
-Ten versions × three payload lengths each (one byte, half full, exactly full) × all
-eight masks forced on both sides, plus the automatic version pick and the automatic
-symbol: **300 comparisons, every module identical**, and the auto mask agrees with the
-reference's **30/30**. The forced-mask half is the one that has to be perfect — it
-isolates the encoding from the judgement call about which mask is prettiest, which is
-scored by four penalty rules and is where two correct encoders may legitimately part
-company. `QR_BUNDLE` overrides where the esbuild bundle of the encoder is written.
 
 ## Departures from the reference
 
