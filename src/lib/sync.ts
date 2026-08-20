@@ -143,7 +143,10 @@ export function getStatus(): SyncStatus {
   return snapshot;
 }
 
-function newCode(): string {
+/** Mint a code without turning anything on. The receive flow puts one on
+ *  screen as a QR and waits: sync starts there only once another device has
+ *  seeded it, so a code that nobody scans costs nothing and leaves no row. */
+export function mintCode(): string {
   try {
     if (crypto.randomUUID) return crypto.randomUUID();
     const b = crypto.getRandomValues(new Uint8Array(16));
@@ -365,7 +368,7 @@ export function stop(): void {
 /** Start syncing under a brand-new code, seeding the cloud with this device. */
 export function enable(): string {
   if (cfg) return cfg.code;
-  cfg = { code: newCode(), editedAt: stamp(0), serverAt: 0, okAt: 0 };
+  cfg = { code: mintCode(), editedAt: stamp(0), serverAt: 0, okAt: 0 };
   failed = false;
   held = false;
   saveCfg();
@@ -386,6 +389,51 @@ export async function join(code: string): Promise<SyncOutcome | "invalid"> {
   saveCfg();
   emit();
   return syncNow(true);
+}
+
+/** The mirror of join(): take on a code the *other* device minted and seed
+ *  the cloud from this device's blob. join() hands the cloud copy the win by
+ *  fiat; this one pushes instead, so it's the direction a device with progress
+ *  can take without exporting first — the usual LWW rule still judges it. */
+export async function claim(code: string): Promise<SyncOutcome | "invalid"> {
+  const trimmed = code.trim();
+  if (!CODE_RE.test(trimmed)) return "invalid";
+  /* Already in this group — someone re-scanned their own QR. Reconcile, don't
+     reseed: fresh stamps here would replay this device over whatever the other
+     one has written since. */
+  if (cfg && cfg.code === trimmed) return syncNow();
+  clearTimers();
+  cfg = { code: trimmed, editedAt: stamp(0), serverAt: 0, okAt: 0 };
+  failed = false;
+  held = false;
+  saveCfg();
+  emit();
+  /* A push that can't get out still leaves cfg saved with editedAt > serverAt,
+     which is the dirty flag the retry timer and the next boot both act on. */
+  return push();
+}
+
+/** What the peek found: a row and the stamp it carries, nothing under the code
+ *  yet, or no usable answer at all. */
+export type ProbeResult = { at: number } | "none" | "unreachable";
+
+/** One cheap GET: is there a row under `code` yet, and how fresh? The receive
+ *  panel polls this while its QR is on screen. Deliberately outside the status
+ *  machinery — no cfg, no `failed`, no emit — because a poll against a code
+ *  this device hasn't joined must not colour its own sync status. */
+export async function probe(code: string): Promise<ProbeResult> {
+  try {
+    const res = await fetch(url(code), { method: "GET" });
+    if (res.status === 404) return "none";
+    if (!res.ok) return "unreachable";
+    const out: unknown = await res.json();
+    if (!isObj(out)) return "unreachable";
+    const at = out["updatedAt"];
+    if (typeof at !== "number" || !Number.isFinite(at)) return "unreachable";
+    return { at };
+  } catch {
+    return "unreachable";
+  }
 }
 
 /** Stop syncing on this device. Local progress and the cloud copy both stay. */

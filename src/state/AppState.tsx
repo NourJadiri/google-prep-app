@@ -4,7 +4,16 @@ import * as engine from "../lib/engine";
 import * as storage from "../lib/storage";
 import * as sync from "../lib/sync";
 import { todayStr } from "../lib/dates";
-import type { DeckId, Fx, PersistedData, Session, StampedFx, Tab } from "../types";
+import { consumeHashLink } from "../lib/link";
+import type {
+  DeckId,
+  Fx,
+  LinkDirective,
+  PersistedData,
+  Session,
+  StampedFx,
+  Tab,
+} from "../types";
 
 /* One store for the whole app. `data` is the persisted schema and nothing else
  * — the export in the Me tab is literally JSON.stringify(state.data), which is
@@ -30,6 +39,10 @@ export interface AppStateShape {
   openTpl: string[];
   /** Template ids whose code has been un-blurred, session-scoped on purpose. */
   shownTpl: string[];
+  /** A scanned or opened link directive waiting on the reader's yes. It lives
+   *  in the store because it can arrive at boot, long before the Me tab that
+   *  renders the consent card has ever mounted. */
+  link: LinkDirective | null;
   /** Celebrations waiting to be drained by <Celebrations>. */
   fx: StampedFx[];
   fxSeq: number;
@@ -55,6 +68,8 @@ export type Action =
   | { type: "REVEAL_TPL"; id: string }
   | { type: "IMPORT"; data: PersistedData }
   | { type: "SYNC_ADOPT"; data: PersistedData }
+  | { type: "LINK_OPEN"; link: LinkDirective }
+  | { type: "LINK_CLEAR" }
   | { type: "RESET" }
   | { type: "FX"; fx: Fx[] }
   | { type: "FX_CONSUMED" };
@@ -69,6 +84,7 @@ function boot(): AppStateShape {
     session: null,
     openTpl: [],
     shownTpl: [],
+    link: null,
     fx: [],
     fxSeq: 0,
   };
@@ -153,6 +169,14 @@ function reducer(state: AppStateShape, action: Action): AppStateShape {
         { kind: "toast", msg: "Progress synced from the cloud", gold: true },
       ]);
 
+    /* The consent card lives on the Me tab, so a scanned link walks the reader
+       there rather than waiting behind a tab they'd have to go find. */
+    case "LINK_OPEN":
+      return { ...state, link: action.link, tab: "me" };
+
+    case "LINK_CLEAR":
+      return { ...state, link: null };
+
     case "RESET":
       return withFx(state, { data: engine.blank(), session: null }, [
         { kind: "toast", msg: "Fresh line. Day 1 awaits.", gold: false },
@@ -184,6 +208,8 @@ export interface Actions {
   toggleTpl: (id: string) => void;
   revealTpl: (id: string) => void;
   importData: (data: PersistedData) => void;
+  openLink: (link: LinkDirective) => void;
+  clearLink: () => void;
   reset: () => void;
   celebrate: (...fx: Fx[]) => void;
   toast: (msg: string, gold?: boolean) => void;
@@ -230,6 +256,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => sync.stop();
   }, []);
 
+  /* A device-linking link this app was opened with. Nothing is acted on here
+     — the directive only reaches the store, where the consent card asks. The
+     hashchange listener covers a link pasted into an already-open tab, which
+     reloads nothing; consumeHashLink strips the hash it consumed, so
+     StrictMode's second mount finds none and offers the same link once. */
+  useEffect(() => {
+    const open = () => {
+      const d = consumeHashLink();
+      if (d) dispatch({ type: "LINK_OPEN", link: d });
+    };
+    open();
+    window.addEventListener("hashchange", open);
+    return () => window.removeEventListener("hashchange", open);
+  }, []);
+
   /* iOS can discard a backgrounded tab without ever firing unload. Coming
      back is the moment to look for another device's progress — but never
      mid-run, or the adoption would yank the deck out from under the reader. */
@@ -267,6 +308,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleTpl: (id) => dispatch({ type: "TOGGLE_TPL", id }),
       revealTpl: (id) => dispatch({ type: "REVEAL_TPL", id }),
       importData: (data) => dispatch({ type: "IMPORT", data }),
+      openLink: (link) => dispatch({ type: "LINK_OPEN", link }),
+      clearLink: () => dispatch({ type: "LINK_CLEAR" }),
       reset: () => dispatch({ type: "RESET" }),
       celebrate: (...fx) => dispatch({ type: "FX", fx }),
       toast: (msg, gold = false) =>

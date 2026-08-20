@@ -198,6 +198,15 @@ export interface Session {
 
 export type Tab = "line" | "metro" | "dojo" | "me";
 
+/** A device-linking instruction carried by a QR code or a share link: what
+ *  THIS device should do with the code — send its progress under it, or
+ *  receive (adopt) what the cloud holds. Consented to in the UI, never acted
+ *  on silently. */
+export interface LinkDirective {
+  code: string;
+  dir: "send" | "recv";
+}
+
 /** Clock and randomness, injected so every rule stays a pure function. */
 export interface EngineOpts {
   /** Today as "YYYY-MM-DD". */
