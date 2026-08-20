@@ -69,6 +69,63 @@ like an Import (`v === 1`, then field-by-field). A blob some future schema wrote
 sync (`held`) rather than letting either side overwrite the other — but "parked" surfaces
 as the generic error line, which will confuse whoever hits it mid-migration.
 
+Linking by QR landed on top of that same dumb mirror. It inherits every edge above, and
+adds these:
+
+**The Get-mode watch discounts its own writes only as far as the acknowledgment.**
+`probe()` sees one number, the row's `updatedAt`, and the panel refuses to adopt any
+stamp the server has already credited to this device (`SyncStatus.serverAt`) — so a
+debounced push landing mid-watch no longer reads as the other device arriving. The
+residue is one round trip: a push that has moved the row but whose credit isn't home
+yet — an Import saved seconds before the panel opened, a retry that finally gets out —
+can still be adopted back as if it came from elsewhere, with everything an adoption
+means: a real "Progress synced from the cloud" toast over this device's own data,
+`session` nulled, and anything edited inside that window rolled back to the row's copy.
+Spooky rather than harmful, and the window is network latency now instead of the 4s
+debounce; taking the baseline only after a `flush()` would shave it further.
+
+**The hand-off itself is still last-write-wins, so a "sent" copy can lose.** `claim()`
+pushes under the other device's code and the consent card toasts "Progress sent — devices
+linked" the moment the server applies it, but the receiving device has an `editedAt` of
+its own: any local edit stamped later than that push wins the next exchange and replaces
+what just arrived. Leaving the Me tab unmounts the panel and stops the watch, so the
+realistic version is the reader wandering off to study while the other device is still
+scanning, then coming back to find the two devices linked around the wrong copy. The
+panel only ever says "Waiting for the other device…", which is not the same as "stay
+here". The honest fix is the event-log merge the top of this section already wants; the
+cheap one is copy that asks the reader to wait.
+
+**A Get-mode code dies with its panel.** On a device where sync is off there is no code
+to show, so the panel mints one per opening (`useState(sync.mintCode)`) and never
+persists it — close the panel, or switch tabs, and it is gone. Scan that square
+afterwards and the sending device claims a code nobody is watching: it seeds the row,
+turns its own sync on, and syncs alone under a code the other device has already
+forgotten, while its card says "devices linked". Rare and self-healing — a fresh square
+re-links — but worth knowing. (With sync already on the code is the persisted one, and
+the next `syncNow` picks the row up regardless, so this is a fresh-device-only edge.)
+
+**The in-app scanner is Chromium-only today.** `scanSupported()` gates the "Scan a code"
+button on `BarcodeDetector`, which Safari and Firefox don't ship, so on those the button
+simply isn't rendered. Phone-reads-computer is unaffected — that path is the camera app
+opening a link — but computer-reads-phone falls back to typing the code across. The fix
+is a JS QR *decoder*, a fatter dependency than the encoder that was hand-rolled to avoid
+exactly that.
+
+**An iOS home-screen install has its own storage.** A camera-app scan opens Safari, not
+the installed copy, so "send from the phone" on a device whose progress lives in the
+home-screen app sends whatever Safari holds — usually nothing. The consent card says as
+much when it is asked to send from a device with no progress, and the way through is to
+open the installed app and scan (or paste the code) from inside it. Nothing to fix
+app-side: standalone web apps get their own storage bucket there, and that is the
+platform.
+
+**The encoder stops at version 10.** 213 bytes at level M, above which `qrMatrix` returns
+`null` rather than guessing. `linkUrl` output runs 80–150 bytes everywhere this app is
+actually hosted, landing around versions 5 to 8 with room to spare; a fork served from a
+very deep path would lose the square and get the code as text, which every panel prints
+underneath it anyway. Versions 11 to 40 are more tables, not more logic — the 16-bit
+character count and the version-information block are both already handled.
+
 ## Sharper edges
 
 **Streaks use the device's local calendar day.**
