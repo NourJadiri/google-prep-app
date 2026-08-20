@@ -1,12 +1,17 @@
-import { useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useApp } from "../../state/AppState";
 import * as sync from "../../lib/sync";
 import type { SyncStatus } from "../../lib/sync";
+import LinkConfirm from "./LinkConfirm";
+import QrLinkPanel from "./QrLinkPanel";
 
 /* Cross-device sync controls. All the actual syncing lives in lib/sync; this
    panel only renders its status and forwards taps. The one rule it owns is
    the confirm before Connect: joining a code adopts the cloud copy, which is
-   the only sync action that can cost this device progress. */
+   the only sync action that can cost this device progress.
+
+   It also composes the two linking surfaces: the QR sub-panel, which is a
+   proposal being made, and the consent card, which is one being answered. */
 
 function statusLine(s: SyncStatus): string {
   switch (s.phase) {
@@ -27,6 +32,7 @@ export default function SyncPanel() {
   const { state, actions } = useApp();
   const status = useSyncExternalStore(sync.subscribe, sync.getStatus);
   const [entering, setEntering] = useState(false);
+  const [qr, setQr] = useState(false);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -35,6 +41,16 @@ export default function SyncPanel() {
     Object.keys(state.data.done).length > 0 ||
     Object.keys(state.data.rituals).length > 0 ||
     state.data.quiz.answered > 0;
+
+  /* A consent card and a live QR must never share the screen: the card is a
+     decision being made, and the sub-panel's poll would be making another one
+     behind it. Closing the sub-panel takes the scanner down with it. */
+  useEffect(() => {
+    if (state.link) setQr(false);
+  }, [state.link]);
+
+  /* Stable, because the QR panel's poll effect has it in its deps. */
+  const closeQr = useCallback(() => setQr(false), []);
 
   function doEnable() {
     sync.enable();
@@ -102,12 +118,28 @@ export default function SyncPanel() {
   if (!status.enabled) {
     return (
       <>
+        {state.link && <LinkConfirm status={status} hasProgress={hasProgress} />}
         <div className="mrow">
           <button className="mbtn" onClick={doEnable}>
             Turn on sync
           </button>
-          <button className="mbtn" onClick={() => setEntering((v) => !v)}>
+          <button
+            className="mbtn"
+            onClick={() => {
+              setEntering((v) => !v);
+              setQr(false);
+            }}
+          >
             I have a code
+          </button>
+          <button
+            className="mbtn"
+            onClick={() => {
+              setQr((v) => !v);
+              setEntering(false);
+            }}
+          >
+            Link by QR
           </button>
         </div>
         {entering && (
@@ -127,6 +159,7 @@ export default function SyncPanel() {
             </button>
           </div>
         )}
+        {qr && <QrLinkPanel status={status} hasProgress={hasProgress} onDone={closeQr} />}
         <p className="storenote">
           Sync mirrors progress through the app's own cloud store. Turn it on here, then
           enter the code on the next device — the cloud copy wins there, so export first
@@ -138,6 +171,7 @@ export default function SyncPanel() {
 
   return (
     <>
+      {state.link && <LinkConfirm status={status} hasProgress={hasProgress} />}
       <button className="synccode" onClick={doCopy} title="Tap to copy">
         {status.code}
       </button>
@@ -152,10 +186,14 @@ export default function SyncPanel() {
         <button className="mbtn" onClick={doCopy}>
           Copy code
         </button>
+        <button className="mbtn" onClick={() => setQr((v) => !v)}>
+          Link a device
+        </button>
         <button className="mbtn danger" onClick={doDisable}>
           Turn off
         </button>
       </div>
+      {qr && <QrLinkPanel status={status} hasProgress={hasProgress} onDone={closeQr} />}
       <p className="storenote">{statusLine(status)}</p>
     </>
   );
