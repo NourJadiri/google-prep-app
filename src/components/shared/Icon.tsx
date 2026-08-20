@@ -10,7 +10,8 @@ export type IconName =
   | "flame" | "zap" | "target" | "star" | "bug" | "flag"
   | "layers" | "calendar-check" | "milestone" | "graduation-cap"
   | "play" | "pause" | "rotate-ccw" | "timer"
-  | "download" | "upload" | "copy" | "trash" | "lock";
+  | "download" | "upload" | "copy" | "trash" | "lock"
+  | "cloud-check" | "cloud-upload" | "cloud-off" | "qr-code";  /* sync */
 
 const PATHS: Record<IconName, ReactNode> = {
   route: (
@@ -181,6 +182,45 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </>
+  ),
+  /* The three sync phases. Same open-bottomed cloud arc in all of them, so the
+     glyph that changes is only ever the thing underneath it — a swap the eye
+     reads as one state changing rather than three different pictures. */
+  "cloud-check": (
+    <>
+      <path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24" />
+      <path d="m8.5 17 2.5 2.5 4.5-4.5" />
+    </>
+  ),
+  "cloud-upload": (
+    <>
+      <path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24" />
+      <path d="M12 21v-8" />
+      <path d="m8.5 16.5 3.5-3.5 3.5 3.5" />
+    </>
+  ),
+  "cloud-off": (
+    <>
+      <path d="m2 2 20 20" />
+      <path d="M5.78 5.78A7 7 0 0 0 9 19h8.5a4.4 4.4 0 0 0 1.3-.19" />
+      <path d="M21.53 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7 7 0 0 0 10 5.07" />
+    </>
+  ),
+  /* Three finder squares and a scatter of modules: enough of a QR to read as
+     one at 14px, which is the only size it is ever drawn at. */
+  "qr-code": (
+    <>
+      <rect width="5" height="5" x="3" y="3" rx="1" />
+      <rect width="5" height="5" x="16" y="3" rx="1" />
+      <rect width="5" height="5" x="3" y="16" rx="1" />
+      <path d="M21 16h-3a2 2 0 0 0-2 2v3" />
+      <path d="M12 7v3a2 2 0 0 1-2 2H7" />
+      <path d="M12 3h.01" />
+      <path d="M12 16v.01" />
+      <path d="M21 12v.01" />
+      <path d="M12 21v.01" />
+      <path d="M16 12h1" />
     </>
   ),
 };

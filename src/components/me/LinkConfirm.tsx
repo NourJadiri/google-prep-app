@@ -45,6 +45,13 @@ export default function LinkConfirm({
       actions.toast("That doesn't look like a sync code");
       return;
     }
+    /* Two devices finding each other is a terminus-worthy moment in a
+       fourteen-station app, so it gets what a station clear gets — but only
+       where something actually linked. "Already in sync" is the same two
+       devices re-shaking hands, and a failed exchange linked nothing. */
+    if (out === "adopted" || out === "pushed" || (dir === "recv" && out === "clean")) {
+      actions.celebrate({ kind: "confetti", n: 12 });
+    }
     /* "adopted" already toasts from the store; the rest speak for themselves. */
     if (dir === "recv") {
       if (out === "pushed") actions.toast("Connected — this device seeded the cloud", true);
