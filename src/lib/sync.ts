@@ -50,6 +50,10 @@ export interface SyncStatus {
   phase: SyncPhase;
   /** ms epoch of the last successful exchange, 0 if never. */
   syncedAt: number;
+  /** Newest stamp the server has acknowledged as this device's own write —
+   *  what lets the Get-mode watch tell its own push landing from another
+   *  device's arrival. */
+  serverAt: number;
 }
 
 export type SyncOutcome = "adopted" | "pushed" | "clean" | "failed";
@@ -124,6 +128,7 @@ function build(): SyncStatus {
             ? "pending"
             : "synced",
     syncedAt: cfg ? cfg.okAt : 0,
+    serverAt: cfg ? cfg.serverAt : 0,
   };
 }
 

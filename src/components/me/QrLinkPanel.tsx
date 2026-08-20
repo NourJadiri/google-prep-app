@@ -53,6 +53,12 @@ export default function QrLinkPanel({
   const enabled = status.enabled;
   const code = status.code ?? minted;
   const closeScan = useCallback(() => setScanning(false), []);
+  /* The freshest stamp the server has credited to this device, mirrored into
+     a ref so the watch below can read it without restarting. A row wearing an
+     acknowledged stamp is this device's own push landing, not the other one
+     arriving. */
+  const acked = useRef(status.serverAt);
+  acked.current = status.serverAt;
 
   /* Get mode's watch. Stable deps only, or every render would restart it. */
   useEffect(() => {
@@ -97,7 +103,12 @@ export default function QrLinkPanel({
       }
       const at = r === "none" ? 0 : r.at;
       if (baseline === null) baseline = at;
-      else if (at > baseline) {
+      /* Arrival is a stamp newer than when the watch began that the server
+         has *not* credited to this device — without the second check, our own
+         debounced push moving the row would read as the other one arriving.
+         What's left is one round trip: a push that has moved the row but
+         whose acknowledgment isn't home yet. */
+      else if (at > baseline && at > acked.current) {
         void arrived();
         return;
       }
