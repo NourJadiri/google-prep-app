@@ -73,14 +73,22 @@ Then, in the app: **Me → Sync → Turn on sync** on one device, and **I have a
 Connect** with that code on the next. The code is the only credential — anyone holding
 it can read and write that one blob, so treat it like the bearer token it is.
 
-With both devices in front of you there is a second way round: **Me → Sync → Link by
-QR** (the button reads **Link a device** once sync is on). The two modes are named for
-what the device *showing* the code wants. **Get progress** is the fresh machine — it
-puts a QR on screen, you scan it with the phone that has the progress, the phone's
-consent card asks, and a poll tick later the progress is here; WhatsApp-Web-shaped.
-Nothing is switched on until the other device actually writes, so a code nobody scans
-leaves no row and no trace. **Send progress** is the mirror: this device holds the code
-up and the device that scans adopts.
+With both devices in front of you there is a second way round: **Me → Sync → Link a
+device**, which opens a full-screen sheet with the square on it. Everything about
+linking is in that sheet — the mode, the QR, the code, the paste box, the way through
+to the camera — so the panel behind it stays three buttons wide.
+
+The sheet's two modes are named for what the device *showing* the code wants. **Get
+progress** is the fresh machine — it puts a QR up, you scan it with the phone that has
+the progress, the phone's consent card asks, and a poll tick later the progress is here;
+WhatsApp-Web-shaped. Nothing is switched on until the other device actually writes, so a
+code nobody scans leaves no row and no trace. **Send progress** is the mirror: this
+device holds the code up and the device that scans adopts.
+
+The sheet is also the waiting room. While it is open, a Get-mode device is watching the
+cloud for the other one; close it and it stops watching, which is the honest reading of
+a screen you have walked away from. Leave it up until the two devices have found each
+other — the sheet says "Linked" and closes itself when they do.
 
 - **The QR is a plain link to the app** — `…/#sync=<code>&do=send|recv` — so a phone's
   own camera app is the scanner and there is nothing to install. The code rides in the
@@ -88,17 +96,17 @@ up and the device that scans adopts.
 - **No link ever acts on its own.** However a directive arrives — camera app, in-app
   scan, pasted code — it lands on the same consent card, which states what is about to
   be replaced in this device's own numbers and does nothing until you say yes.
-- **A "Scan a code" button appears anywhere there's a camera** — `BarcodeDetector` where
-  the browser has one (Chromium, so Android and most desktops), `jsqr` in the bundle
-  everywhere else, Safari included. It is what lets a laptop read a phone's screen, and
-  the only way into an iOS home-screen install. Where there is no camera at all — or an
-  insecure origin, which hides the API — the camera-app route, the code printed under the
-  square and the paste row cover it.
+- **"Scan a code instead", at the foot of the sheet, appears anywhere there's a
+  camera** — `BarcodeDetector` where the browser has one (Chromium, so Android and most
+  desktops), `jsqr` in the bundle everywhere else, Safari included. It is what lets a
+  laptop read a phone's screen, and the only way into an iOS home-screen install. Where
+  there is no camera at all — or an insecure origin, which hides the API — the camera-app
+  route, the code printed under the square and the paste row cover it.
 
 One iOS wrinkle: a home-screen install keeps its storage separate from Safari's, and iOS
 gives a web app no way to make a scanned link open the installed copy — so a camera-app
 scan lands in Safari, where the progress you meant to send may not be. Open the installed
-app and use its own **Scan a code** instead: the camera works there (iOS 14.3 and up) and
+app and use **Link a device → Scan a code instead**: the camera works there (iOS 14.3 and up) and
 the decoding rides in the bundle, so the whole exchange stays inside the copy that holds
 the progress. Typing the code across still works and is the last resort. The consent card
 says as much when it is asked to send from a device with nothing to send.

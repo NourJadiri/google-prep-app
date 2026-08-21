@@ -73,11 +73,11 @@ Linking by QR landed on top of that same dumb mirror. It inherits every edge abo
 adds these:
 
 **The Get-mode watch discounts its own writes only as far as the acknowledgment.**
-`probe()` sees one number, the row's `updatedAt`, and the panel refuses to adopt any
+`probe()` sees one number, the row's `updatedAt`, and the sheet refuses to adopt any
 stamp the server has already credited to this device (`SyncStatus.serverAt`) — so a
 debounced push landing mid-watch no longer reads as the other device arriving. The
 residue is one round trip: a push that has moved the row but whose credit isn't home
-yet — an Import saved seconds before the panel opened, a retry that finally gets out —
+yet — an Import saved seconds before the sheet opened, a retry that finally gets out —
 can still be adopted back as if it came from elsewhere, with everything an adoption
 means: a real "Progress synced from the cloud" toast over this device's own data,
 `session` nulled, and anything edited inside that window rolled back to the row's copy.
@@ -88,21 +88,31 @@ debounce; taking the baseline only after a `flush()` would shave it further.
 pushes under the other device's code and the consent card toasts "Progress sent — devices
 linked" the moment the server applies it, but the receiving device has an `editedAt` of
 its own: any local edit stamped later than that push wins the next exchange and replaces
-what just arrived. Leaving the Me tab unmounts the panel and stops the watch, so the
+what just arrived. Closing the sheet — or leaving the Me tab — stops the watch, so the
 realistic version is the reader wandering off to study while the other device is still
 scanning, then coming back to find the two devices linked around the wrong copy. The
-panel only ever says "Waiting for the other device…", which is not the same as "stay
-here". The honest fix is the event-log merge the top of this section already wants; the
-cheap one is copy that asks the reader to wait.
+sheet asks to be left up more plainly than the old panel did, since it is now the whole
+screen and it says "Waiting for the other device" in the middle of it, but it still does
+not say why. The honest fix is the event-log merge the top of this section already
+wants; the cheap one is copy that asks the reader to wait.
 
-**A Get-mode code dies with its panel.** On a device where sync is off there is no code
-to show, so the panel mints one per opening (`useState(sync.mintCode)`) and never
-persists it — close the panel, or switch tabs, and it is gone. Scan that square
-afterwards and the sending device claims a code nobody is watching: it seeds the row,
-turns its own sync on, and syncs alone under a code the other device has already
-forgotten, while its card says "devices linked". Rare and self-healing — a fresh square
-re-links — but worth knowing. (With sync already on the code is the persisted one, and
-the next `syncNow` picks the row up regardless, so this is a fresh-device-only edge.)
+**A Get-mode code dies with its sheet, and so does the watch.** On a device where sync
+is off there is no code to show, so the sheet mints one per opening
+(`useState(sync.mintCode)`) and never persists it — close the sheet, or switch tabs, and
+it is gone. Scan that square afterwards and the sending device claims a code nobody is
+watching: it seeds the row, turns its own sync on, and syncs alone under a code the other
+device has already forgotten, while its card says "devices linked". Rare and
+self-healing — a fresh square re-links — but worth knowing. (With sync already on the
+code is the persisted one, and the next `syncNow` picks the row up regardless, so this is
+a fresh-device-only edge.)
+
+The watch goes with it, and that is a rule that got repealed rather than fixed. For one
+wave the poll deliberately outlived a closed square, on the theory that dismissing a
+picture should not be the same as calling off a handshake. It bought very little — a
+fresh device's code was abandoned on close anyway, and an enabled one converges on the
+next wake or boot regardless — and it cost a lifetime nobody could point at: a poll
+running with no visible owner, waiting on a screen the reader had left. The sheet is the
+waiting room now. Open means listening, closed means not, and that is the whole rule.
 
 **The in-app scanner reads everywhere now, and `jsqr` is what that cost.** It used to gate
 on `BarcodeDetector`, which Safari and Firefox don't ship, so on those the button simply

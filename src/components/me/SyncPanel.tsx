@@ -4,21 +4,30 @@ import * as sync from "../../lib/sync";
 import type { SyncStatus, SyncPhase } from "../../lib/sync";
 import Icon, { type IconName } from "../shared/Icon";
 import LinkConfirm from "./LinkConfirm";
-import QrLinkPanel from "./QrLinkPanel";
+import LinkSheet from "./LinkSheet";
+import ScanOverlay from "./ScanOverlay";
 
 /* Cross-device sync controls. All the actual syncing lives in lib/sync; this
    panel only renders its status and forwards taps. The one rule it owns is
    the confirm before Connect: joining a code adopts the cloud copy, which is
    the only sync action that can cost this device progress.
 
-   It also composes the two linking surfaces: the QR sub-panel, which is a
-   proposal being made, and the consent card, which is one being answered.
-
    The status used to be a sentence in the footnote grey every other aside in
    this app wears, which made "cloud unreachable" and "here's a tip" look like
    the same kind of thing. It is a card now: one drawn cloud, tinted by phase
    the way the rank ladder tints its dot, a title, and how long ago the last
-   exchange actually landed. */
+   exchange actually landed.
+
+   Below it, three buttons and no more. Everything linking used to put here —
+   a mode toggle, a Show-the-QR, a second code chip, a paste row — went into
+   the sheet, because a column of eight identical pills tells the reader
+   nothing about which one they want. "Copy code" went too: the dashed chip
+   above it already copies on tap and was saying the same thing twice.
+
+   This panel owns the three full-screen surfaces and keeps them exclusive:
+   the sheet, the scanner it can hand off to, and the consent card, which
+   closes the sheet (and with it the sheet's watch) the moment a directive
+   needs answering. */
 
 /* How often the "3m ago" line is allowed to be wrong by. A minute's precision
    with a half-minute tick means it is never off by more than it can show. */
@@ -102,7 +111,8 @@ export default function SyncPanel() {
   const { state, actions } = useApp();
   const status = useSyncExternalStore(sync.subscribe, sync.getStatus);
   const [entering, setEntering] = useState(false);
-  const [qr, setQr] = useState(false);
+  const [sheet, setSheet] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   /* Only here to re-render the relative time; the value is never read. */
@@ -115,11 +125,11 @@ export default function SyncPanel() {
     Object.keys(state.data.rituals).length > 0 ||
     state.data.quiz.answered > 0;
 
-  /* A consent card and a live QR must never share the screen: the card is a
-     decision being made, and the sub-panel's poll would be making another one
-     behind it. Closing the sub-panel takes the scanner and the square with it. */
+  /* A consent card and a live square must never share the screen: the card is
+     a decision being made, and the sheet's poll would be making another one
+     behind it. Closing the sheet stops that watch, which is the point. */
   useEffect(() => {
-    if (state.link) setQr(false);
+    if (state.link) setSheet(false);
   }, [state.link]);
 
   /* "3m ago" goes stale on its own, and nothing in the store changes when it
@@ -130,8 +140,20 @@ export default function SyncPanel() {
     return () => clearInterval(t);
   }, [status.enabled]);
 
-  /* Stable, because the QR panel's poll effect has it in its deps. */
-  const closeQr = useCallback(() => setQr(false), []);
+  /* Stable, because the sheet's poll effect has it in its deps. */
+  const closeSheet = useCallback(() => setSheet(false), []);
+  const closeScan = useCallback(() => setScanning(false), []);
+  /* The sheet and the camera are both the whole screen and both about the same
+     handshake; two at once is a state the reader has to back out of. */
+  const toScanner = useCallback(() => {
+    setSheet(false);
+    setScanning(true);
+  }, []);
+  const openSheet = useCallback(() => {
+    setEntering(false);
+    setScanning(false);
+    setSheet(true);
+  }, []);
 
   function doEnable() {
     sync.enable();
@@ -202,13 +224,13 @@ export default function SyncPanel() {
   const when = ago(status.syncedAt, Date.now());
 
   /* The head is the half that swaps wholesale when sync comes on. It is kept
-     at one fixed position in the tree, and the QR sub-panel at another, for a
-     reason that took a broken modal to find: a Get-mode link *enables* sync,
-     so this component flips branch in the middle of the sub-panel's own
-     success animation. Reconciling by index, React would tear the sub-panel
-     down and stand a fresh one up — new state, no "Linked" card, and a second
-     poll started on the code that had just been joined. Same index, same
-     component, one instance, and the flip is invisible to it. */
+     at one fixed position in the tree, and the sheet at another, for a reason
+     that took a broken animation to find: a Get-mode link *enables* sync, so
+     this component flips branch in the middle of the sheet's own success beat.
+     Reconciling by index, React would tear the sheet down and stand a fresh
+     one up — no "Linked" card, and a second watch started on the code that had
+     just been joined. Same index, same component, one instance, and the flip
+     is invisible to it. */
   const head = status.enabled ? (
     <>
       <div className={"synccard" + (pop ? " pop" : "")} style={{ color: l.tone }}>
@@ -231,10 +253,7 @@ export default function SyncPanel() {
         >
           Sync now
         </button>
-        <button className="mbtn" onClick={doCopy}>
-          Copy code
-        </button>
-        <button className="mbtn ico" onClick={() => setQr((v) => !v)}>
+        <button className="mbtn ico" onClick={openSheet}>
           <Icon name="qr-code" size={14} />
           Link a device
         </button>
@@ -253,20 +272,15 @@ export default function SyncPanel() {
           className="mbtn"
           onClick={() => {
             setEntering((v) => !v);
-            setQr(false);
+            setSheet(false);
           }}
         >
           I have a code
         </button>
-        <button
-          className="mbtn ico"
-          onClick={() => {
-            setQr((v) => !v);
-            setEntering(false);
-          }}
-        >
+        {/* Same action, same name as the one on the enabled panel. */}
+        <button className="mbtn ico" onClick={openSheet}>
           <Icon name="qr-code" size={14} />
-          Link by QR
+          Link a device
         </button>
       </div>
       {entering && (
@@ -291,9 +305,17 @@ export default function SyncPanel() {
 
   return (
     <>
+      {scanning && <ScanOverlay onClose={closeScan} />}
       {state.link && <LinkConfirm status={status} hasProgress={hasProgress} />}
       {head}
-      {qr && <QrLinkPanel status={status} hasProgress={hasProgress} onDone={closeQr} />}
+      {sheet && (
+        <LinkSheet
+          status={status}
+          hasProgress={hasProgress}
+          onScan={toScanner}
+          onDone={closeSheet}
+        />
+      )}
       {status.enabled ? (
         l.note && <p className="storenote">{l.note}</p>
       ) : (

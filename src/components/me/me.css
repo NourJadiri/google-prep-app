@@ -64,27 +64,62 @@
 .scanvid { width: min(85vw, 420px); max-height: 58vh; border-radius: 16px; background: #000; object-fit: cover; }
 .scannote { margin: 0; max-width: 34ch; text-align: center; font-size: 12.5px; line-height: 1.5; color: #ffffff; }
 
-/* The QR modal, at the scanner's layer for the scanner's reason — it owns the
-   screen while it is open, and the two can never both be up. Darker scrim than
-   the camera's: the phone reading this is metering the whole frame, and a dark
-   surround stops it opening up and blowing the white card out. */
-.qrscrim { position: fixed; inset: 0; z-index: 58; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.82); padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+/* The linking sheet, at the scanner's layer for the scanner's reason — it owns
+   the screen while it is open, and the two can never both be up. Darker scrim
+   than the camera's: the phone reading this is metering the whole frame, and a
+   dark surround stops it opening up and blowing the white card out.
+
+   `dvh` rather than `vh` for the same reason base.css uses it on the body: on
+   a phone the URL bar comes and goes, and a sheet measured against the tall
+   viewport puts its Close button under the chrome. */
+.qrscrim { position: fixed; inset: 0; height: 100dvh; z-index: 58; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.82); padding: calc(16px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom)); }
 /* White in both themes on purpose, the same reason QrCode.tsx hard-codes its
    two hex values: a scanner wants dark modules on a light card with a margin
-   round them, and a dark-mode card would be a dark-mode card. */
-.qrsheet { display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(92vw, 460px); padding: 18px 18px 16px; border-radius: 16px; background: #ffffff; color: #202124; box-shadow: 0 8px 28px rgba(0,0,0,.4); }
-.qrbig { width: min(80vw, 60vh, 420px); aspect-ratio: 1; padding: 10px; border-radius: 12px; background: #ffffff; }
+   round them, and a dark-mode card would be a dark-mode card.
+   It scrolls rather than overflows: an iPhone SE in Get mode, with the warning
+   and the waiting line both showing, is taller than 667px and the square is
+   the last thing that should be made to shrink for it. */
+.qrsheet {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: min(94vw, 440px); max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  padding: 16px 16px 14px; border-radius: 16px;
+  background: #ffffff; color: #202124; box-shadow: 0 8px 28px rgba(0,0,0,.4);
+}
+/* A column that scrolls must not also squash: without this the flex items give
+   up height when the content is a hair too tall, and the first thing to go is
+   the toggle's track, which then has a pressed pill bulging out of it. */
+.qrsheet > * { flex: none; }
+/* The one decision the sheet asks for, as a segmented control rather than two
+   more pills — a single object with a half lit, so it reads as a choice
+   already made and not as two things to do. Pinned to the light palette like
+   everything else in here. */
+.segtoggle { display: flex; width: 100%; gap: 3px; padding: 3px; border-radius: 999px; background: #f1f3f4; }
+.segtoggle button { flex: 1; min-width: 0; min-height: 44px; padding: 0 8px; border: 0; border-radius: 999px; background: transparent; color: #5f6368; font-size: 13px; font-weight: 600; transition: background-color .15s ease, color .15s ease; }
+.segtoggle button[aria-pressed="true"] { background: #ffffff; color: #1a73e8; box-shadow: 0 1px 2px rgba(60,64,67,.24); }
+.qrbig { width: min(78vw, 48vh, 380px); aspect-ratio: 1; flex: none; padding: 10px; border-radius: 12px; background: #ffffff; }
 .qrbig svg { display: block; }
-/* Inside the sheet the theme tokens would fight the white; pin the two
-   controls to the light palette's own values. */
+/* Inside the sheet the theme tokens would fight the white; pin the controls to
+   the light palette's own values. */
 .qrsheet .synccode { margin-top: 0; border-color: #dadce0; background: #ffffff; color: #202124; }
 .qrsheet .synccode:active { background: #f1f3f4; }
 .qrsheet .mbtn { border-color: #dadce0; background: #ffffff; color: #202124; }
 .qrsheet .mbtn:active { background: #f1f3f4; }
-.qrhint { margin: 0; max-width: 32ch; text-align: center; font-size: 12px; line-height: 1.45; color: #5f6368; }
+.qrsheet .syncinput { width: 100%; flex: none; border-color: #dadce0; background: #ffffff; color: #202124; min-height: 44px; }
+.qrhint { margin: 0; max-width: 34ch; text-align: center; font-size: 12px; line-height: 1.45; color: #5f6368; }
+/* The replacement warning is not a footnote — full ink, like .storenote.warn. */
+.qrwarn { margin: 0; max-width: 34ch; text-align: center; font-size: 11.5px; line-height: 1.45; color: #202124; }
+.qrwait { margin: 0; text-align: center; font-size: 12px; color: #5f6368; }
+.qrenable { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 0; }
+/* The ways round. Text-level on purpose: another pill here would compete with
+   the square, and these are what you reach for when the square isn't working.
+   Still 44px of finger, which is what the padding is doing. */
+.sheetsub { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 100%; padding-top: 8px; border-top: 1px solid #e8eaed; }
+.sublink { min-height: 44px; padding: 8px 10px; border: 0; background: transparent; color: #1a73e8; font-size: 12.5px; font-weight: 600; border-radius: 10px; }
+.sublink:active { background: #f1f3f4; }
+@media (hover: hover) { .sublink:hover { background: #f1f3f4; } }
 /* The arrival card, same footprint as the square it replaces so the sheet
    doesn't jump on the way out. */
-.qrlinked { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: min(80vw, 60vh, 420px); aspect-ratio: 1; color: #1e8e3e; }
+.qrlinked { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: min(78vw, 48vh, 380px); aspect-ratio: 1; color: #1e8e3e; }
 .qrlinked .ic { width: 88px; height: 88px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, currentColor 12%, transparent); }
 .qrlinked p { margin: 0; font-size: 16px; font-weight: 700; color: #202124; }
 
@@ -104,9 +139,9 @@
   .synccard.pop .ic svg { animation: syncpop 380ms cubic-bezier(.2,1.6,.4,1); }
   /* The poll is running. Three dots at 1.6s so it reads as patience, not as a
      spinner promising something in the next second. */
-  .storenote.waiting .ell i { animation: ellfade 1.6s ease-in-out infinite; }
-  .storenote.waiting .ell i:nth-child(2) { animation-delay: .22s; }
-  .storenote.waiting .ell i:nth-child(3) { animation-delay: .44s; }
+  .waiting .ell i { animation: ellfade 1.6s ease-in-out infinite; }
+  .waiting .ell i:nth-child(2) { animation-delay: .22s; }
+  .waiting .ell i:nth-child(3) { animation-delay: .44s; }
   /* The sheet arrives rather than appearing; the scrim just fades. */
   .qrscrim { animation: scrimin .18s ease-out; }
   .qrsheet { animation: sheetin .22s cubic-bezier(.05,.7,.1,1); }
@@ -124,5 +159,5 @@
 @keyframes sheetin { from { transform: scale(.94); opacity: 0; } }
 
 /* The dots are inline text either way, so nothing reflows when they stop. */
-.storenote.waiting .ell { white-space: nowrap; }
-.storenote.waiting .ell i { font-style: normal; }
+.waiting .ell { white-space: nowrap; }
+.waiting .ell i { font-style: normal; }
