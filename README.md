@@ -10,6 +10,14 @@ re-drill day. Five problems a day, Google-tagged picks, and every day ends with
 a warm-up re-drilling an older pattern so nothing rots. Twenty-four stations,
 terminus called GOOGLE.
 
+The premium classics — Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
+Walls and Gates, Number of Islands II, Android Unlock Patterns, Longest
+Substring with At Most K Distinct, Design Hit Counter — ride along as in-app
+drills under `public/drills/`: original re-statements of the same tasks (own
+wording, own worked examples, follow-ups an interviewer would ask), served by
+the app itself and linked straight from their station rows. Open one, copy it,
+and work it with Claude as your interviewer.
+
 Four tabs:
 
 - **Line** — the plan as a transit line in Google's four logo colours. Check problems, log

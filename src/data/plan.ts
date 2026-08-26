@@ -12,7 +12,13 @@
 // cross-checked against liquidslr/leetcode-company-wise-problems' Google lists
 // (30-day and 3-month CSVs — the same repo the timed mocks link to). Where a
 // problem from the retired d11–d14 survives, it keeps its old id, so a tick
-// made ahead of schedule still counts. This file is no longer written by
+// made ahead of schedule still counts.
+//
+// The premium classics (Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
+// Walls and Gates, …) ride as in-app drills: original re-statements of the
+// same tasks — own wording, own examples — served from public/drills and
+// linked via url instead of slug. LeetCode's actual text is paywalled and none
+// of it is copied here. This file is no longer written by
 // scripts/extract-data.mjs — regenerating would amputate everything past d7.
 
 import type { Day, Diff, NonEmpty, Problem } from "../types";
@@ -130,32 +136,33 @@ export const PLAN: NonEmpty<Day> = [
     ritual:"Write the BFS skeleton cold — queue, seen-at-push, ring by ring. Dojo t8 checks you.",
     probs:[
       { id:"ff",   n:"Flood Fill", slug:"flood-fill", diff:"E" },
-      { id:"mai",  n:"Max Area of Island", slug:"max-area-of-island", diff:"M" },
+      { id:"paw",  n:"Pacific Atlantic Water Flow", slug:"pacific-atlantic-water-flow", diff:"M" },
       { id:"ro",   n:"Rotting Oranges", slug:"rotting-oranges", diff:"M" },
       { id:"spbm", n:"Shortest Path in Binary Matrix", slug:"shortest-path-in-binary-matrix", diff:"M" },
+      { id:"wag",  n:"Walls and Gates (in-app drill)", url:"/drills/walls-and-gates.md", diff:"M" },
       { id:"csum", n:"Combination Sum", slug:"combination-sum", diff:"M", warm:true },
     ]},
   { id:"d12", d:12, stn:"Union Depot", color:"var(--red)", ph:"graphs",
     name:"Connected components, two ways",
-    note:"Count islands in any disguise: DFS eats a component whole, union-find merges one edge at a time. Pick by verb — handed a static grid, flood it; edges arriving one by one, union them. Accounts Merge is Google's favourite way to hide a graph inside strings.",
+    note:"Count islands in any disguise: DFS eats a component whole, union-find merges one edge at a time. Pick by verb — handed a static grid, flood it; edges arriving one by one, union them. A tree is the sparsest component going: n−1 edges, connected, nothing spare. Accounts Merge is Google's favourite way to hide a graph inside strings.",
     ritual:"Write union-find from memory — find with path compression, union, a components counter.",
     probs:[
       { id:"prov", n:"Number of Provinces", slug:"number-of-provinces", diff:"M" },
-      { id:"paw",  n:"Pacific Atlantic Water Flow", slug:"pacific-atlantic-water-flow", diff:"M" },
-      { id:"redc", n:"Redundant Connection", slug:"redundant-connection", diff:"M" },
+      { id:"gvt",  n:"Graph Valid Tree (in-app drill)", url:"/drills/graph-valid-tree.md", diff:"M" },
       { id:"accm", n:"Accounts Merge", slug:"accounts-merge", diff:"M" },
-      { id:"lrcr", n:"Longest Repeating Character Replacement", slug:"longest-repeating-character-replacement", diff:"M", warm:true },
+      { id:"isl2", n:"Number of Islands II (in-app drill, if time)", url:"/drills/number-of-islands-ii.md", diff:"H" },
+      { id:"lsk",  n:"Longest Substring with At Most K Distinct (in-app drill)", url:"/drills/longest-substring-k-distinct.md", diff:"M", warm:true },
     ]},
   { id:"d13", d:13, stn:"Order Junction", color:"var(--yellow)", ph:"graphs",
     name:"Topological order — graphs with deadlines",
-    note:"Prerequisites are edges, a valid schedule is a topo order, a cycle is the interviewer asking what breaks. Kahn's: indegrees in, zeroes queue up, pop and decrement. Then Longest Increasing Path — the same DAG order, memoised instead of queued, and the bridge to next week's DP.",
+    note:"Prerequisites are edges, a valid schedule is a topo order, a cycle is the interviewer asking what breaks. Kahn's: indegrees in, zeroes queue up, pop and decrement. Alien Dictionary hides its edges between adjacent words — the premium crown jewel, re-stated in-app. Then Longest Increasing Path: the same DAG order, memoised instead of queued.",
     ritual:"Write Kahn's from memory — indegree array, zero-queue, pop-decrement-push — and say what a leftover node means.",
     probs:[
-      { id:"crs",  n:"Course Schedule", slug:"course-schedule", diff:"M" },
-      { id:"crs2", n:"Course Schedule II", slug:"course-schedule-ii", diff:"M" },
-      { id:"safe", n:"Find Eventual Safe States", slug:"find-eventual-safe-states", diff:"M" },
-      { id:"lip",  n:"Longest Increasing Path in a Matrix", slug:"longest-increasing-path-in-a-matrix", diff:"H" },
-      { id:"kcl",  n:"K Closest Points to Origin", slug:"k-closest-points-to-origin", diff:"M", warm:true },
+      { id:"crs",   n:"Course Schedule", slug:"course-schedule", diff:"M" },
+      { id:"crs2",  n:"Course Schedule II", slug:"course-schedule-ii", diff:"M" },
+      { id:"alien", n:"Alien Dictionary (in-app drill)", url:"/drills/alien-dictionary.md", diff:"H" },
+      { id:"lip",   n:"Longest Increasing Path in a Matrix", slug:"longest-increasing-path-in-a-matrix", diff:"H" },
+      { id:"kcl",   n:"K Closest Points to Origin", slug:"k-closest-points-to-origin", diff:"M", warm:true },
     ]},
   { id:"d14", d:14, stn:"Weighbridge", color:"var(--green)", ph:"graphs",
     name:"Dijkstra — BFS grows a priority queue",
@@ -177,7 +184,7 @@ export const PLAN: NonEmpty<Day> = [
       { id:"wlad",  n:"Word Ladder", slug:"word-ladder", diff:"H" },
       { id:"spva",  n:"Shortest Path Visiting All Nodes", slug:"shortest-path-visiting-all-nodes", diff:"H" },
       { id:"bus",   n:"Bus Routes (if time)", slug:"bus-routes", diff:"H" },
-      { id:"hr1",   n:"House Robber", slug:"house-robber", diff:"M", warm:true },
+      { id:"aup",   n:"Android Unlock Patterns (in-app drill)", url:"/drills/android-unlock-patterns.md", diff:"M", warm:true },
     ]},
   { id:"d16", d:16, stn:"Knapsack Wharf", color:"var(--red)", ph:"dp",
     name:"Choose or skip — the knapsack family",
@@ -236,12 +243,13 @@ export const PLAN: NonEmpty<Day> = [
     ]},
   { id:"d21", d:21, stn:"Daily Bread", color:"var(--yellow)", ph:"ds",
     name:"The staples the line skipped",
-    note:"The handshake questions — fumble these and nothing after matters. Two Sum is 'store the complement you still need'; Subarray Sum K is the same ledger holding prefix sums; intervals sort by start, then one decision each: extend the last or push a new one. Fifteen minutes apiece, tops.",
+    note:"The handshake questions — fumble these and nothing after matters. Two Sum is 'store the complement you still need'; Subarray Sum K is the same ledger holding prefix sums; intervals sort by start, then one decision each: extend the last or push a new one. Meeting Rooms II — the most Google-tagged premium problem there is, re-stated in-app — is that sweep plus a heap of end times.",
     ritual:"Day 9's ritual, resurrected: the variable-window skeleton — grow right, while-broken shrink left, record.",
     probs:[
       { id:"tsum", n:"Two Sum", slug:"two-sum", diff:"E" },
       { id:"mi",   n:"Merge Intervals", slug:"merge-intervals", diff:"M" },
       { id:"ii",   n:"Insert Interval", slug:"insert-interval", diff:"M" },
+      { id:"mr2",  n:"Meeting Rooms II (in-app drill)", url:"/drills/meeting-rooms-ii.md", diff:"M" },
       { id:"ssk",  n:"Subarray Sum Equals K", slug:"subarray-sum-equals-k", diff:"M" },
       { id:"clg",  n:"Clone Graph", slug:"clone-graph", diff:"M", warm:true },
     ]},
@@ -265,6 +273,7 @@ export const PLAN: NonEmpty<Day> = [
       { id:"idg",   n:"Insert Delete GetRandom O(1)", slug:"insert-delete-getrandom-o1", diff:"M" },
       { id:"rpw",   n:"Random Pick with Weight", slug:"random-pick-with-weight", diff:"M" },
       { id:"tbkv",  n:"Time Based Key-Value Store", slug:"time-based-key-value-store", diff:"M" },
+      { id:"dhc",   n:"Design Hit Counter (in-app drill, if time)", url:"/drills/design-hit-counter.md", diff:"M" },
       { id:"mpsub", n:"Maximum Product Subarray", slug:"maximum-product-subarray", diff:"M", warm:true },
     ]},
   { id:"d24", d:24, stn:"Final Approach", color:"var(--blue)", ph:"mix", mock:true,
@@ -294,6 +303,7 @@ export const TOTAL: number = PLAN.reduce((a, d) => a + d.probs.length, 0);
 export const DIFFN: Record<Diff, string> = { E: "EASY", M: "MED", H: "HARD" };
 export const probXP = (p: Problem): number => p.xp || XPD[p.diff];
 
-/* Where a problem's ↗ goes. Every problem carries a slug or a url — only the
-   two timed mocks use the latter — so the "" is unreachable. */
+/* Where a problem's ↗ goes. Every problem carries a slug or a url — the timed
+   mocks and the in-app premium drills use the latter — so the "" is
+   unreachable. */
 export const probURL = (p: Problem): string => p.url ?? (p.slug ? LC(p.slug) : "");
