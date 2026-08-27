@@ -1,14 +1,18 @@
 // Ranks and badges. Ported from reference/onsite-express.html, then the two
-// station badges were re-worded when the line grew to 14 stations — their
-// thresholds live in engine.toggleProb and derive from PLAN.length. This file
-// is no longer written by scripts/extract-data.mjs; regenerating would revert
-// the badge copy to the 7-station line.
+// station badges were re-worded when the line grew to 14 stations, and again
+// at 24 — their thresholds live in engine.toggleProb and derive from
+// PLAN.length. The ladder grew three rungs above Noogler when the Google
+// fortnight (d11–d24) roughly doubled the XP on the table; existing rungs are
+// never re-priced, so nobody is demoted by an update. This file is no longer
+// written by scripts/extract-data.mjs; regenerating would revert the badge
+// copy to the 7-station line.
 
 import type { Badge, NonEmpty, Rank } from "../types";
 
 export const RANKS: NonEmpty<Rank> = [
   ["Wanderer", 0], ["Pathfinder", 100], ["Backtracker", 250], ["Memoizer", 450],
   ["Tabulator", 700], ["Pattern Oracle", 1000], ["Noogler", 1350],
+  ["Graph Whisperer", 1800], ["DP Sensei", 2250], ["Offer Letter", 2750],
 ];
 
 export const BADGES: Badge[] = [
@@ -19,13 +23,14 @@ export const BADGES: Badge[] = [
   { id:"bugs20",   ic:"🐞", n:"Exterminator",   d:"20 bug hunts right" },
   { id:"streak3",  ic:"🔥", n:"Heating Up",     d:"3-day streak" },
   { id:"streak7",  ic:"☄️", n:"Full Week",      d:"7-day streak" },
-  { id:"half",     ic:"🛤️", n:"Halfway There",  d:"Clear 7 stations" },
-  { id:"line",     ic:"🏁", n:"End of the Line", d:"Clear all 14 stations" },
+  { id:"half",     ic:"🛤️", n:"Halfway There",  d:"Clear 12 stations" },
+  { id:"line",     ic:"🏁", n:"End of the Line", d:"Clear all 24 stations" },
   { id:"noogler",  ic:"🎓", n:"Noogler",        d:"Reach the top rank" },
 ];
 
 /* Rank dot colours, cycling the four logo colours up the ladder. */
 export const RANKCOL: string[] = [
   "var(--blue)", "var(--red)", "var(--yellow)", "var(--green)",
-  "var(--blue)", "var(--red)", "var(--yellow)",
+  "var(--blue)", "var(--red)", "var(--yellow)", "var(--green)",
+  "var(--blue)", "var(--red)",
 ];

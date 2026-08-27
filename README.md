@@ -1,13 +1,27 @@
 # Onsite Express
 
-A 14-day Google onsite study plan, ridden like a metro line. Week one: graphs →
-backtracking → DP. Week two: heaps, windows, binary search, intervals, monotonic
-stacks and the arrays-and-hashing staples. Fourteen stations, terminus called GOOGLE.
+A 24-day Google onsite study plan, ridden like a metro line. Days 1–10: paths →
+backtracking → DP → heaps, windows, binary search. Days 11–24, the Google
+fortnight, built as multi-day arcs rather than one pattern a day: five days of
+graphs (BFS, connected components, union-find, topological order, Dijkstra,
+state graphs and the bitmask TSP), three of DP (knapsack, strings, grids), two
+of hard trees, then the staples, monotonic stacks, a design day and a final
+re-drill day. Five problems a day, Google-tagged picks, and every day ends with
+a warm-up re-drilling an older pattern so nothing rots. Twenty-four stations,
+terminus called GOOGLE.
+
+The premium classics — Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
+Walls and Gates, Number of Islands II, Android Unlock Patterns, Longest
+Substring with At Most K Distinct, Design Hit Counter — ride along as in-app
+drills under `public/drills/`: original re-statements of the same tasks (own
+wording, own worked examples, follow-ups an interviewer would ask), served by
+the app itself and linked straight from their station rows. Open one, copy it,
+and work it with Claude as your interviewer.
 
 Four tabs:
 
-- **Line** — the week as a transit line in Google's four logo colours. Check problems, log
-  the morning ritual, run the Day-7 mock clock.
+- **Line** — the plan as a transit line in Google's four logo colours. Check problems, log
+  the morning ritual, run the mock clocks on days 7, 18, 22 and 24.
 - **Metro** — thumb-only quiz mode for the commute or the plane. 120 hand-written cards,
   ten stops a run, streaks multiply the XP. No typing, ever.
 - **Dojo** — 15 algorithm templates, blurred until you've written yours from memory.

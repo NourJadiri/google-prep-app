@@ -1,5 +1,5 @@
 import { useApp } from "../../state/AppState";
-import { TOTAL } from "../../data/plan";
+import { PLAN, TOTAL } from "../../data/plan";
 import { problemsDone, stationsCleared } from "../../lib/engine";
 import TransitLine from "./TransitLine";
 
@@ -19,14 +19,16 @@ export default function LineView() {
         <h1>
           Onsite <b>Express</b>
         </h1>
-        <p>Two rounds between you and the terminus. Fourteen stations, one line. Board anywhere.</p>
+        <p>Two rounds between you and the terminus. Twenty-four stations, one line. Board anywhere.</p>
         <p className="linestats">
           {problemsDone(data) +
             " / " +
             TOTAL +
             " problems · " +
             stationsCleared(data) +
-            " / 7 stations cleared"}
+            " / " +
+            PLAN.length +
+            " stations cleared"}
         </p>
       </div>
       <TransitLine />
