@@ -151,6 +151,29 @@ export const ritualsLogged = (data: PersistedData): number =>
 export const accuracy = (data: PersistedData): number =>
   data.quiz.answered ? Math.round((data.quiz.correct / data.quiz.answered) * 100) : 0;
 
+/** What the departures board prints per deck: how many cards the line carries,
+ *  and your hit rate across them — null until a card of it has been seen.
+ *  Redemption's "cards" are the misses currently owed, so its pct stays null. */
+export interface DeckStat {
+  n: number;
+  pct: number | null;
+}
+
+export function deckStat(data: PersistedData, deck: DeckId): DeckStat {
+  if (deck === "redo") return { n: data.quiz.missed.length, pct: null };
+  const pool = deck === "mix" ? Q : Q.filter((q) => q.ph === deck);
+  let seen = 0;
+  let right = 0;
+  pool.forEach((q) => {
+    const s = data.quiz.perQ[q.id];
+    if (s) {
+      seen += s.seen;
+      right += s.right;
+    }
+  });
+  return { n: pool.length, pct: seen ? Math.round((right / seen) * 100) : null };
+}
+
 /* Same story as LAST_DAY: RANKS is non-empty, so a computed index resolves. */
 const rankAt = (i: number): Rank => RANKS[i] ?? RANKS[0];
 
