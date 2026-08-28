@@ -117,6 +117,19 @@
   .dscrim { align-items: center; padding: 28px; background: rgba(0, 0, 0, .45); }
   .dsheet { max-width: 680px; max-height: min(86dvh, 820px); border-radius: 16px; box-shadow: 0 12px 48px rgba(0, 0, 0, .3); }
 }
+/* Entry, in the linking sheet's vocabulary: the scrim fades, the sheet rises
+   on a phone and settles as a dialog on desktop. Guarded the same way, so
+   `reduce` gets an instant open. */
+@media (prefers-reduced-motion: no-preference) {
+  .dscrim { animation: dscrimin .18s ease-out; }
+  .dsheet { animation: dsheetin .26s cubic-bezier(.05, .7, .1, 1); }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 640px) {
+  .dsheet { animation: ddlgin .22s cubic-bezier(.05, .7, .1, 1); }
+}
+@keyframes dscrimin { from { opacity: 0; } }
+@keyframes dsheetin { from { transform: translateY(28px); opacity: 0; } }
+@keyframes ddlgin { from { transform: translateY(10px) scale(.97); opacity: 0; } }
 .dshead {
   flex: none; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
   padding: 16px 18px 12px; border-bottom: 1px solid var(--line); background: var(--surface);
