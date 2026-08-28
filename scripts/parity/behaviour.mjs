@@ -178,8 +178,8 @@ console.log("\nquiz");
 
   await page.click('.mbtn:has-text("Decks")');
   await page.waitForTimeout(250);
-  const redo = await page.locator('.deck:has-text("Redemption")').innerText();
-  check("Redemption deck counts what you owe", /Redemption \(\d+\)/.test(redo), redo);
+  const redo = await page.locator('.drow:has-text("Redemption")').innerText();
+  check("Redemption deck counts what you owe", /\d+ missed/.test(redo), redo);
   await ctx.close();
 }
 

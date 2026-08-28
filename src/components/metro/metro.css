@@ -1,17 +1,43 @@
-.decks { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
-.deck {
-  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line);
-  background: var(--surface); font-size: 13px; font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  transition: background .15s, border-color .15s, transform .12s;
+/* The departures board: the deck picker as a station board. Rows are 60px, so
+   they clear the 44px thumb floor without the ::after overlay the old pills
+   needed. Line colours ride inline from DeckPicker's LOOK map; everything
+   theme-dependent stays a token, so dark mode needs no rules of its own. */
+.dboard {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: var(--shadow); margin: 14px 0 0; overflow: hidden;
 }
-@media (hover: hover) { .deck:not(:disabled):not(.sel):hover { background: var(--sunken); } }
-.deck:not(:disabled):active { transform: scale(.97); }
-.deck.sel { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.deck:disabled { opacity: .4; color: var(--ink2); cursor: default; }
+.dboard-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 10px; }
+.dboard-title { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--ink2); }
+.dboard-live { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.dboard-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+.drow {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px;
+  padding: 8px 14px; border-top: 1px solid var(--sunken); text-align: left;
+  transition: background .15s;
+}
+@media (hover: hover) { .drow:not(:disabled):not(.sel):hover { background: var(--sunken); } }
+.drow:not(:disabled):active { background: var(--sunken); }
+.drow.sel { background: var(--sunken); }
+.drow:disabled { opacity: .4; cursor: default; }
+/* Roundels flip to ink-on-pastel in dark mode the same way .board does; the
+   yellow line's letter is dark in both themes, since yellow never darkens. */
+.rdl {
+  width: 28px; height: 28px; border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: #fff;
+}
+@media (prefers-color-scheme: dark) { .rdl { color: var(--bg); } }
+.rdl.onyellow { color: #202124; }
+.rdl.mix { background: conic-gradient(var(--blue) 0 25%, var(--red) 0 50%, var(--yellow) 0 75%, var(--green) 0); }
+.rdl.mix i { width: 11px; height: 11px; border-radius: 50%; background: var(--surface); }
+.drow-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.drow-name { font-size: 14.5px; font-weight: 600; letter-spacing: -.1px; }
+.drow-sub { font-family: var(--mono); font-size: 11px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.dtag { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .1em; padding: 4px 8px; border-radius: 999px; flex: none; font-variant-numeric: tabular-nums; }
+.dplat { font-family: var(--mono); font-size: 11px; color: var(--ink2); flex: none; }
 .board {
   display: flex; align-items: center; justify-content: center; gap: 9px;
-  width: 100%; margin-top: 6px; padding: 14px; border-radius: 14px; border: none;
+  width: 100%; margin-top: 12px; padding: 14px; border-radius: 14px; border: none;
   background: var(--blue); color: #fff; font-size: 15.5px; font-weight: 600;
   box-shadow: var(--shadow);
   transition: transform .12s, filter .15s;
