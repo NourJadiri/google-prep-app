@@ -43,6 +43,8 @@ export interface AppStateShape {
    *  in the store because it can arrive at boot, long before the Me tab that
    *  renders the consent card has ever mounted. */
   link: LinkDirective | null;
+  /** The drill open in the reader sheet, by DRILLS id. */
+  drill: string | null;
   /** Celebrations waiting to be drained by <Celebrations>. */
   fx: StampedFx[];
   fxSeq: number;
@@ -70,6 +72,8 @@ export type Action =
   | { type: "SYNC_ADOPT"; data: PersistedData }
   | { type: "LINK_OPEN"; link: LinkDirective }
   | { type: "LINK_CLEAR" }
+  | { type: "DRILL_OPEN"; id: string }
+  | { type: "DRILL_CLOSE" }
   | { type: "RESET" }
   | { type: "FX"; fx: Fx[] }
   | { type: "FX_CONSUMED" };
@@ -85,6 +89,7 @@ function boot(): AppStateShape {
     openTpl: [],
     shownTpl: [],
     link: null,
+    drill: null,
     fx: [],
     fxSeq: 0,
   };
@@ -177,6 +182,12 @@ function reducer(state: AppStateShape, action: Action): AppStateShape {
     case "LINK_CLEAR":
       return { ...state, link: null };
 
+    case "DRILL_OPEN":
+      return { ...state, drill: action.id };
+
+    case "DRILL_CLOSE":
+      return { ...state, drill: null };
+
     case "RESET":
       return withFx(state, { data: engine.blank(), session: null }, [
         { kind: "toast", msg: "Fresh line. Day 1 awaits.", gold: false },
@@ -210,6 +221,8 @@ export interface Actions {
   importData: (data: PersistedData) => void;
   openLink: (link: LinkDirective) => void;
   clearLink: () => void;
+  openDrill: (id: string) => void;
+  closeDrill: () => void;
   reset: () => void;
   celebrate: (...fx: Fx[]) => void;
   toast: (msg: string, gold?: boolean) => void;
@@ -310,6 +323,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       importData: (data) => dispatch({ type: "IMPORT", data }),
       openLink: (link) => dispatch({ type: "LINK_OPEN", link }),
       clearLink: () => dispatch({ type: "LINK_CLEAR" }),
+      openDrill: (id) => dispatch({ type: "DRILL_OPEN", id }),
+      closeDrill: () => dispatch({ type: "DRILL_CLOSE" }),
       reset: () => dispatch({ type: "RESET" }),
       celebrate: (...fx) => dispatch({ type: "FX", fx }),
       toast: (msg, gold = false) =>

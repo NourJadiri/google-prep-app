@@ -13,10 +13,12 @@ terminus called GOOGLE.
 The premium classics — Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
 Walls and Gates, Number of Islands II, Android Unlock Patterns, Longest
 Substring with At Most K Distinct, Design Hit Counter — ride along as in-app
-drills under `public/drills/`: original re-statements of the same tasks (own
-wording, own worked examples, follow-ups an interviewer would ask), served by
-the app itself and linked straight from their station rows. Open one, copy it,
-and work it with Claude as your interviewer.
+drills: original re-statements of the same tasks (own wording, own worked
+examples, follow-ups an interviewer would ask), authored as markdown under
+`src/data/drills/`, bundled into the app, and read in a LeetCode-style
+sheet opened from the book icon on their station rows — a bottom sheet on the
+phone, a centred dialog on desktop, with a one-tap **Copy for Claude** that
+puts the whole drill on the clipboard to work with Claude as your interviewer.
 
 Four tabs:
 

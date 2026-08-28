@@ -32,10 +32,13 @@ export interface Problem {
   id: string;
   n: string;
   diff: Diff;
-  /** Every problem but the timed mocks links to LeetCode by slug. */
+  /** Every problem but the timed mocks and the drills links to LeetCode by slug. */
   slug?: string;
   /** The timed mocks carry a full url instead. */
   url?: string;
+  /** The premium classics carry a drill id instead: the row's ↗ opens the
+   *  in-app reader (DrillSheet) on DRILLS[drill] rather than leaving the app. */
+  drill?: string;
   /** Overrides the difficulty's XP; only the timed mocks set it. */
   xp?: number;
   /** Marks the day's last problem as a warm-up. Week 1 warms seed the heaps
