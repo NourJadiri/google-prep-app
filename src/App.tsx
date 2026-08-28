@@ -4,6 +4,7 @@ import { TimerProvider } from "./state/TimerProvider";
 import Header from "./components/layout/Header";
 import TabBar from "./components/layout/TabBar";
 import Celebrations from "./components/shared/Celebrations";
+import DrillSheet from "./components/line/DrillSheet";
 import LineView from "./components/line/LineView";
 import MetroView from "./components/metro/MetroView";
 import DojoView from "./components/dojo/DojoView";
@@ -30,6 +31,7 @@ export default function App() {
         <View />
       </main>
       <TabBar />
+      {state.drill && <DrillSheet id={state.drill} />}
       <Celebrations />
     </TimerProvider>
   );

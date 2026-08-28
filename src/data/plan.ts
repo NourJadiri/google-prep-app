@@ -16,10 +16,11 @@
 //
 // The premium classics (Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
 // Walls and Gates, …) ride as in-app drills: original re-statements of the
-// same tasks — own wording, own examples — served from public/drills and
-// linked via url instead of slug. LeetCode's actual text is paywalled and none
-// of it is copied here. This file is no longer written by
-// scripts/extract-data.mjs — regenerating would amputate everything past d7.
+// same tasks — own wording, own examples — bundled from src/data/drills and
+// carried on a row by `drill` instead of slug, which opens the in-app reader
+// (DrillSheet). LeetCode's actual text is paywalled and none of it is copied
+// here. This file is no longer written by scripts/extract-data.mjs —
+// regenerating would amputate everything past d7.
 
 import type { Day, Diff, NonEmpty, Problem } from "../types";
 
@@ -139,7 +140,7 @@ export const PLAN: NonEmpty<Day> = [
       { id:"paw",  n:"Pacific Atlantic Water Flow", slug:"pacific-atlantic-water-flow", diff:"M" },
       { id:"ro",   n:"Rotting Oranges", slug:"rotting-oranges", diff:"M" },
       { id:"spbm", n:"Shortest Path in Binary Matrix", slug:"shortest-path-in-binary-matrix", diff:"M" },
-      { id:"wag",  n:"Walls and Gates (in-app drill)", url:"/drills/walls-and-gates.md", diff:"M" },
+      { id:"wag",  n:"Walls and Gates", drill:"walls-and-gates", diff:"M" },
       { id:"csum", n:"Combination Sum", slug:"combination-sum", diff:"M", warm:true },
     ]},
   { id:"d12", d:12, stn:"Union Depot", color:"var(--red)", ph:"graphs",
@@ -148,10 +149,10 @@ export const PLAN: NonEmpty<Day> = [
     ritual:"Write union-find from memory — find with path compression, union, a components counter.",
     probs:[
       { id:"prov", n:"Number of Provinces", slug:"number-of-provinces", diff:"M" },
-      { id:"gvt",  n:"Graph Valid Tree (in-app drill)", url:"/drills/graph-valid-tree.md", diff:"M" },
+      { id:"gvt",  n:"Graph Valid Tree", drill:"graph-valid-tree", diff:"M" },
       { id:"accm", n:"Accounts Merge", slug:"accounts-merge", diff:"M" },
-      { id:"isl2", n:"Number of Islands II (in-app drill, if time)", url:"/drills/number-of-islands-ii.md", diff:"H" },
-      { id:"lsk",  n:"Longest Substring with At Most K Distinct (in-app drill)", url:"/drills/longest-substring-k-distinct.md", diff:"M", warm:true },
+      { id:"isl2", n:"Number of Islands II (if time)", drill:"number-of-islands-ii", diff:"H" },
+      { id:"lsk",  n:"Longest Substring with At Most K Distinct", drill:"longest-substring-k-distinct", diff:"M", warm:true },
     ]},
   { id:"d13", d:13, stn:"Order Junction", color:"var(--yellow)", ph:"graphs",
     name:"Topological order — graphs with deadlines",
@@ -160,7 +161,7 @@ export const PLAN: NonEmpty<Day> = [
     probs:[
       { id:"crs",   n:"Course Schedule", slug:"course-schedule", diff:"M" },
       { id:"crs2",  n:"Course Schedule II", slug:"course-schedule-ii", diff:"M" },
-      { id:"alien", n:"Alien Dictionary (in-app drill)", url:"/drills/alien-dictionary.md", diff:"H" },
+      { id:"alien", n:"Alien Dictionary", drill:"alien-dictionary", diff:"H" },
       { id:"lip",   n:"Longest Increasing Path in a Matrix", slug:"longest-increasing-path-in-a-matrix", diff:"H" },
       { id:"kcl",   n:"K Closest Points to Origin", slug:"k-closest-points-to-origin", diff:"M", warm:true },
     ]},
@@ -184,7 +185,7 @@ export const PLAN: NonEmpty<Day> = [
       { id:"wlad",  n:"Word Ladder", slug:"word-ladder", diff:"H" },
       { id:"spva",  n:"Shortest Path Visiting All Nodes", slug:"shortest-path-visiting-all-nodes", diff:"H" },
       { id:"bus",   n:"Bus Routes (if time)", slug:"bus-routes", diff:"H" },
-      { id:"aup",   n:"Android Unlock Patterns (in-app drill)", url:"/drills/android-unlock-patterns.md", diff:"M", warm:true },
+      { id:"aup",   n:"Android Unlock Patterns", drill:"android-unlock-patterns", diff:"M", warm:true },
     ]},
   { id:"d16", d:16, stn:"Knapsack Wharf", color:"var(--red)", ph:"dp",
     name:"Choose or skip — the knapsack family",
@@ -249,7 +250,7 @@ export const PLAN: NonEmpty<Day> = [
       { id:"tsum", n:"Two Sum", slug:"two-sum", diff:"E" },
       { id:"mi",   n:"Merge Intervals", slug:"merge-intervals", diff:"M" },
       { id:"ii",   n:"Insert Interval", slug:"insert-interval", diff:"M" },
-      { id:"mr2",  n:"Meeting Rooms II (in-app drill)", url:"/drills/meeting-rooms-ii.md", diff:"M" },
+      { id:"mr2",  n:"Meeting Rooms II", drill:"meeting-rooms-ii", diff:"M" },
       { id:"ssk",  n:"Subarray Sum Equals K", slug:"subarray-sum-equals-k", diff:"M" },
       { id:"clg",  n:"Clone Graph", slug:"clone-graph", diff:"M", warm:true },
     ]},
@@ -273,7 +274,7 @@ export const PLAN: NonEmpty<Day> = [
       { id:"idg",   n:"Insert Delete GetRandom O(1)", slug:"insert-delete-getrandom-o1", diff:"M" },
       { id:"rpw",   n:"Random Pick with Weight", slug:"random-pick-with-weight", diff:"M" },
       { id:"tbkv",  n:"Time Based Key-Value Store", slug:"time-based-key-value-store", diff:"M" },
-      { id:"dhc",   n:"Design Hit Counter (in-app drill, if time)", url:"/drills/design-hit-counter.md", diff:"M" },
+      { id:"dhc",   n:"Design Hit Counter (if time)", drill:"design-hit-counter", diff:"M" },
       { id:"mpsub", n:"Maximum Product Subarray", slug:"maximum-product-subarray", diff:"M", warm:true },
     ]},
   { id:"d24", d:24, stn:"Final Approach", color:"var(--blue)", ph:"mix", mock:true,
@@ -303,7 +304,7 @@ export const TOTAL: number = PLAN.reduce((a, d) => a + d.probs.length, 0);
 export const DIFFN: Record<Diff, string> = { E: "EASY", M: "MED", H: "HARD" };
 export const probXP = (p: Problem): number => p.xp || XPD[p.diff];
 
-/* Where a problem's ↗ goes. Every problem carries a slug or a url — the timed
-   mocks and the in-app premium drills use the latter — so the "" is
-   unreachable. */
+/* Where a problem's ↗ goes, for rows that leave the app. Every such problem
+   carries a slug or a url — only the timed mocks use the latter — so the "" is
+   unreachable. Drill rows never come here: their book opens DrillSheet. */
 export const probURL = (p: Problem): string => p.url ?? (p.slug ? LC(p.slug) : "");

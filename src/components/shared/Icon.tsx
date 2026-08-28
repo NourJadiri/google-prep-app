@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 export type IconName =
   | "route" | "train" | "code" | "chart"          /* tab bar */
   | "check" | "chevron-down" | "arrow-up-right" | "arrow-right" | "x"
+  | "book-open"                                    /* drill reader */
   | "flame" | "zap" | "target" | "star" | "bug" | "flag"
   | "layers" | "calendar-check" | "milestone" | "graduation-cap"
   | "play" | "pause" | "rotate-ccw" | "timer"
@@ -64,6 +65,12 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <path d="M18 6 6 18" />
       <path d="m6 6 12 12" />
+    </>
+  ),
+  "book-open": (
+    <>
+      <path d="M12 7v14" />
+      <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
     </>
   ),
   flame: (
