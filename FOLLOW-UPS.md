@@ -222,6 +222,25 @@ answer anyway (or a slow one: it shares the twelve-second setup budget, after wh
 run stops). Statistical judges (Random Pick with Weight, Insert Delete GetRandom) use
 loose bounds, so a correct solution fails them with negligible — not zero — probability.
 
+**Some limits differ from LeetCode's, on purpose — and each statement says so.** Where a
+problem's own limits are too small for any test to tell the intended complexity from
+the naive one (Target Sum at 20 numbers, Rotting Oranges at 10x10, Merge k Sorted Lists
+at 10^4 nodes, Split Array's `k <= 50`), the bank raised them so a perf test could
+separate the two. Where LeetCode's limits would let a natural recursive solution
+outgrow the browser's stack (Path With Minimum Effort's 100x100 grid, Palindrome
+Linked List's 10^5 nodes), the bank lowered them. Search in Rotated Sorted Array and
+Find First and Last pass a *list* of targets in their large tests, so one search can't
+hide inside microseconds. Code still moves between the two sites unchanged; only the
+largest inputs differ.
+
+**Not every perf test can separate.** Within some problems' limits every reasonable
+approach is fast (Task Scheduler, Validate BST, Decode String…); their large tests
+check scale and correctness only, and the notes say so rather than claiming a timeout.
+
+**Float tolerance is absolute *or* relative 1e-5**, so near 2^31 an answer can be off
+by far more than 1e-5 and still pass. Fine for every float problem in the bank;
+worth knowing before adding one where large floats must be exact.
+
 **No per-language support.** Python only, deliberately: one interpreter, one judge.
 
 **The timed mocks still leave the app.** They link to the company-wise lists on GitHub

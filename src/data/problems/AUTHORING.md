@@ -221,6 +221,17 @@ reported as the first call whose return value differs.
   characters. ListNode and TreeNode chains the harness builds are taken apart
   safely at any length.
 
+### Things the interpreter does differently
+
+- Pyodide is 32-bit: a generator that builds `range(2**31 + 1)` (or a list that
+  long) fails there even though CPython on your machine is happy. Draw big
+  values with `rng(seed).randint` instead.
+- The judge's own time counts: a `judge.py` `check` that simulates a 100,000-op
+  test runs inside the four seconds. Keep it linear.
+- Exceptions are fine at any depth (an infinite recursion is a clean
+  `RecursionError`), but a `wrong.py` that recurses through a generator past
+  ~500 levels still kills the interpreter — and the validator with it.
+
 ## judge.py (only when needed)
 
 A module with any of these functions; everything from the starter scope is
