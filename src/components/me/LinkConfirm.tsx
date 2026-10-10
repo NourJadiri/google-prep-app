@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../../state/AppState";
 import * as sync from "../../lib/sync";
+import { progressSummary } from "../../lib/engine";
 import type { SyncStatus } from "../../lib/sync";
 
 /* The one surface that ever acts on a link.
@@ -30,7 +31,7 @@ export default function LinkConfirm({
   if (!link) return null;
   const { code, dir } = link;
 
-  const summary = `${state.data.xp} XP · ${Object.keys(state.data.done).length} problems`;
+  const summary = progressSummary(state.data);
   const switching = status.enabled && status.code !== code;
 
   async function accept() {

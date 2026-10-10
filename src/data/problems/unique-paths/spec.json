@@ -1,0 +1,33 @@
+{
+  "id": "unique-paths",
+  "title": "Unique Paths",
+  "difficulty": "M",
+  "lc": {"num": 62, "slug": "unique-paths"},
+  "topics": ["dynamic programming", "math", "combinatorics"],
+  "kind": "function",
+  "entry": "uniquePaths",
+  "params": [{"name": "m"}, {"name": "n"}],
+  "starter": "class Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        pass\n",
+  "tests": [
+    {"args": [4, 4], "expected": 20, "show": true},
+    {"args": [2, 5], "expected": 5, "show": true},
+    {"args": [1, 9], "expected": 1, "show": true},
+    {"args": [1, 1], "expected": 1, "label": "1 x 1: already at the goal"},
+    {"args": [100, 1], "expected": 1, "label": "one column, as tall as allowed"},
+    {"args": [1, 100], "expected": 1, "label": "one row, as wide as allowed"},
+    {"args": [2, 2], "expected": 2, "label": "2 x 2"},
+    {"args": [3, 3], "expected": 6, "label": "3 x 3"},
+    {"args": [6, 3], "expected": 21, "label": "taller than wide"},
+    {"args": [3, 6], "expected": 21, "label": "wider than tall"},
+    {"args": [100, 2], "expected": 100, "label": "two columns"},
+    {"args": [2, 100], "expected": 100, "label": "two rows"},
+    {"args": [3, 100], "expected": 5050, "label": "three rows, 100 columns"},
+    {"args": [5, 9], "expected": 495, "label": "5 x 9"},
+    {"args": [10, 10], "expected": 48620, "label": "10 x 10"},
+    {"args": [8, 12], "expected": 31824, "label": "8 x 12"},
+    {"args": [17, 17], "expected": 601080390, "label": "large: 17 x 17", "perf": true},
+    {"args": [18, 17], "expected": 1166803110, "label": "large: 18 x 17", "perf": true},
+    {"args": [100, 7], "expected": 1609344100, "label": "large: 100 x 7", "perf": true},
+    {"args": [7, 100], "expected": 1609344100, "label": "large: 7 x 100", "perf": true}
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "linked-list-cycle",
+  "title": "Linked List Cycle",
+  "difficulty": "E",
+  "lc": {"num": 141, "slug": "linked-list-cycle"},
+  "topics": ["linked list", "two pointers"],
+  "kind": "function",
+  "entry": "hasCycle",
+  "params": [{"name": "values"}, {"name": "pos"}],
+  "starter": "# class ListNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.next = None\n\nclass Solution:\n    def hasCycle(self, head: Optional[ListNode]) -> bool:\n        pass\n",
+  "tests": [
+    {"args": [[5, 8, 2, 9], 1], "expected": true, "show": true},
+    {"args": [[6, 6], 0], "expected": true, "show": true},
+    {"args": [[1, 2, 3], -1], "expected": false, "show": true},
+    {"args": [[], -1], "expected": false, "label": "empty list"},
+    {"args": [[7], -1], "expected": false, "label": "one node, no loop"},
+    {"args": [[7], 0], "expected": true, "label": "one node pointing at itself"},
+    {"args": [[1, 2], 1], "expected": true, "label": "tail points at itself"},
+    {"args": [[4, 4, 4, 4], -1], "expected": false, "label": "equal values, no loop"},
+    {"args": [[1, 2, 3, 4, 5, 6], 0], "expected": true, "label": "loop back to the head"},
+    {"args": [[1, 2, 3, 4, 5, 6], 5], "expected": true, "label": "tail loops to itself"},
+    {"args": [[-92087, 52134, 24523, -53505, 50374, 82911, 21191, -99573, -29500, 70652, 47123, -96709, 79642, -10125, 7781, -37421, -29613, 35114, -8718, 62182, 94523, 26792, 42478, -51607, -58758, 91650, -9692, -5700, 49415, -41193, 59496, 95775, 42320, -33354, 24393, 41665], 30], "expected": true, "label": "random"},
+    {"args": [[-29331, 9486, -56794, 35688, -41651, -3774, 97390, -89488, 74552, 58083, 44767, 30726, 40431, 66683, 49743, 14696, -95697, -73732, -92921, -25508, -93168, -14983, 48436, 63917, 45840, 60099, 22315, 4482, 5773, -5636, -51282, 51094, 22742], -1], "expected": false, "label": "random"},
+    {"args": [[-79857, 23908, -88269, -10822, -17225, -80795, -96110, -29712, 79804, 61078, 72062, 71051, -93369, -16639, -30380, -13724, -39955, 59308, -98221, 81429], -1], "expected": false, "label": "random"},
+    {"args": [[84452, -81894, 23449, -69352, 13420, 43331, 37882, 34540, -52578, -4660, 46672, 66003, -63920, -22499, 81481, -58861, 64448, 187, -49037, 54806, 66078, -54536, -9930, 87911, -21034, 89865, -1713, -53077, -29334, -52432, 81150, -18102, 97608, -53917, 57677, 55012, -58887, -78573, 80019, -19359], 38], "expected": true, "label": "random"},
+    {"argsPy": "[list(range(10**4)), 0]", "expected": true, "label": "10,000 nodes, loop to the head", "perf": true},
+    {"argsPy": "[list(range(10**4)), -1]", "expected": false, "label": "10,000 nodes, no loop", "perf": true}
+  ]
+}

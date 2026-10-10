@@ -1,23 +1,26 @@
 import { useApp } from "../../state/AppState";
-import { focusDay, rankProgress } from "../../lib/engine";
-import { RANKCOL } from "../../data/meta";
+import { focusDay, progressOf, rankProgress, trackOf } from "../../lib/engine";
 import Icon from "../shared/Icon";
 import "./Header.css";
 
-/* Always-on status bar: who you are, how hot the streak is, and how far the
-   next rank still is. The XP bar runs through all four logo colours. */
+/* Always-on status bar: who you are on this line, how hot the streak is, and
+   how far the next rank still is. The XP bar runs through all four logo
+   colours on the Google line, and through the Local's orange on the Local.
+   The streak is the only number here that both lines share. */
 
 export default function Header() {
   const { state } = useApp();
   const { data } = state;
-  const rank = rankProgress(data.xp);
+  const T = trackOf(data);
+  const xp = progressOf(data).xp;
+  const rank = rankProgress(T.ranks, xp);
   const day = focusDay(data);
 
   return (
     <header className="hdr">
       <div className="hdr-row">
         <div className="rank">
-          <span className="rank-dot" style={{ background: RANKCOL[rank.idx] }} />
+          <span className="rank-dot" style={{ background: T.rankCol[rank.idx] }} />
           <span className="rank-name">{rank.name}</span>
         </div>
         <div className="hdr-stats">
@@ -26,7 +29,7 @@ export default function Header() {
             <b>{data.streak.cur}</b>
           </span>
           <span>
-            XP <b>{data.xp}</b>
+            XP <b>{xp}</b>
           </span>
         </div>
       </div>
@@ -35,7 +38,7 @@ export default function Header() {
       </div>
       <div className="xp-sub">
         <span className="xp-day">
-          {"Day " + day.d}
+          {T.unit + " " + day.d}
           <i className="xp-dot" aria-hidden="true" />
           <span className="xp-stn">{day.stn}</span>
         </span>

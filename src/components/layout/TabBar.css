@@ -17,8 +17,8 @@
   width: 46px; height: 26px; border-radius: 999px;
   transition: background-color .15s ease, transform .15s ease;
 }
-.tab.on { color: var(--blue); }
-.tab.on .ic { background: color-mix(in srgb, var(--blue) 14%, transparent); }
+.tab.on { color: var(--accent); }
+.tab.on .ic { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .tab:active .ic { transform: scale(.94); }
 @media (hover: hover) {
   .tab:not(.on):hover { color: var(--ink); }

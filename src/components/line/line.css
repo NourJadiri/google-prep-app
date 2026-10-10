@@ -98,89 +98,36 @@
   .tbtn:hover { border-color: var(--ink2); }
 }
 
-/* ------------------------------ drill reader ------------------------------ */
-/* A bottom sheet on a phone, a centred dialog from 640px up. Layered at 56:
-   above the confetti (55), below the scanner (58) and the toasts (60). The
-   body contains its own overscroll the way the linking sheet does, so the
-   page behind never rubber-bands. */
-.dscrim {
-  position: fixed; inset: 0; height: 100dvh; z-index: 56;
-  display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(0, 0, 0, .55);
+/* ------------------------------ the picker ------------------------------ */
+/* Two line bullets under the hero, a metro map's legend: the only place to
+   change trains. Each wears its own line's colour whichever line is showing. */
+.lines { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.linepick {
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line); text-align: left;
+  transition: border-color .15s ease, background .15s ease, transform .12s ease;
 }
-.dsheet {
-  background: var(--bg); width: 100%; max-height: 92dvh;
-  border-radius: 20px 20px 0 0; box-shadow: 0 -8px 40px rgba(0, 0, 0, .28);
-  display: flex; flex-direction: column; overflow: hidden;
+.linepick:active { transform: scale(.98); }
+.linepick { --lc: var(--blue); }
+.linepick[data-track="aws"] { --lc: var(--aws-orange); }
+.linepick.on { border-color: var(--lc); background: color-mix(in srgb, var(--lc) 8%, var(--surface)); }
+.lbullet {
+  width: 28px; height: 28px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--lc); color: #fff; font-weight: 800; font-size: 14px; letter-spacing: -.02em;
 }
-@media (min-width: 640px) {
-  .dscrim { align-items: center; padding: 28px; background: rgba(0, 0, 0, .45); }
-  .dsheet { max-width: 680px; max-height: min(86dvh, 820px); border-radius: 16px; box-shadow: 0 12px 48px rgba(0, 0, 0, .3); }
+@media (prefers-color-scheme: dark) { .lbullet { color: var(--bg); } }
+.linepick:not(.on) .lbullet { background: color-mix(in srgb, var(--lc) 18%, var(--surface)); color: var(--lc); }
+.lname { display: flex; flex-direction: column; line-height: 1.2; }
+.lname b { font-size: 13px; font-weight: 650; color: var(--ink); }
+.lname span { font-family: var(--mono); font-size: 10px; color: var(--ink2); margin-top: 2px; letter-spacing: .02em; }
+@media (hover: hover) { .linepick:not(.on):hover { border-color: color-mix(in srgb, var(--lc) 50%, var(--line)); } }
+
+/* The row's way into the editor reads as the primary action it is. */
+.golink.code { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+@media (hover: hover) { .golink.code:hover { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); color: var(--accent); } }
+.tag.passed { color: var(--ok-ink); }
+
+/* The Local's terminus dot, in the Local's own four colours. */
+:root[data-track="aws"] .terminus .stop {
+  background: conic-gradient(var(--aws-orange) 0 25%, var(--aws-teal) 0 50%, var(--aws-ink) 0 75%, var(--aws-rust) 0);
 }
-/* Entry, in the linking sheet's vocabulary: the scrim fades, the sheet rises
-   on a phone and settles as a dialog on desktop. Guarded the same way, so
-   `reduce` gets an instant open. */
-@media (prefers-reduced-motion: no-preference) {
-  .dscrim { animation: dscrimin .18s ease-out; }
-  .dsheet { animation: dsheetin .26s cubic-bezier(.05, .7, .1, 1); }
-}
-@media (prefers-reduced-motion: no-preference) and (min-width: 640px) {
-  .dsheet { animation: ddlgin .22s cubic-bezier(.05, .7, .1, 1); }
-}
-@keyframes dscrimin { from { opacity: 0; } }
-@keyframes dsheetin { from { transform: translateY(28px); opacity: 0; } }
-@keyframes ddlgin { from { transform: translateY(10px) scale(.97); opacity: 0; } }
-.dshead {
-  flex: none; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  padding: 16px 18px 12px; border-bottom: 1px solid var(--line); background: var(--surface);
-}
-.dshead-info { min-width: 0; }
-.deyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--ink2); }
-.dshead h2 { font-size: 19px; font-weight: 700; letter-spacing: -.3px; line-height: 1.25; margin: 3px 0 7px; }
-.dmeta { display: flex; align-items: center; gap: 8px; }
-.dclose {
-  flex: none; width: 34px; height: 34px; border-radius: 50%;
-  border: 1px solid var(--line); background: var(--surface); color: var(--ink2);
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s, color .15s, transform .12s;
-}
-@media (hover: hover) { .dclose:hover { background: var(--sunken); color: var(--ink); } }
-.dclose:active { transform: scale(.94); }
-.dbody {
-  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
-  padding: 14px 18px 18px;
-}
-.dbody p { font-size: 14px; line-height: 1.65; margin: 0 0 10px; }
-.dbody p strong { font-weight: 600; }
-.dbody p em { color: var(--ink2); font-size: 13px; }
-.dbody ul { margin: 0 0 10px; padding-left: 20px; }
-.dbody li { font-size: 14px; line-height: 1.6; margin-bottom: 4px; }
-.dbody code {
-  font-family: var(--mono); font-size: 12.5px;
-  background: var(--sunken); border-radius: 5px; padding: 1.5px 5px;
-}
-.dsec {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
-  font-weight: 700; color: var(--ink2); margin: 18px 0 8px;
-}
-.dbody .dsec:first-child { margin-top: 2px; }
-.dcode {
-  font-family: var(--mono); font-size: 12px; line-height: 1.55; white-space: pre;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
-  padding: 11px 13px; margin: 0 0 12px; overflow-x: auto;
-}
-.dhr { border: none; border-top: 1px solid var(--line); margin: 16px 0 12px; }
-.dsfoot {
-  flex: none; padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--line); background: var(--surface);
-}
-.dcopy {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 12px; border-radius: 12px; border: none;
-  background: var(--ink); color: var(--bg); font-size: 14px; font-weight: 600;
-  transition: background .2s, transform .12s, opacity .15s;
-}
-@media (hover: hover) { .dcopy:hover { opacity: .88; } }
-.dcopy:active { transform: scale(.98); }
-.dcopy.ok { background: var(--green); color: #fff; }
-@media (prefers-color-scheme: dark) { .dcopy.ok { color: var(--bg); } }

@@ -1,0 +1,31 @@
+{
+  "id": "missing-number",
+  "title": "Missing Number",
+  "difficulty": "E",
+  "lc": {"num": 268, "slug": "missing-number"},
+  "topics": ["array", "math", "bit manipulation"],
+  "kind": "function",
+  "entry": "missingNumber",
+  "params": [{"name": "nums"}],
+  "starter": "class Solution:\n    def missingNumber(self, nums: List[int]) -> int:\n        pass\n",
+  "tests": [
+    {"args": [[4, 0, 3, 1]], "expected": 2, "show": true},
+    {"args": [[0, 1, 2]], "expected": 3, "show": true},
+    {"args": [[1]], "expected": 0, "show": true},
+    {"args": [[0]], "expected": 1, "label": "one number, 1 is missing"},
+    {"args": [[2, 0]], "expected": 1, "label": "n = 2, the middle is missing"},
+    {"args": [[1, 2]], "expected": 0, "label": "n = 2, 0 is missing"},
+    {"args": [[3, 1, 2]], "expected": 0, "label": "0 is missing, unsorted"},
+    {"args": [[5, 4, 3, 2, 1, 0]], "expected": 6, "label": "descending, n is missing"},
+    {"args": [[0, 1, 2, 3, 4, 5, 6, 8]], "expected": 7, "label": "sorted, missing near the end"},
+    {"args": [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]], "expected": 0, "label": "sorted, 0 is missing"},
+    {"args": [[0, 2, 1, 4, 3, 6, 5, 8, 7, 10]], "expected": 9, "label": "neighbours swapped, 9 is missing"},
+    {"args": [[8, 7, 14, 11, 12, 5, 15, 3, 4, 9, 2, 1, 6, 13, 0]], "expected": 10, "label": "random"},
+    {"args": [[32, 23, 37, 1, 4, 31, 10, 27, 16, 34, 21, 28, 40, 19, 39, 5, 22, 7, 35, 3, 38, 20, 14, 33, 2, 30, 29, 8, 12, 18, 0, 15, 9, 24, 6, 36, 17, 13, 26, 25]], "expected": 11, "label": "random"},
+    {"args": [[37, 2, 38, 39, 48, 11, 31, 42, 96, 59, 94, 89, 66, 83, 4, 92, 33, 24, 72, 17, 81, 61, 73, 23, 95, 3, 84, 32, 13, 14, 63, 44, 87, 62, 16, 46, 60, 41, 64, 10, 91, 50, 54, 43, 97, 12, 1, 68, 45, 67, 9, 6, 0, 47, 21, 7, 79, 15, 18, 58, 30, 82, 76, 57, 75, 35, 80, 27, 40, 65, 93, 77, 69, 71, 51, 36, 53, 85, 78, 88, 22, 20, 70, 55, 8, 52, 90, 86, 34, 25, 49, 26, 28, 98, 19, 5, 99, 29, 74]], "expected": 56, "label": "random"},
+    {"args": [[2, 44, 41, 56, 16, 50, 20, 43, 19, 17, 3, 49, 37, 23, 34, 8, 36, 29, 54, 22, 11, 30, 13, 10, 6, 48, 14, 9, 27, 26, 55, 21, 57, 58, 38, 52, 33, 31, 35, 40, 5, 45, 28, 53, 51, 59, 24, 18, 4, 46, 25, 42, 32, 1, 7, 39, 60, 47, 12, 15]], "expected": 0, "label": "random, 0 is missing"},
+    {"args": [[45, 42, 41, 67, 68, 5, 40, 35, 25, 19, 43, 65, 32, 51, 62, 21, 15, 58, 9, 44, 70, 17, 27, 57, 33, 63, 54, 50, 39, 31, 22, 72, 11, 74, 29, 64, 47, 3, 7, 26, 8, 48, 52, 20, 69, 66, 36, 13, 2, 18, 61, 12, 30, 60, 56, 0, 4, 37, 28, 6, 59, 71, 46, 10, 14, 34, 55, 23, 24, 73, 53, 16, 1, 49, 38]], "expected": 75, "label": "random, n is missing"},
+    {"argsPy": "r = rng(2680)\nxs = list(range(10**4))\nr.shuffle(xs)\nargs = [xs]", "expected": 10000, "label": "large: n = 10,000 and n is missing", "perf": true},
+    {"argsPy": "r = rng(2681)\nmissing = r.randint(1, 10**4 - 1)\nxs = [v for v in range(10**4 + 1) if v != missing]\nr.shuffle(xs)\nargs = [xs]", "expected": 998, "label": "large: n = 10,000, missing from the middle", "perf": true}
+  ]
+}

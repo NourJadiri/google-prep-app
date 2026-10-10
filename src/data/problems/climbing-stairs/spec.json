@@ -1,0 +1,33 @@
+{
+  "id": "climbing-stairs",
+  "title": "Climbing Stairs",
+  "difficulty": "E",
+  "lc": {"num": 70, "slug": "climbing-stairs"},
+  "topics": ["dynamic programming", "memoization"],
+  "kind": "function",
+  "entry": "climbStairs",
+  "params": [{"name": "n"}],
+  "starter": "class Solution:\n    def climbStairs(self, n: int) -> int:\n        pass\n",
+  "tests": [
+    {"args": [4], "expected": 5, "show": true},
+    {"args": [1], "expected": 1, "show": true},
+    {"args": [7], "expected": 21, "show": true},
+    {"args": [2], "expected": 2, "label": "two steps"},
+    {"args": [3], "expected": 3, "label": "three steps"},
+    {"args": [5], "expected": 8, "label": "five steps"},
+    {"args": [6], "expected": 13, "label": "six steps"},
+    {"args": [8], "expected": 34, "label": "eight steps"},
+    {"args": [10], "expected": 89, "label": "ten steps"},
+    {"args": [12], "expected": 233, "label": "n = 12"},
+    {"args": [15], "expected": 987, "label": "n = 15"},
+    {"args": [19], "expected": 6765, "label": "n = 19"},
+    {"args": [23], "expected": 46368, "label": "n = 23"},
+    {"args": [27], "expected": 317811, "label": "n = 27"},
+    {"args": [31], "expected": 2178309, "label": "n = 31"},
+    {"args": [35], "expected": 14930352, "label": "n = 35: tens of millions of calls without memoization"},
+    {"args": [38], "expected": 63245986, "label": "n = 38"},
+    {"args": [40], "expected": 165580141, "label": "n = 40", "perf": true},
+    {"args": [42], "expected": 433494437, "label": "n = 42"},
+    {"args": [45], "expected": 1836311903, "label": "largest staircase", "perf": true}
+  ]
+}

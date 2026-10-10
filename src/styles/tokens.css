@@ -13,6 +13,20 @@
   --shadow: 0 1px 2px rgba(60,64,67,.14), 0 1px 3px 1px rgba(60,64,67,.08);
   --sans: -apple-system, BlinkMacSystemFont, "Google Sans", Roboto, "Segoe UI", Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+
+  /* The Local's palette: smile orange, lagoon teal, squid ink, rust. */
+  --aws-orange: #d9690b; --aws-teal: #0b7a87; --aws-ink: #232f3e; --aws-rust: #b6461f;
+
+  /* The one colour that says which line you're on: tabs, focus rings, the
+     workspace's primary button. Google blue here, orange on the Local. */
+  --accent: var(--blue);
+
+  /* The editor. Syntax colours are the logo colours a shade deeper, so code
+     reads as part of the app rather than a pasted-in IDE. */
+  --ed-bg: var(--surface); --ed-gutter: var(--bg);
+  --ed-active: rgba(26,115,232,.05); --ed-sel: rgba(26,115,232,.2); --ed-err: rgba(217,48,37,.13);
+  --hl-kw: #1967d2; --hl-str: #188038; --hl-num: #c5221f; --hl-com: #80868b;
+  --hl-fn: #8430ce; --hl-cls: #b06000; --hl-op: #5f6368; --hl-meta: #b06000;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,5 +37,15 @@
     --easy: #81c995; --med: #fdd663; --hard: #f28b82;
     --ok-bg: #1e3a29; --ok-ink: #81c995; --bad-bg: #3c2422; --bad-ink: #f28b82;
     --shadow: 0 1px 3px rgba(0,0,0,.5);
+
+    --aws-orange: #ff9900; --aws-teal: #45c2cf; --aws-ink: #b6c2cc; --aws-rust: #f2875f;
+
+    --ed-bg: #1f2023; --ed-gutter: #1b1c1f;
+    --ed-active: rgba(138,180,248,.06); --ed-sel: rgba(138,180,248,.24); --ed-err: rgba(242,139,130,.16);
+    --hl-kw: #8ab4f8; --hl-str: #81c995; --hl-num: #f28b82; --hl-com: #9aa0a6;
+    --hl-fn: #c58af9; --hl-cls: #fdd663; --hl-op: #bdc1c6; --hl-meta: #fdd663;
   }
 }
+
+/* Riding the Local: the accent turns orange. Set on <html> by App. */
+:root[data-track="aws"] { --accent: var(--aws-orange); }

@@ -1,0 +1,32 @@
+{
+  "id": "two-sum",
+  "title": "Two Sum",
+  "difficulty": "E",
+  "lc": {"num": 1, "slug": "two-sum"},
+  "topics": ["array", "hash map"],
+  "kind": "function",
+  "entry": "twoSum",
+  "params": [{"name": "nums"}, {"name": "target"}],
+  "compare": "unordered",
+  "starter": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        pass\n",
+  "tests": [
+    {"args": [[4, 9, 2, 6], 10], "expected": [0, 3], "show": true},
+    {"args": [[-3, 8, 5, 11], 2], "expected": [0, 2], "show": true},
+    {"args": [[7, 7], 14], "expected": [0, 1], "show": true},
+    {"args": [[1, 2], 3], "expected": [0, 1], "label": "smallest input"},
+    {"args": [[0, 4, 3, 0], 0], "expected": [0, 3], "label": "zeros"},
+    {"args": [[5, -5, 10, 20], 0], "expected": [0, 1], "label": "negatives"},
+    {"args": [[1, 3, 5, 7, 9, 11], 20], "expected": [4, 5], "label": "pair at the end"},
+    {"args": [[2, 8, 1, 1, 4], 2], "expected": [2, 3], "label": "duplicate pair in the middle"},
+    {"args": [[1000000000, -1000000000, 3], 0], "expected": [0, 1], "label": "extremes"},
+    {"args": [[3, 2, 4], 6], "expected": [1, 2], "label": "can't reuse an index"},
+    {"args": [[-1, -2, -3, -4, -5], -9], "expected": [3, 4], "label": "all negative"},
+    {"args": [[6, 6, 1, 5], 12], "expected": [0, 1], "label": "duplicates at the front"},
+    {"args": [[2, 2, 2, 3, 2, 8], 11], "expected": [3, 5], "label": "many duplicates"},
+    {"args": [[33, 44, 28, 33, -30, 29, -49, 17, -42, -43, -46, -26, -20, 26, -47, 49, 9, -9, 6, 25, -25, 16], -8], "expected": [7, 20], "label": "random"},
+    {"args": [[13, -50, 34, -40, 8, 33, -15, 2, 20, -40, 40, -18, -10, 47, -21, 15, -14], 47], "expected": [0, 2], "label": "random"},
+    {"args": [[-49, 2, 47, -35, -33, -19, 40, -38, -49, -43, 9, 12, -28, 37, 21, -26, 7, 15], 7], "expected": [4, 6], "label": "random"},
+    {"args": [[32, -1, -36, 0, 3, -23, -50, -16, 25, -12, -48, -24, -27, 0, 27, 32, 23, -38, -45, -32, -23], 52], "expected": [8, 14], "label": "random"},
+    {"argsPy": "[list(range(1, 9999)) + [10**8, 10**8 + 1], 2 * 10**8 + 1]", "expected": [9998, 9999], "label": "large: the pair is the last two numbers", "perf": true}
+  ]
+}

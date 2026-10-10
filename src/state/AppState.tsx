@@ -13,6 +13,7 @@ import type {
   Session,
   StampedFx,
   Tab,
+  TrackId,
 } from "../types";
 
 /* One store for the whole app. `data` is the persisted schema and nothing else
@@ -43,8 +44,8 @@ export interface AppStateShape {
    *  in the store because it can arrive at boot, long before the Me tab that
    *  renders the consent card has ever mounted. */
   link: LinkDirective | null;
-  /** The drill open in the reader sheet, by DRILLS id. */
-  drill: string | null;
+  /** The problem open in the workspace, by problem id. */
+  work: string | null;
   /** Celebrations waiting to be drained by <Celebrations>. */
   fx: StampedFx[];
   fxSeq: number;
@@ -60,6 +61,8 @@ export type Action =
   | { type: "TAB"; tab: Tab }
   | { type: "TOGGLE_DAY"; id: string }
   | ({ type: "TOGGLE_PROB"; id: string } & Stamp)
+  | ({ type: "ACCEPT"; id: string } & Stamp)
+  | { type: "SET_TRACK"; track: TrackId }
   | ({ type: "TOGGLE_RITUAL"; dayId: string } & Stamp)
   | { type: "SET_DECK"; deck: DeckId }
   | { type: "START_RUN" }
@@ -72,8 +75,8 @@ export type Action =
   | { type: "SYNC_ADOPT"; data: PersistedData }
   | { type: "LINK_OPEN"; link: LinkDirective }
   | { type: "LINK_CLEAR" }
-  | { type: "DRILL_OPEN"; id: string }
-  | { type: "DRILL_CLOSE" }
+  | { type: "WORK_OPEN"; id: string }
+  | { type: "WORK_CLOSE" }
   | { type: "RESET" }
   | { type: "FX"; fx: Fx[] }
   | { type: "FX_CONSUMED" };
@@ -89,7 +92,7 @@ function boot(): AppStateShape {
     openTpl: [],
     shownTpl: [],
     link: null,
-    drill: null,
+    work: null,
     fx: [],
     fxSeq: 0,
   };
@@ -121,6 +124,23 @@ function reducer(state: AppStateShape, action: Action): AppStateShape {
     case "TOGGLE_PROB": {
       const { data, fx } = engine.toggleProb(state.data, action.id, action);
       return withFx(state, { data }, fx);
+    }
+
+    case "ACCEPT": {
+      const { data, fx } = engine.acceptProb(state.data, action.id, action);
+      return withFx(state, { data }, fx);
+    }
+
+    /* The new line opens on its current station, like a fresh boot would. */
+    case "SET_TRACK": {
+      const data = engine.setTrack(state.data, action.track);
+      if (data === state.data) return state;
+      const focus = engine.focusDay(data).id;
+      return {
+        ...state,
+        data,
+        openDays: state.openDays.includes(focus) ? state.openDays : [...state.openDays, focus],
+      };
     }
 
     case "TOGGLE_RITUAL": {
@@ -182,16 +202,19 @@ function reducer(state: AppStateShape, action: Action): AppStateShape {
     case "LINK_CLEAR":
       return { ...state, link: null };
 
-    case "DRILL_OPEN":
-      return { ...state, drill: action.id };
+    case "WORK_OPEN":
+      return { ...state, work: action.id };
 
-    case "DRILL_CLOSE":
-      return { ...state, drill: null };
+    case "WORK_CLOSE":
+      return { ...state, work: null };
 
+    /* Both lines start over; the reader stays on the one they were riding. */
     case "RESET":
-      return withFx(state, { data: engine.blank(), session: null }, [
-        { kind: "toast", msg: "Fresh line. Day 1 awaits.", gold: false },
-      ]);
+      return withFx(
+        state,
+        { data: engine.setTrack(engine.blank(), state.data.track), session: null },
+        [{ kind: "toast", msg: "Fresh start. " + engine.trackOf(state.data).unit + " 1 awaits.", gold: false }]
+      );
 
     /* Celebrations raised outside the engine — the mock clock, a failed import. */
     case "FX":
@@ -210,6 +233,9 @@ export interface Actions {
   setTab: (tab: Tab) => void;
   toggleDay: (id: string) => void;
   toggleProb: (id: string) => void;
+  /** Every test passed in the workspace. */
+  accept: (id: string) => void;
+  setTrack: (track: TrackId) => void;
   toggleRitual: (dayId: string) => void;
   setDeck: (deck: DeckId) => void;
   startRun: () => void;
@@ -221,8 +247,8 @@ export interface Actions {
   importData: (data: PersistedData) => void;
   openLink: (link: LinkDirective) => void;
   clearLink: () => void;
-  openDrill: (id: string) => void;
-  closeDrill: () => void;
+  openWork: (id: string) => void;
+  closeWork: () => void;
   reset: () => void;
   celebrate: (...fx: Fx[]) => void;
   toast: (msg: string, gold?: boolean) => void;
@@ -253,14 +279,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [state.data]);
 
   /* Cloud sync. The callback is sync's only path into the store: it vets the
-     raw cloud blob exactly the way Import does, then adopts it. Returning
+     raw cloud blob exactly the way Import does, then adopts it — a v1 blob
+     (an older build's) upgrades on the way in like any import. Returning
      false (a payload some future version wrote) parks sync instead of letting
      either side overwrite the other. */
   useEffect(() => {
     sync.start((raw) => {
-      if (!raw || typeof raw !== "object" || (raw as { v?: unknown }).v !== 1) {
-        return false;
-      }
+      if (!engine.isExport(raw)) return false;
       const data = engine.normalize(raw);
       sync.markAdopted(data);
       dispatch({ type: "SYNC_ADOPT", data });
@@ -312,6 +337,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTab: (tab) => dispatch({ type: "TAB", tab }),
       toggleDay: (id) => dispatch({ type: "TOGGLE_DAY", id }),
       toggleProb: (id) => dispatch({ type: "TOGGLE_PROB", id, ...stamp() }),
+      accept: (id) => dispatch({ type: "ACCEPT", id, ...stamp() }),
+      setTrack: (track) => dispatch({ type: "SET_TRACK", track }),
       toggleRitual: (dayId) => dispatch({ type: "TOGGLE_RITUAL", dayId, ...stamp() }),
       setDeck: (deck) => dispatch({ type: "SET_DECK", deck }),
       startRun: () => dispatch({ type: "START_RUN" }),
@@ -323,8 +350,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       importData: (data) => dispatch({ type: "IMPORT", data }),
       openLink: (link) => dispatch({ type: "LINK_OPEN", link }),
       clearLink: () => dispatch({ type: "LINK_CLEAR" }),
-      openDrill: (id) => dispatch({ type: "DRILL_OPEN", id }),
-      closeDrill: () => dispatch({ type: "DRILL_CLOSE" }),
+      openWork: (id) => dispatch({ type: "WORK_OPEN", id }),
+      closeWork: () => dispatch({ type: "WORK_CLOSE" }),
       reset: () => dispatch({ type: "RESET" }),
       celebrate: (...fx) => dispatch({ type: "FX", fx }),
       toast: (msg, gold = false) =>

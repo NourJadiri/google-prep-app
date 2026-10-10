@@ -9,6 +9,10 @@
 .gdots i { width: 8px; height: 8px; border-radius: 50%; }
 .gdots i:nth-child(1){background:var(--blue)} .gdots i:nth-child(2){background:var(--red)}
 .gdots i:nth-child(3){background:var(--yellow)} .gdots i:nth-child(4){background:var(--green)}
+:root[data-track="aws"] .gdots i:nth-child(1){background:var(--aws-orange)}
+:root[data-track="aws"] .gdots i:nth-child(2){background:var(--aws-teal)}
+:root[data-track="aws"] .gdots i:nth-child(3){background:var(--aws-ink)}
+:root[data-track="aws"] .gdots i:nth-child(4){background:var(--aws-rust)}
 
 /* Shared by the dojo and Me. */
 .sectionlabel { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin: 22px 0 2px; font-weight: 700; }
@@ -28,3 +32,6 @@
   .mbtn.danger:hover { background: var(--bad-bg); border-color: var(--red); }
 }
 .storenote { font-size: 11.5px; color: var(--ink2); margin-top: 14px; line-height: 1.5; }
+
+/* What shows for the instant the workspace chunk is still arriving. */
+.ws-boot { position: fixed; inset: 0; z-index: 50; background: var(--bg); }

@@ -1,20 +1,26 @@
 import { useApp } from "../../state/AppState";
 import { DIFFN, probURL, probXP } from "../../data/plan";
+import { specOf } from "../../data/tracks";
+import { hasProblem } from "../../data/problems";
 import Icon from "../shared/Icon";
 import type { Problem } from "../../types";
 
-/* Check toggle, name, difficulty chip, XP, and a jump to LeetCode.
-   The timed mocks carry their own url instead of a slug; the premium drills
-   carry a drill id, and their book opens the in-app reader instead of a tab. */
+/* Check toggle, name, difficulty chip, XP, and the way in: the workspace for
+   every problem the bank has (statement, editor, tests), LeetCode only for
+   the timed mocks, which are a random pick by design. "passed" marks a
+   problem whose every test went green in the editor, as opposed to one
+   ticked by hand after solving it elsewhere. */
 
 interface ProblemRowProps {
   prob: Problem;
   done: boolean;
+  passed: boolean;
 }
 
-export default function ProblemRow({ prob, done }: ProblemRowProps) {
+export default function ProblemRow({ prob, done, passed }: ProblemRowProps) {
   const { actions } = useApp();
-  const drill = prob.drill;
+  const inApp = hasProblem(specOf(prob));
+  const url = probURL(prob);
 
   return (
     <li className={"prow" + (done ? " done" : "")}>
@@ -31,29 +37,31 @@ export default function ProblemRow({ prob, done }: ProblemRowProps) {
         <div className="pmeta">
           <span className={"diff " + prob.diff}>{DIFFN[prob.diff]}</span>
           {prob.warm && <span className="tag">warm-up</span>}
-          {drill && <span className="tag">drill</span>}
+          {prob.drill && <span className="tag">premium</span>}
+          {passed && <span className="tag passed">passed</span>}
           <span className="xpv">{"+" + probXP(prob) + " XP"}</span>
         </div>
       </div>
-      {drill ? (
+      {inApp ? (
         <button
-          className="golink"
-          onClick={() => actions.openDrill(drill)}
-          aria-label={"Read " + prob.n}
+          className="golink code"
+          onClick={() => actions.openWork(prob.id)}
+          aria-label={"Solve " + prob.n + " in the editor"}
+          title="Open in the editor"
         >
-          <Icon name="book-open" size={16} />
+          <Icon name="code" size={16} />
         </button>
-      ) : (
+      ) : url ? (
         <a
           className="golink"
-          href={probURL(prob)}
+          href={url}
           target="_blank"
           rel="noopener"
           aria-label={"Open " + prob.n}
         >
           <Icon name="arrow-up-right" size={16} />
         </a>
-      )}
+      ) : null}
     </li>
   );
 }

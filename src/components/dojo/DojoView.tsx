@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { useApp } from "../../state/AppState";
 import { TPL } from "../../data/templates";
-import { focusDay } from "../../lib/engine";
+import { focusDay, progressOf } from "../../lib/engine";
 import RitualLog from "./RitualLog";
 import TemplateCard from "./TemplateCard";
 import "./dojo.css";
@@ -28,7 +28,14 @@ export default function DojoView() {
       {/* Mount point kept from the reference so the DOM matches element for
           element — see the note in MetroView. */}
       <div id="dojoArea">
-        <RitualLog day={day} logged={!!data.rituals[day.id]} />
+        {day.ritual ? (
+          <RitualLog day={day} ritual={day.ritual} logged={!!progressOf(data).rituals[day.id]} />
+        ) : (
+          <p className="dojo-local">
+            No morning rituals on the Local — but the templates below are fair game whenever a stop
+            leans on one.
+          </p>
+        )}
 
         {TPL.map((t) => {
           const label = t.g !== group ? t.g : null;

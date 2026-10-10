@@ -16,11 +16,12 @@
 //
 // The premium classics (Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
 // Walls and Gates, …) ride as in-app drills: original re-statements of the
-// same tasks — own wording, own examples — bundled from src/data/drills and
-// carried on a row by `drill` instead of slug, which opens the in-app reader
-// (DrillSheet). LeetCode's actual text is paywalled and none of it is copied
-// here. This file is no longer written by scripts/extract-data.mjs —
-// regenerating would amputate everything past d7.
+// same tasks — own wording, own examples — carried on a row by `drill`
+// instead of slug. Like every problem here, they open in the workspace
+// (statement, editor, tests) from src/data/problems; for these there is no
+// LeetCode page to fall back on. LeetCode's actual text is paywalled and none
+// of it is copied here. This file is no longer written by
+// scripts/extract-data.mjs — regenerating would amputate everything past d7.
 
 import type { Day, Diff, NonEmpty, Problem } from "../types";
 
@@ -304,7 +305,7 @@ export const TOTAL: number = PLAN.reduce((a, d) => a + d.probs.length, 0);
 export const DIFFN: Record<Diff, string> = { E: "EASY", M: "MED", H: "HARD" };
 export const probXP = (p: Problem): number => p.xp || XPD[p.diff];
 
-/* Where a problem's ↗ goes, for rows that leave the app. Every such problem
-   carries a slug or a url — only the timed mocks use the latter — so the "" is
-   unreachable. Drill rows never come here: their book opens DrillSheet. */
+/* Where a problem's ↗ goes, for rows that leave the app — the timed mocks,
+   which carry a url, and any slug the problem bank doesn't have yet. A drill
+   has neither, and gets "": its only door is the workspace. */
 export const probURL = (p: Problem): string => p.url ?? (p.slug ? LC(p.slug) : "");
