@@ -46,12 +46,15 @@ FLOAT_TOL = 1e-5
 # math.pow would shadow the three-argument builtin.
 PRELUDE = '''
 from typing import *
-import collections, heapq, bisect, math, itertools, functools, string, re, random, operator
 from collections import *
 from heapq import *
 from bisect import *
 from itertools import *
 from functools import *
+# After the star imports, so the module names win: `from bisect import *`
+# alone would leave `bisect` meaning the function, and `bisect.insort(...)`
+# — which works on LeetCode — would fail here.
+import collections, heapq, bisect, math, itertools, functools, string, re, random, operator
 
 
 class ListNode:
