@@ -6,7 +6,7 @@ Let `top` be the largest number of copies any label has, and `ties` the number o
 
 `(top - 1) * (n + 1) + ties`
 
-**The larger bound is always achievable.** Picture `top` rows. The first `top - 1` rows are `n + 1` slots wide, and the last row holds only the labels tied at `top`. Fill the grid column by column with the labels in decreasing order of count: each tied label fills a whole column, one copy per row, and the remaining labels are dealt across the first `top - 1` rows. Every label has at most `top` copies, so its copies land in different rows, a full row-width apart. Dealing in decreasing order of count is what keeps this true when a label wraps from one column into the next.
+**The larger bound is always achievable.** Picture `top` rows. The first `top - 1` rows are `n + 1` slots wide, and the last row holds only the labels tied at `top`. Fill the grid column by column with the labels in decreasing order of count: each tied label fills a whole column, one copy per row, and the remaining labels are dealt across the first `top - 1` rows. Every label has at most `top` copies, so its copies land in different rows, at least a row-width apart. Dealing in decreasing order of count is what keeps this true when a label wraps from one column into the next.
 
 - If the tasks run out before the grid is full, the blanks are idle units and the length is exactly the second bound.
 - If tasks are left over, widen the rows and keep dealing. Wider rows only push copies of a label further apart, so the cooldown still holds, nothing idles, and the length is exactly `len(tasks)`.
