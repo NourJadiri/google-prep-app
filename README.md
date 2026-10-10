@@ -1,6 +1,18 @@
 # Onsite Express
 
-A 24-day Google onsite study plan, ridden like a metro line. Days 1–10: paths →
+Interview prep ridden like a metro line — two lines, one app, and a Python editor in
+every problem.
+
+- **Onsite Express** (Google): a 24-day onsite study plan.
+- **Day One Local** (Amazon): the slow train — thirteen stops through Seattle, one idea
+  per stop, LeetCode Easy only, no timetable.
+
+Every problem on both lines opens in the **workspace**: an original statement, a
+CodeMirror editor, and tests that run in your browser on real CPython (Pyodide) — Run
+for the examples, Submit for the full hidden suite, and a clean sweep ticks the
+problem. No LeetCode tab needed, premium or not.
+
+The Google line, in detail: Days 1–10: paths →
 backtracking → DP → heaps, windows, binary search. Days 11–24, the Google
 fortnight, built as multi-day arcs rather than one pattern a day: five days of
 graphs (BFS, connected components, union-find, topological order, Dijkstra,
@@ -14,24 +26,37 @@ The premium classics — Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
 Walls and Gates, Number of Islands II, Android Unlock Patterns, Longest
 Substring with At Most K Distinct, Design Hit Counter — ride along as in-app
 drills: original re-statements of the same tasks (own wording, own worked
-examples, follow-ups an interviewer would ask), authored as markdown under
-`src/data/drills/`, bundled into the app, and read in a LeetCode-style
-sheet opened from the book icon on their station rows — a bottom sheet on the
-phone, a centred dialog on desktop, with a one-tap **Copy for Claude** that
-puts the whole drill on the clipboard to work with Claude as your interviewer.
+examples, follow-ups an interviewer would ask). Like every other problem they
+open in the workspace, with tests — for these there is no LeetCode page to fall
+back on.
+
+The Local's stops: Pike Place (hash maps), Pioneer Square (strings), Ballard Locks
+(two pointers), Fremont (running state and windows), Union Station (stacks and
+queues), Monorail (linked lists), Space Needle (binary search), Discovery Park and
+the Arboretum (trees), Smith Tower (heaps), Puget Sound (grids and graphs), Mount
+Rainier (first DP), Doppler (bits and math) — terminus DAY ONE. 55 problems, each
+stop opening with a short note on its one idea.
 
 Four tabs:
 
-- **Line** — the plan as a transit line in Google's four logo colours. Check problems, log
-  the morning ritual, run the mock clocks on days 7, 18, 22 and 24.
+- **Line** — the line you're riding, and the picker that switches trains. Google's
+  in its four logo colours, the Local in orange; switching retints the whole app.
+  Check problems, open any of them in the workspace, log the morning ritual, run the
+  mock clocks on days 7, 18, 22 and 24.
 - **Metro** — thumb-only quiz mode for the commute or the plane. 120 hand-written cards,
   ten stops a run, streaks multiply the XP. No typing, ever.
 - **Dojo** — 15 algorithm templates, blurred until you've written yours from memory.
-- **Me** — stats, the rank ladder, badges, export/import, cloud sync.
+- **Me** — the line's stats, its rank ladder (Wanderer to Offer Letter, or Applicant to
+  Day One), badges, export/import, cloud sync.
 
-Everything runs offline. No webfonts, no analytics, and the only network requests at
-runtime are the optional cloud sync's — progress lives in localStorage first, and the
-cloud copy is a mirror, never a dependency.
+Each line keeps its own progress, XP and ranks; the streak, the metro card stats and
+the badge case are shared, because studying is studying whichever train you're on.
+
+Nothing is fetched from another origin. No webfonts, no analytics; the network
+requests at runtime are the optional cloud sync's, the problem you open, and — the
+first time you open one — the Python interpreter, served from this same origin and
+cached for good after that. Progress lives in localStorage first, and the cloud copy
+is a mirror, never a dependency.
 
 ## Running it
 
@@ -41,11 +66,15 @@ npm run dev      # http://localhost:5173
 npm run build    # -> dist/
 npm run preview  # serve the build
 npm run typecheck  # tsc, no emit
+npm run problems   # validate the problem bank in the real interpreter (below)
 ```
 
-Runtime dependencies are `react` and `react-dom`, plus `jsqr` for the scanner and `qrcode`
-for the square itself. No router (tabs are component state), no CSS framework, no state
-library.
+Runtime dependencies are `react` and `react-dom`, `jsqr` for the scanner and `qrcode`
+for the square, CodeMirror 6 (`codemirror` and the `@codemirror/*` packages it is made
+of) for the editor, and `marked` for problem statements. `pyodide` is a dev dependency:
+the build copies the interpreter out of it and serves it as static files (below), so
+none of it is bundled. No router (tabs are component state), no CSS framework, no state
+library. The workspace is its own lazy chunk: the line loads as light as it always did.
 
 Written in TypeScript under `strict` plus `noUncheckedIndexedAccess`. `npm run build`
 typechecks before it bundles, so a type error fails the build rather than reaching Pages.
@@ -68,6 +97,19 @@ No `_redirects` file is needed — the app is a single route, so there is no cli
 routing for Pages to rewrite. `dist/` is fully static and can be hosted anywhere; the
 `functions/` directory is picked up by Pages automatically and only matters if you want
 cloud sync (below).
+
+`public/_headers` ships two rules with the build:
+
+- **Cross-origin isolation** (`Cross-Origin-Opener-Policy: same-origin` +
+  `Cross-Origin-Embedder-Policy: require-corp`) on every path. It is what lets the
+  editor's Stop button and time limits interrupt Python through a shared buffer
+  instead of throwing the interpreter away. The app loads nothing cross-origin, so
+  `require-corp` blocks nothing. Off a host that ignores `_headers`, everything still
+  works — a timeout just costs a two-second reload of the interpreter.
+- **Immutable caching for `/pyodide/*`.** The interpreter (about 13 MB: a 9.6 MB wasm,
+  the 2.5 MB standard library, the loader) lives under its version number,
+  `/pyodide/314.0.7/`, so a path never changes content and moves once per upgrade.
+  Every file is under Pages' 25 MiB per-file limit.
 
 ## Cloud sync (optional, free tier)
 
@@ -140,6 +182,20 @@ How it behaves:
 - **Without the binding** (or on a fork that never sets it up) the sync panel still
   renders, pushes fail quietly, and the app is exactly the local-only app it was.
 
+**The schema maintains itself, migrations included.** Version 2 of the export split
+progress by line (below), and the table grew two columns to match: `v`, the blob's
+schema version, and `track`, the line it was last riding. The function reads exactly
+those two labels off each blob it stores, and nothing else. A table created by an
+earlier deploy gets the columns on its first request after this one (`no such column`
+→ `ALTER TABLE` → retry), with every existing row back-filled as what it is — a v1
+blob on the Google line. There is still no schema step to run.
+
+The `v` column is the safety catch for the deploy itself: a tab left open across it
+still runs the v1 build, and its next push would otherwise replace a v2 blob — and the
+Local's progress with it — just by carrying a newer timestamp. The upsert refuses any
+write whose schema is older than the row's; the stale tab is handed the v2 copy, can't
+read it, and parks until it reloads into a build that can.
+
 Free-tier arithmetic: D1 allows 100k row writes/day and 5M reads/day; one keen day of
 studying is a few hundred writes. Not a concern.
 
@@ -155,6 +211,85 @@ On an iPhone, **Share → Add to Home Screen** gives a standalone window: the
 `apple-mobile-web-app-*` meta tags, `viewport-fit=cover` and the safe-area insets are all
 in place.
 
+## The workspace: Python in the browser
+
+Open any problem from its row (the `</>` button) and the workspace takes the whole
+screen. From 900px up it's LeetCode's three panes — statement left, editor over tests
+right, both splits draggable and remembered; on a phone it's one pane at a time behind
+a Problem / Code / Tests switch.
+
+- **The editor** is CodeMirror 6 with Python highlighting, autocomplete, bracket
+  matching and search, themed from the app's own tokens (light, dark, and the line's
+  accent). Your code is saved per problem as you type, in this browser only
+  (`lib/drafts.ts`) — drafts never sync and never land in an export.
+- **Run** (`⌘/Ctrl+Enter`) tries the cases in the Testcase tab — the statement's
+  examples to start with. Edit one or add your own: anything typed in is answered by
+  the problem's reference solution, so you get an expected output for inputs nobody
+  wrote down. **Submit** (`⌘/Ctrl+Shift+Enter`) runs every test, hidden ones included;
+  when they all pass, the problem is ticked exactly as the check circle would tick it —
+  XP, station clears, badges — and the solution opens.
+- **Results** read like LeetCode's: a verdict (Accepted, Wrong Answer, Runtime Error,
+  Time Limit Exceeded, Syntax Error), one chip per test, and for each the input, your
+  output against the expected one, whatever you printed, and a traceback trimmed to
+  your own lines. The editor marks the line an error came from.
+- **The Solution tab** holds a walkthrough and a reference solution, veiled until you
+  ask — or until every test passes.
+- **Copy for Claude** puts the statement, your current code and the last failing case
+  on the clipboard, with an instruction that makes Claude an interviewer rather than
+  an answer key.
+- A quiet **stopwatch** starts when the workspace opens. Tap to pause.
+
+How it runs:
+
+- **Pyodide** — CPython 3.14 compiled to WebAssembly — loads in a module Web Worker
+  (`src/runner/worker.ts`) the first time a workspace opens: about 13 MB once, a couple
+  of seconds after that. It's self-hosted: `vite.config.ts` serves it from
+  `node_modules/pyodide` in dev and emits it into `dist/pyodide/<version>/` at build.
+- **The judge** is one Python file, `src/runner/harness.py`. It gives your code
+  LeetCode's environment (`List`, `Optional`, `collections`, `heapq`, `bisect`… already
+  imported; `ListNode` and `TreeNode` defined; a fresh `Solution()` per test), converts
+  arrays to linked lists and trees and back, compares answers (order-insensitive where
+  the problem says so, floats to 1e-5, `true` never equal to `1`), captures stdout, and
+  streams each test's result back the moment it finishes.
+- **Time limits** live on the main thread (`src/runner/runner.ts`), since a worker busy
+  in `while True:` can't watch a clock. Each test gets four seconds. When one runs
+  out — or you press Stop — the runner raises a `KeyboardInterrupt` inside Python
+  through a shared interrupt buffer, and the interpreter stays warm; if Python doesn't
+  come back within a second (or the page isn't cross-origin isolated), the worker is
+  replaced. Either way, every test that finished is already on the main thread.
+- **The browser's stack is the one real limit.** Plain recursion is fine past 10,000
+  levels; `@cache` and `@lru_cache` are swapped for pure-Python versions so top-down
+  DP is too; long linked lists and trees are taken apart node by node after each test
+  so freeing them can't nest. Recursion that runs through C — a generator expression,
+  `map()`, `sorted(key=…)` inside a deep recursive call — can still blow the stack
+  around 500 levels deep. That crashes the interpreter, which the runner replaces,
+  reporting the crash on the test that caused it. The problem bank keeps its inputs
+  inside these limits.
+
+## The problem bank
+
+`src/data/problems/` holds every problem the workspace can open — 151 of them: the
+Local's 55, the Google line's 99 LeetCode problems and its 8 premium drills, with the
+11 the lines share written once. One directory per problem, named by its LeetCode slug
+(or drill id):
+
+```
+statement.md   the problem in our own words — never LeetCode's text or examples
+spec.json      signature, starter code, and 15–30 tests, a few marked as examples
+solution.py    the reference solution, shown in the Solution tab
+notes.md       the walkthrough shown with it
+judge.py       custom input building or checking, when an answer isn't unique
+brute.py       an independent, obviously-correct solution  ┐ validator only,
+wrong.py       a plausible bug the tests must catch        ┘ never bundled
+```
+
+Each file loads lazily when its problem opens. `npm run problems` validates the bank
+in the very interpreter the browser runs: every reference solution must pass every
+test inside a third of its time limit, the starter must fail, `brute.py` must agree
+on every expected value, `wrong.py` must be caught, and a shown example typed back in
+must reproduce itself. `src/data/problems/AUTHORING.md` is the full contract for
+writing one.
+
 ## How it's put together
 
 ```
@@ -162,21 +297,34 @@ reference/onsite-express.html   the original single-file app — ground truth fo
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
 
-functions/api/state/[id].ts     the sync endpoint: one D1 row per code, last-write-wins
+scripts/problems/               validate.mjs (the bank's validator), specfmt.py (spec writer)
+
+functions/api/state/[id].ts     the sync endpoint: one D1 row per code, last-write-wins,
+                                self-migrating schema, refuses schema downgrades
+public/_headers                 cross-origin isolation + immutable /pyodide/* caching
 
 src/
   main.tsx
-  App.tsx                       tab switch + layout
+  App.tsx                       tab switch + layout; tints the app for the line
   types.ts                      the whole vocabulary: content, state, effects
-  styles/       tokens.css      the ported custom properties, light and dark
+  styles/       tokens.css      the custom properties, light and dark, per line
                 base.css        reset, and the 44px touch-target overlays
                 layout.css      page frame + classes more than one tab uses
-  data/         plan.ts         LC, XPD, RITUAL_XP, PLAN (14 days, 61 problems) — see below
+  data/         plan.ts         the Google line: LC, XPD, RITUAL_XP, PLAN (24 days)
+                aws.ts          the Local: AWS_PLAN (13 stops, 55 problems)
+                tracks.ts       TRACKS — each line's plan, ranks, badges, copy — and the
+                                cross-line problem/station indexes
                 questions.ts    Q (120 cards), DECKS, CATN — hand-authored, see below
                 templates.ts    TPL (15 templates in 3 groups)
-                meta.ts         RANKS, BADGES, RANKCOL
+                meta.ts         RANKS, AWS_RANKS, BADGES, RANKCOL
+                problems/       the problem bank (above); index.ts loads it lazily
+  runner/       harness.py      the judge, in Python
+                worker.ts       Pyodide in a module worker
+                runner.ts       one run at a time, time limits, Stop, crash recovery
+                types.ts        the wire format between the three
   lib/          engine.ts       every rule, as pure functions
                 storage.ts      localStorage with an in-memory fallback
+                drafts.ts       your code per problem, and workspace prefs — local only
                 sync.ts         mirrors the blob to /api/state; offline-first
                 link.ts         the link a QR carries: #sync=<code>&do=send|recv
                 qr.ts           the QR matrix, via the qrcode package
@@ -184,6 +332,7 @@ src/
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
   components/   layout/ line/ metro/ dojo/ me/ shared/
+                workspace/      the editor, the panes, results, verdicts, Copy for Claude
 ```
 
 ### What the types are actually doing
@@ -260,15 +409,21 @@ Options are never rendered in stored order. `answerCard` compares `order[slot] =
 ## State schema
 
 The Me tab's export is literally `JSON.stringify(state.data)`, and `state.data` is exactly
-this shape. It is compatible in both directions with the original single-file app: an
-export from one imports cleanly into the other.
+this shape — version 2, which split progress by line:
 
 ```json
 {
-  "v": 1,
-  "xp": 0,
-  "done": { "<problemId>": true },
-  "rituals": { "<dayId>": "YYYY-MM-DD" },
+  "v": 2,
+  "track": "google",
+  "tracks": {
+    "google": {
+      "xp": 0,
+      "done": { "<problemId>": true },
+      "rituals": { "<dayId>": "YYYY-MM-DD" },
+      "accepted": { "<problemId>": 1723190000000 }
+    },
+    "aws": { "xp": 0, "done": {}, "rituals": {}, "accepted": {} }
+  },
   "quiz": {
     "answered": 0, "correct": 0,
     "perQ": { "<questionId>": { "seen": 0, "right": 0 } },
@@ -280,8 +435,17 @@ export from one imports cleanly into the other.
 }
 ```
 
-`engine.normalize()` fills in anything a partial or older payload is missing and returns a
-fresh state for anything that isn't a `v: 1` export. Persistence writes to `localStorage`
+`track` is the line on screen — synced, because it's where you are rather than a
+setting. `accepted` records when every test of a problem first passed in the
+workspace; it outlives unticking, because it happened. Problem and station ids are
+unique across lines (short ids on the Google line, slugs on the Local), so a stale id
+can never land on the wrong one.
+
+Every v1 export still imports — the original single-file app's included.
+`engine.normalize()` upgrades it on the way in: v1 kept `xp`, `done` and `rituals` at the
+top level, and all of it was the Google line's, so it becomes `tracks.google` and the
+Local starts empty. Otherwise `normalize()` fills in anything a partial payload is
+missing and returns a fresh state for anything that isn't a v1 or v2 export. Persistence writes to `localStorage`
 under `onsite-express-v1`, debounced 350 ms, with an in-memory fallback so a private
 window or a cookie-blocked embed degrades instead of crashing.
 
@@ -292,7 +456,10 @@ window or a cookie-blocked embed degrades instead of crashing.
 | XP | Easy 10 · Medium 20 · Hard 40 · timed mocks 30 · ritual 15 |
 | Quiz XP | 2 per correct card, ×2 at streak ≥3, ×3 at ≥6, awarded silently |
 | Perfect run | 10/10 on a full ten-card run: +20 XP, badge, confetti |
-| Ranks | Wanderer 0 · Pathfinder 100 · Backtracker 250 · Memoizer 450 · Tabulator 700 · Pattern Oracle 1000 · Noogler 1350 |
+| Ranks (Google) | Wanderer 0 · Pathfinder 100 · Backtracker 250 · Memoizer 450 · Tabulator 700 · Pattern Oracle 1000 · Noogler 1350 · Graph Whisperer 1800 · DP Sensei 2250 · Offer Letter 2750 |
+| Ranks (Local) | Applicant 0 · Online Assessment 40 · Phone Screen 100 · On the Loop 180 · Bar Raiser 280 · Offer Extended 400 · Day One 560 |
+| Lines | XP, ticks, rituals and ranks are per line; quiz XP goes to the line on screen; the streak, card stats and badges are shared |
+| Accepted | a Submit where every test passes ticks the problem (if it wasn't) with the usual XP; the first one earns All Green, 25 earn Test Pilot |
 | Streak | consecutive calendar days on which anything earned XP |
 | Unchecking | refunds the same XP, silently; XP floors at 0; badges are never revoked |
 | Deck weighting | weakest cards first: `(right+1)/(seen+2) + random()*0.55`, ascending |
@@ -301,11 +468,11 @@ window or a cookie-blocked embed degrades instead of crashing.
 
 ## Verification
 
-There is no unit-test suite — this is a personal app and the tests were removed on
-purpose. What remains is the harness below, and it is the check that actually matters
-here, because it compares against something real rather than asserting against
-assumptions: it drives this app against `reference/onsite-express.html` in a real browser
-and diffs the two.
+There is no unit-test suite for the app — this is a personal app and the tests were
+removed on purpose. Two checks remain, and both compare against something real rather
+than asserting against assumptions: `npm run problems` runs every problem's reference
+solution through the real judge in the real interpreter (above), and the parity harness
+below drives the app against `reference/onsite-express.html` in a real browser.
 
 `npm run build` typechecks first, so a type error fails the build.
 

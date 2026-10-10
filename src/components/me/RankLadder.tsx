@@ -1,15 +1,22 @@
-import { RANKCOL, RANKS } from "../../data/meta";
 import { rankIdx } from "../../lib/engine";
+import type { NonEmpty, Rank } from "../../types";
 import Icon from "../shared/Icon";
 
-/* Wanderer to Noogler, with a marker on where you actually are. */
+/* The line's ladder — Wanderer to Offer Letter, or Applicant to Day One —
+   with a marker on where you actually are. */
 
-export default function RankLadder({ xp }: { xp: number }) {
-  const here = rankIdx(xp);
+interface RankLadderProps {
+  ranks: NonEmpty<Rank>;
+  colors: readonly string[];
+  xp: number;
+}
+
+export default function RankLadder({ ranks, colors, xp }: RankLadderProps) {
+  const here = rankIdx(ranks, xp);
 
   return (
     <ul className="ladder">
-      {RANKS.map(([name, need], k) => (
+      {ranks.map(([name, need], k) => (
         <li key={name} className={k < here ? "past" : k === here ? "cur" : ""}>
           <span className="lmark">
             {k < here ? (
@@ -17,7 +24,7 @@ export default function RankLadder({ xp }: { xp: number }) {
             ) : (
               <i
                 className={"ldot" + (k === here ? "" : " dim")}
-                style={k === here ? { color: RANKCOL[k] } : undefined}
+                style={k === here ? { color: colors[k] } : undefined}
               />
             )}
           </span>

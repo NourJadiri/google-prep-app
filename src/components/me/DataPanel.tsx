@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { useApp } from "../../state/AppState";
-import { normalize } from "../../lib/engine";
+import { isExport, normalize } from "../../lib/engine";
 import { storeNote } from "../../lib/storage";
 
-/* Export is literally the persisted state, so a blob written by the original
-   single-file app imports here unchanged — and vice versa. */
+/* Export is literally the persisted state. Imports take any export the app
+   has written — the original single-file app's v1 blobs too, which upgrade
+   on the way in (their progress lands on the Google line). */
 
 export default function DataPanel() {
   const { state, actions } = useApp();
@@ -43,12 +44,11 @@ export default function DataPanel() {
     }
     try {
       /* JSON.parse hands back `any`; normalize takes `unknown` and is the only
-         thing that turns it into a PersistedData. The v-check stays so a valid
-         but non-v1 blob is rejected loudly instead of normalising to a blank. */
+         thing that turns it into a PersistedData. The version check stays so
+         valid JSON that isn't an export is rejected loudly instead of
+         normalising to a blank. */
       const obj: unknown = JSON.parse(value);
-      if (!obj || typeof obj !== "object" || (obj as { v?: unknown }).v !== 1) {
-        throw new Error("not a v1 export");
-      }
+      if (!isExport(obj)) throw new Error("not an export");
       actions.importData(normalize(obj));
     } catch {
       actions.toast("That didn't parse — paste a full export");
@@ -56,7 +56,7 @@ export default function DataPanel() {
   }
 
   function doReset() {
-    if (!window.confirm("Wipe all progress, XP and badges?")) return;
+    if (!window.confirm("Wipe all progress, XP and badges — on both lines?")) return;
     actions.reset();
   }
 

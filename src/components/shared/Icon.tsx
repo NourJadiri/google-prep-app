@@ -12,7 +12,10 @@ export type IconName =
   | "layers" | "calendar-check" | "milestone" | "graduation-cap"
   | "play" | "pause" | "rotate-ccw" | "timer"
   | "download" | "upload" | "copy" | "trash" | "lock"
-  | "cloud-check" | "cloud-upload" | "cloud-off" | "qr-code";  /* sync */
+  | "cloud-check" | "cloud-upload" | "cloud-off" | "qr-code"   /* sync */
+  | "chevron-left" | "send" | "square" | "eye" | "lightbulb"   /* workspace */
+  | "plus" | "minus" | "terminal" | "alert-triangle" | "circle-check"
+  | "circle-x" | "list-checks" | "file-text";
 
 const PATHS: Record<IconName, ReactNode> = {
   route: (
@@ -212,6 +215,78 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="m2 2 20 20" />
       <path d="M5.78 5.78A7 7 0 0 0 9 19h8.5a4.4 4.4 0 0 0 1.3-.19" />
       <path d="M21.53 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7 7 0 0 0 10 5.07" />
+    </>
+  ),
+  "chevron-left": <path d="m15 18-6-6 6-6" />,
+  send: (
+    <>
+      <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+      <path d="m21.854 2.147-10.94 10.939" />
+    </>
+  ),
+  square: <rect width="14" height="14" x="5" y="5" rx="2" />,
+  eye: (
+    <>
+      <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  lightbulb: (
+    <>
+      <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+    </>
+  ),
+  plus: (
+    <>
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </>
+  ),
+  minus: <path d="M5 12h14" />,
+  terminal: (
+    <>
+      <polyline points="4 17 10 11 4 5" />
+      <line x1="12" x2="20" y1="19" y2="19" />
+    </>
+  ),
+  "alert-triangle": (
+    <>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </>
+  ),
+  "circle-check": (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m9 12 2 2 4-4" />
+    </>
+  ),
+  "circle-x": (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m15 9-6 6" />
+      <path d="m9 9 6 6" />
+    </>
+  ),
+  "list-checks": (
+    <>
+      <path d="m3 17 2 2 4-4" />
+      <path d="m3 7 2 2 4-4" />
+      <path d="M13 6h8" />
+      <path d="M13 12h8" />
+      <path d="M13 18h8" />
+    </>
+  ),
+  "file-text": (
+    <>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 9H8" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
     </>
   ),
   /* Three finder squares and a scatter of modules: enough of a QR to read as

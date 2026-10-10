@@ -69,6 +69,26 @@ like an Import (`v === 1`, then field-by-field). A blob some future schema wrote
 sync (`held`) rather than letting either side overwrite the other — but "parked" surfaces
 as the generic error line, which will confuse whoever hits it mid-migration.
 
+**The line split (export v2) is still one blob.** Progress per line lives in one
+document under one LWW stamp, so the conflict story above is unchanged: studying the
+Google line on one device and the Local on another while both are offline still loses
+one side. Per-line rows would isolate that, at the cost of a sync engine that tracks
+several stamps per code and a linking flow that hands over several rows; the `track`
+column D1 grew is a label today (the line last written from), not a key.
+
+Switching lines is an edit like any other: it stamps, pushes, and the other device
+follows. That's the intent — the line you're on is where you are — but it does mean a
+tap on the picker can win an LWW race against real progress made elsewhere seconds
+earlier.
+
+**The deploy's own race.** The server refuses a v1 write over a v2 row, which covers a
+tab left open across the deploy *pushing*. It can't cover that tab's unpushed edits:
+when it finally reloads into the new build, its local v1 blob upgrades (Google progress
+only, the Local empty) with the old tab's edit stamp, and if that stamp is newer than
+the cloud's, LWW lets it replace the cloud copy — Local progress included. Needs a tab
+that edited offline across the deploy, so it's rare; the fix is the per-line merge that
+the paragraph above already wants.
+
 Linking by QR landed on top of that same dumb mirror. It inherits every edge above, and
 adds these:
 
@@ -162,6 +182,53 @@ their own storage bucket there, iOS gives a web app no way to claim its own link
 so no camera-app scan can ever be made to land in the right copy, and that is the
 platform.
 
+## The workspace
+
+What the in-app editor deliberately doesn't do yet, and the edges that are real.
+
+**The browser's stack is the one hard limit, and it can still be hit.** Pyodide runs on
+the JS stack. Plain Python recursion doesn't touch it (CPython 3.11+ keeps Python frames
+on the heap), `@cache`/`@lru_cache` are swapped for pure-Python versions so memoised
+recursion doesn't either, and every ListNode/TreeNode the judge builds or walks is taken
+apart node by node after each test so freeing a 10,000-node list can't nest 10,000
+deallocations deep (CPython's trashcan, which normally flattens that, doesn't engage
+under wasm). What's left: recursion that passes through C — a generator expression,
+`map()`, `sorted(key=…)`, a C-level `__eq__` inside a deep recursive call — crashes at
+roughly 500 levels; so does freeing a long chain of *user-defined* objects (a trie built
+from a 2,000-character word, a design problem's own linked list). The runner catches the
+crash, replaces the worker and pins it on the test, with an explanation — but on
+LeetCode the same code passes. The problem bank keeps its inputs inside the limits
+(AUTHORING.md's Depth section); a solution you write for a typed-in case may not.
+
+**Drafts are per browser.** Code lives in localStorage under its own key, never in the
+progress blob — no sync, no export. Deliberate (drafts churn on every keystroke and can
+run to kilobytes each, and the sync payload is capped at 256 KB), but a laptop and a
+desktop each keep their own. Folding *accepted* solutions — not drafts — into the blob
+would be the cheap version, if it ever matters.
+
+**Time limits are wall clock in a slower interpreter.** Pyodide runs Python 2–3× slower
+than native CPython, and a busy machine slower still. The bank's perf tests are sized
+against Pyodide (the validator fails any reference solution that needs more than a third
+of the four-second limit), so a sound solution has headroom — but the line between
+"slow" and "too slow" is softer than LeetCode's.
+
+**First load is 13 MB, and offline only after it.** No service worker: the interpreter is
+cached by the browser under an immutable path, which is the same thing until the cache
+is evicted. A workspace opened offline before Python was ever loaded says it can't load.
+
+**Typed-in cases trust the reference.** An edited or added case gets its expected output
+by running the reference solution, so a case outside the stated constraints may get an
+answer anyway (or a slow one: it shares the twelve-second setup budget, after which the
+run stops). Statistical judges (Random Pick with Weight, Insert Delete GetRandom) use
+loose bounds, so a correct solution fails them with negligible — not zero — probability.
+
+**No per-language support.** Python only, deliberately: one interpreter, one judge.
+
+**The timed mocks still leave the app.** They link to the company-wise lists on GitHub
+because "a random Google-tagged medium" is the point. With the bank in place, a mock
+could draw an unsolved Medium from it and open the workspace with the 25:00 clock
+counting down instead of the stopwatch counting up — the pieces all exist.
+
 ## Sharper edges
 
 **Streaks use the device's local calendar day.**
@@ -185,6 +252,12 @@ The brief is explicit that Metro mode is thumbs-only, so this is by design. If i
 gets used at a desk, A–D key handlers on the option buttons would be a few lines.
 
 ## Testing
+
+**The problem bank is validated, the app isn't.** `npm run problems` is the one
+automated suite in the repo, and it's for content: it runs every reference solution,
+brute force and planted bug through the real judge in the real interpreter. The app
+itself — the runner's time limits, the workspace UI, the v1 → v2 upgrade — was verified
+by driving it in Chromium, not by tests that stayed behind.
 
 **The unit suite was removed on request** (personal app, no test burden wanted). It was
 green at the point of removal: 68 specs across the engine, the date maths, the session

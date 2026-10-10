@@ -10,3 +10,7 @@ npm-debug.log*
 
 # wrangler's local state (miniflare D1, logs) from `wrangler pages dev`
 .wrangler/
+
+# CPython writes these when a script imports the harness to generate tests
+__pycache__/
+*.pyc

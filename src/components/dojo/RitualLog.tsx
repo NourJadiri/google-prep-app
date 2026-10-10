@@ -6,10 +6,11 @@ import type { Day } from "../../types";
 
 interface RitualLogProps {
   day: Day;
+  ritual: string;
   logged: boolean;
 }
 
-export default function RitualLog({ day, logged }: RitualLogProps) {
+export default function RitualLog({ day, ritual, logged }: RitualLogProps) {
   const { actions } = useApp();
 
   return (
@@ -18,7 +19,7 @@ export default function RitualLog({ day, logged }: RitualLogProps) {
           antialiasing by a subpixel against the reference. */}
       <p>
         <b>{"Day " + day.d + " ritual:"}</b>
-        {" " + day.ritual}
+        {" " + ritual}
       </p>
       <button onClick={() => actions.toggleRitual(day.id)} aria-pressed={logged}>
         {logged ? (

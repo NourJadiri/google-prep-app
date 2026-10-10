@@ -1,0 +1,140 @@
+// Day One Local — the slow train to Amazon. Thirteen stops through Seattle,
+// one idea per stop, LeetCode Easy only, no timetable: nothing here counts
+// down, and no stop has a morning ritual. Picks lean on what Amazon actually
+// asks at the easy end (Two Sum, Valid Parentheses, Merge Two Sorted Lists,
+// Most Common Word…), ordered so each stop needs only the ideas before it.
+//
+// Every problem has an in-app statement and tests under src/data/problems,
+// keyed by slug — which is also the problem id here, so ids never collide
+// with the Google line's short ones. Stations are named for places on the way
+// to Amazon's Day 1 tower, each with a reason: two gates at the Ballard Locks
+// for two pointers, a needle in a haystack for binary search, a park full of
+// trees, islands in the Sound. Station ids are "a1".."a13" for the same
+// reason the problem ids are slugs: never the same as a Google day's.
+
+import type { Day, NonEmpty, Problem } from "../types";
+
+const E = (slug: string, n: string): Problem => ({ id: slug, n, slug, diff: "E" });
+
+export const AWS_PLAN: NonEmpty<Day> = [
+  { id:"a1", d:1, stn:"Pike Place", color:"var(--aws-orange)", ph:"ds",
+    name:"Hash sets and hash maps",
+    note:"A set answers \"have I seen this?\" in O(1); a map remembers where, or how often. Trading a little memory for a lot of time is the move behind half of all Easy problems — start here.",
+    probs:[
+      E("contains-duplicate", "Contains Duplicate"),
+      E("two-sum", "Two Sum"),
+      E("valid-anagram", "Valid Anagram"),
+      E("majority-element", "Majority Element"),
+    ]},
+  { id:"a2", d:2, stn:"Pioneer Square", color:"var(--aws-teal)", ph:"ds",
+    name:"Strings, one character at a time",
+    note:"A string is an array of characters with opinions. Count with a dictionary, compare with two indices, build with a list and \"\".join — never += in a loop. Amazon loves a parsing question; Most Common Word is the classic.",
+    probs:[
+      E("valid-palindrome", "Valid Palindrome"),
+      E("longest-common-prefix", "Longest Common Prefix"),
+      E("roman-to-integer", "Roman to Integer"),
+      E("first-unique-character-in-a-string", "First Unique Character in a String"),
+      E("most-common-word", "Most Common Word"),
+    ]},
+  { id:"a3", d:3, stn:"Ballard Locks", color:"var(--aws-ink)", ph:"ds",
+    name:"Two pointers",
+    note:"Two gates, two indices: one at each end walking inward, or one reading while the other writes. Sorted input is the tell — it lets every step throw away a whole side without looking at it.",
+    probs:[
+      E("move-zeroes", "Move Zeroes"),
+      E("merge-sorted-array", "Merge Sorted Array"),
+      E("remove-duplicates-from-sorted-array", "Remove Duplicates from Sorted Array"),
+      E("squares-of-a-sorted-array", "Squares of a Sorted Array"),
+      E("is-subsequence", "Is Subsequence"),
+    ]},
+  { id:"a4", d:4, stn:"Fremont", color:"var(--aws-rust)", ph:"ds",
+    name:"Running state: best-so-far, prefix sums, windows",
+    note:"Carry the answer forward instead of recomputing it: the cheapest price so far, a running total, a window that slides one step at a time. That's how O(n²) becomes O(n).",
+    probs:[
+      E("best-time-to-buy-and-sell-stock", "Best Time to Buy and Sell Stock"),
+      E("find-pivot-index", "Find Pivot Index"),
+      E("maximum-average-subarray-i", "Maximum Average Subarray I"),
+      E("contains-duplicate-ii", "Contains Duplicate II"),
+    ]},
+  { id:"a5", d:5, stn:"Union Station", color:"var(--aws-orange)", ph:"ds",
+    name:"Stacks and queues",
+    note:"A stack remembers what's still open — brackets, undo, backspace. A queue serves in arrival order — requests, timestamps, BFS. In Python: a list for a stack, collections.deque for a queue.",
+    probs:[
+      E("valid-parentheses", "Valid Parentheses"),
+      E("backspace-string-compare", "Backspace String Compare"),
+      E("implement-queue-using-stacks", "Implement Queue using Stacks"),
+      E("number-of-recent-calls", "Number of Recent Calls"),
+    ]},
+  { id:"a6", d:6, stn:"Monorail", color:"var(--aws-teal)", ph:"ds",
+    name:"Linked lists",
+    note:"Pointer surgery. Save next before you overwrite it, start from a dummy head so the first node isn't special, and let a fast pointer take two steps for every one the slow pointer takes.",
+    probs:[
+      E("reverse-linked-list", "Reverse Linked List"),
+      E("merge-two-sorted-lists", "Merge Two Sorted Lists"),
+      E("linked-list-cycle", "Linked List Cycle"),
+      E("middle-of-the-linked-list", "Middle of the Linked List"),
+      E("palindrome-linked-list", "Palindrome Linked List"),
+    ]},
+  { id:"a7", d:7, stn:"Space Needle", color:"var(--aws-ink)", ph:"ds",
+    name:"Binary search",
+    note:"A needle in a sorted haystack: halve the search space every step. Choose lo and hi, decide which half can still hold the answer, and keep an invariant you could say out loud. A billion items take about thirty looks.",
+    probs:[
+      E("binary-search", "Binary Search"),
+      E("search-insert-position", "Search Insert Position"),
+      E("first-bad-version", "First Bad Version"),
+      E("sqrtx", "Sqrt(x)"),
+    ]},
+  { id:"a8", d:8, stn:"Discovery Park", color:"var(--aws-rust)", ph:"graphs",
+    name:"Trees, recursively",
+    note:"Every tree problem asks one question: what should a call return for its subtree? Trust the recursion for the children, combine at the node, and let an empty tree be the base case.",
+    probs:[
+      E("maximum-depth-of-binary-tree", "Maximum Depth of Binary Tree"),
+      E("invert-binary-tree", "Invert Binary Tree"),
+      E("same-tree", "Same Tree"),
+      E("symmetric-tree", "Symmetric Tree"),
+    ]},
+  { id:"a9", d:9, stn:"Arboretum", color:"var(--aws-orange)", ph:"graphs",
+    name:"Trees: two answers at once, and levels",
+    note:"Sometimes a call has to return one thing and record another — height up the tree, diameter on the side. And when a problem says \"level\", reach for a queue: BFS, one level per loop.",
+    probs:[
+      E("diameter-of-binary-tree", "Diameter of Binary Tree"),
+      E("balanced-binary-tree", "Balanced Binary Tree"),
+      E("subtree-of-another-tree", "Subtree of Another Tree"),
+      E("average-of-levels-in-binary-tree", "Average of Levels in Binary Tree"),
+    ]},
+  { id:"a10", d:10, stn:"Smith Tower", color:"var(--aws-teal)", ph:"ds",
+    name:"Heaps",
+    note:"heapq keeps the smallest item on top, O(log n) per push or pop. Negate the values for a max-heap; keep a heap of size k and its top is the k-th largest.",
+    probs:[
+      E("last-stone-weight", "Last Stone Weight"),
+      E("kth-largest-element-in-a-stream", "Kth Largest Element in a Stream"),
+      E("relative-ranks", "Relative Ranks"),
+      E("the-k-weakest-rows-in-a-matrix", "The K Weakest Rows in a Matrix"),
+    ]},
+  { id:"a11", d:11, stn:"Puget Sound", color:"var(--aws-ink)", ph:"graphs",
+    name:"Grids and graphs",
+    note:"Islands in the Sound: a grid is a graph whose neighbours are up, down, left and right. BFS or DFS from a cell, mark it visited before moving on, and count what you touch.",
+    probs:[
+      E("flood-fill", "Flood Fill"),
+      E("island-perimeter", "Island Perimeter"),
+      E("find-if-path-exists-in-graph", "Find if Path Exists in Graph"),
+      E("find-the-town-judge", "Find the Town Judge"),
+    ]},
+  { id:"a12", d:12, stn:"Mount Rainier", color:"var(--aws-rust)", ph:"dp",
+    name:"First steps in dynamic programming",
+    note:"Climbing, one step at a time. Name the subproblem (ways to reach step i), write how it builds on smaller ones, seed the base cases, fill in order. A memoised recursion and a bottom-up loop are the same idea.",
+    probs:[
+      E("climbing-stairs", "Climbing Stairs"),
+      E("min-cost-climbing-stairs", "Min Cost Climbing Stairs"),
+      E("pascals-triangle", "Pascal's Triangle"),
+      E("counting-bits", "Counting Bits"),
+    ]},
+  { id:"a13", d:13, stn:"Doppler", color:"var(--aws-orange)", ph:"mix",
+    name:"Bits and math",
+    note:"Last stop before the doors: XOR cancels pairs, a sum reveals what's missing, % 10 peels a digit. Small tricks, a lot of interview mileage.",
+    probs:[
+      E("single-number", "Single Number"),
+      E("missing-number", "Missing Number"),
+      E("plus-one", "Plus One"),
+      E("happy-number", "Happy Number"),
+    ]},
+];

@@ -6,21 +6,26 @@
  * you hand it one, which is what makes the whole rulebook unit-testable.
  */
 
-import { PLAN, PROBS, DAY_OF, RITUAL_XP, probXP } from "../data/plan";
-import { RANKS, BADGES } from "../data/meta";
+import { RITUAL_XP, probXP } from "../data/plan";
+import { BADGES } from "../data/meta";
 import { Q, Q_BY_ID } from "../data/questions";
+import { DAY_INDEX, PROB_INDEX, TRACKS, TRACK_IDS, isTrackId, type ProblemRef } from "../data/tracks";
 import { todayStr, daysBetween } from "./dates";
 import type {
   Day,
   DeckId,
   EngineOpts,
   Fx,
+  NonEmpty,
   PersistedData,
   QStat,
   QuizData,
   Question,
   Rank,
   Session,
+  Track,
+  TrackData,
+  TrackId,
 } from "../types";
 
 export const STOPS = 10;
@@ -39,21 +44,27 @@ export interface RunMutation extends Mutation {
 
 /* ------------------------------ state shape ------------------------------ */
 
+export const blankTrack = (): TrackData => ({ xp: 0, done: {}, rituals: {}, accepted: {} });
+
+const blankQuiz = (): QuizData => ({
+  answered: 0,
+  correct: 0,
+  perQ: {},
+  missed: [],
+  bestStreak: 0,
+  sessions: 0,
+  perfect: 0,
+  bugRight: 0,
+});
+
+const eachTrack = <T>(f: (id: TrackId) => T): Record<TrackId, T> =>
+  Object.fromEntries(TRACK_IDS.map((id) => [id, f(id)])) as Record<TrackId, T>;
+
 export const blank = (): PersistedData => ({
-  v: 1,
-  xp: 0,
-  done: {},
-  rituals: {},
-  quiz: {
-    answered: 0,
-    correct: 0,
-    perQ: {},
-    missed: [],
-    bestStreak: 0,
-    sessions: 0,
-    perfect: 0,
-    bugRight: 0,
-  },
+  v: 2,
+  track: "google",
+  tracks: eachTrack(blankTrack),
+  quiz: blankQuiz(),
   badges: {},
   streak: { last: "", cur: 0, best: 0 },
 });
@@ -67,25 +78,12 @@ const isObj = (x: unknown): x is Loose =>
 /* Matches the old Number.isFinite guard exactly: no coercion, so "5" is 0. */
 const num = (x: unknown): number => (typeof x === "number" && Number.isFinite(x) ? x : 0);
 
-/* Accepts anything an export from the reference app (or an older build) might
-   hold, and fills in whatever is missing. Returns a fresh blank for a payload
-   that isn't a v1 export at all.
+const xpOf = (x: unknown): number =>
+  typeof x === "number" && Number.isFinite(x) ? Math.max(0, Math.round(x)) : 0;
 
-   This is the app's only trust boundary, which is why it is the only place
-   that takes `unknown`: everything downstream gets a real PersistedData.
-
-   Spread-then-override throughout, never a fresh literal — a spread updates a
-   duplicated key in place rather than moving it to the end, so the key order
-   of the export survives and a re-export stays byte-identical. */
-export function normalize(loaded: unknown): PersistedData {
-  const base = blank();
-  if (!isObj(loaded) || loaded["v"] !== 1) return base;
-
-  const raw = { ...(base as unknown as Loose), ...loaded };
-
-  const rawQuiz = isObj(raw["quiz"]) ? raw["quiz"] : {};
-  const q = { ...(blank().quiz as unknown as Loose), ...rawQuiz };
-  const quiz: QuizData = {
+function normQuiz(x: unknown): QuizData {
+  const q = { ...(blankQuiz() as unknown as Loose), ...(isObj(x) ? x : {}) };
+  return {
     ...(q as unknown as QuizData),
     answered: num(q["answered"]),
     correct: num(q["correct"]),
@@ -98,25 +96,87 @@ export function normalize(loaded: unknown): PersistedData {
     perfect: num(q["perfect"]),
     bugRight: num(q["bugRight"]),
   };
+}
 
+function normTrack(x: unknown): TrackData {
+  const t = isObj(x) ? x : {};
+  const accepted = isObj(t["accepted"]) ? t["accepted"] : {};
   return {
-    ...(raw as unknown as PersistedData),
-    v: 1,
-    xp: typeof raw["xp"] === "number" && Number.isFinite(raw["xp"])
-      ? Math.max(0, Math.round(raw["xp"]))
-      : 0,
-    done: isObj(raw["done"]) ? ({ ...raw["done"] } as Record<string, true>) : {},
-    rituals: isObj(raw["rituals"]) ? ({ ...raw["rituals"] } as Record<string, string>) : {},
-    quiz,
-    badges: isObj(raw["badges"]) ? ({ ...raw["badges"] } as Record<string, number>) : {},
-    streak: { ...blank().streak, ...(isObj(raw["streak"]) ? raw["streak"] : {}) },
+    ...(t as unknown as TrackData),
+    xp: xpOf(t["xp"]),
+    done: isObj(t["done"]) ? ({ ...t["done"] } as Record<string, true>) : {},
+    rituals: isObj(t["rituals"]) ? ({ ...t["rituals"] } as Record<string, string>) : {},
+    accepted: Object.fromEntries(
+      Object.entries(accepted).filter(([, v]) => typeof v === "number" && Number.isFinite(v))
+    ) as Record<string, number>,
   };
 }
 
+const normBadges = (x: unknown): Record<string, number> =>
+  isObj(x) ? ({ ...x } as Record<string, number>) : {};
+
+const normStreak = (x: unknown) => ({
+  ...blank().streak,
+  ...(isObj(x) ? x : {}),
+});
+
+/* Accepts every export the app has ever written — the reference app's v1
+   blobs included — and fills in whatever is missing. Returns a fresh blank
+   for a payload that is neither.
+
+   This is the app's only trust boundary, which is why it is the only place
+   that takes `unknown`: everything downstream gets a real PersistedData.
+
+   A v1 blob is upgraded on the way in: its top-level xp/done/rituals were
+   the Google line's, all of it, so they become tracks.google and the Local
+   starts empty. A v2 blob keeps any key this build doesn't know (a newer
+   build's), spread-then-override as before, so a round trip loses nothing. */
+export function normalize(loaded: unknown): PersistedData {
+  if (!isObj(loaded)) return blank();
+
+  if (loaded["v"] === 1) {
+    return {
+      v: 2,
+      track: "google",
+      tracks: {
+        ...eachTrack(blankTrack),
+        google: normTrack({ xp: loaded["xp"], done: loaded["done"], rituals: loaded["rituals"] }),
+      },
+      quiz: normQuiz(loaded["quiz"]),
+      badges: normBadges(loaded["badges"]),
+      streak: normStreak(loaded["streak"]),
+    };
+  }
+
+  if (loaded["v"] !== 2) return blank();
+
+  const raw = { ...(blank() as unknown as Loose), ...loaded };
+  const tracks = isObj(raw["tracks"]) ? raw["tracks"] : {};
+  return {
+    ...(raw as unknown as PersistedData),
+    v: 2,
+    track: isTrackId(raw["track"]) ? raw["track"] : "google",
+    tracks: eachTrack((id) => normTrack(tracks[id])),
+    quiz: normQuiz(raw["quiz"]),
+    badges: normBadges(raw["badges"]),
+    streak: normStreak(raw["streak"]),
+  };
+}
+
+/** Is this a blob some build of the app wrote — one normalize can read? */
+export const isExport = (x: unknown): boolean =>
+  isObj(x) && (x["v"] === 1 || x["v"] === 2);
+
+const cloneTrack = (t: TrackData): TrackData => ({
+  ...t,
+  done: { ...t.done },
+  rituals: { ...t.rituals },
+  accepted: { ...t.accepted },
+});
+
 const clone = (d: PersistedData): PersistedData => ({
   ...d,
-  done: { ...d.done },
-  rituals: { ...d.rituals },
+  tracks: eachTrack((id) => cloneTrack(d.tracks[id])),
   badges: { ...d.badges },
   streak: { ...d.streak },
   quiz: {
@@ -126,27 +186,69 @@ const clone = (d: PersistedData): PersistedData => ({
   },
 });
 
+/** Switch lines. Not an Fx-bearing rule: nothing to celebrate, just a view. */
+export const setTrack = (data: PersistedData, track: TrackId): PersistedData =>
+  data.track === track ? data : { ...data, track };
+
 /* ------------------------------ derivations ------------------------------ */
 
-export const dayDone = (data: PersistedData, day: Day): boolean =>
-  day.probs.every((p) => !!data.done[p.id]);
+/* Every derivation below reads one line — the one showing, unless told. */
 
-/* PLAN is a non-empty tuple, so the terminus fallback resolves at compile time
-   without an assertion or an impossible-state branch. */
-const LAST_DAY: Day = PLAN[PLAN.length - 1] ?? PLAN[0];
+export const trackOf = (data: PersistedData): Track => TRACKS[data.track];
 
-export const focusDay = (data: PersistedData): Day =>
-  PLAN.find((d) => !dayDone(data, d)) ?? LAST_DAY;
+export const progressOf = (data: PersistedData, id: TrackId = data.track): TrackData =>
+  data.tracks[id];
 
-export const stationsCleared = (data: PersistedData): number =>
-  PLAN.filter((d) => dayDone(data, d)).length;
+export const dayDone = (t: TrackData, day: Day): boolean =>
+  day.probs.every((p) => !!t.done[p.id]);
 
-/* Only counts ids the plan still knows about, so a stale export can't inflate it. */
-export const problemsDone = (data: PersistedData): number =>
-  Object.keys(data.done).filter((id) => PROBS[id]).length;
+/* A plan is a non-empty tuple, so the terminus fallback resolves at compile
+   time without an assertion or an impossible-state branch. */
+const lastDay = (plan: NonEmpty<Day>): Day => plan[plan.length - 1] ?? plan[0];
 
-export const ritualsLogged = (data: PersistedData): number =>
-  Object.keys(data.rituals).length;
+export const focusDay = (data: PersistedData, id: TrackId = data.track): Day => {
+  const plan = TRACKS[id].plan;
+  const t = data.tracks[id];
+  return plan.find((d) => !dayDone(t, d)) ?? lastDay(plan);
+};
+
+export const stationsCleared = (data: PersistedData, id: TrackId = data.track): number =>
+  TRACKS[id].plan.filter((d) => dayDone(data.tracks[id], d)).length;
+
+/* Only counts ids the line still carries, so a stale export can't inflate it. */
+export const problemsDone = (data: PersistedData, id: TrackId = data.track): number =>
+  Object.keys(data.tracks[id].done).filter((pid) => PROB_INDEX[pid]?.track === id).length;
+
+export const ritualsLogged = (data: PersistedData, id: TrackId = data.track): number =>
+  Object.keys(data.tracks[id].rituals).length;
+
+/** Anything on any line worth not overwriting: XP, ticks, rituals, cards. */
+export const hasAnyProgress = (data: PersistedData): boolean =>
+  data.quiz.answered > 0 ||
+  TRACK_IDS.some((id) => {
+    const t = data.tracks[id];
+    return t.xp > 0 || Object.keys(t.done).length > 0 || Object.keys(t.rituals).length > 0;
+  });
+
+/** This device's progress in one phrase, for the linking consent card:
+ *  "1240 XP · 41 problems on Onsite Express, 50 XP · 5 on Day One Local". */
+export function progressSummary(data: PersistedData): string {
+  const lines = TRACK_IDS.filter((id) => data.tracks[id].xp > 0 || problemsDone(data, id) > 0);
+  if (!lines.length) return "no XP, no problems";
+  return lines
+    .map((id, k) => {
+      const n = problemsDone(data, id);
+      return `${data.tracks[id].xp} XP · ${n}${k === 0 ? (n === 1 ? " problem" : " problems") : ""} on ${TRACKS[id].name}`;
+    })
+    .join(", ");
+}
+
+/** Problems passed in the workspace, both lines together. */
+export const acceptedTotal = (data: PersistedData): number =>
+  TRACK_IDS.reduce(
+    (n, id) => n + Object.keys(data.tracks[id].accepted).filter((pid) => PROB_INDEX[pid]).length,
+    0
+  );
 
 export const accuracy = (data: PersistedData): number =>
   data.quiz.answered ? Math.round((data.quiz.correct / data.quiz.answered) * 100) : 0;
@@ -174,13 +276,13 @@ export function deckStat(data: PersistedData, deck: DeckId): DeckStat {
   return { n: pool.length, pct: seen ? Math.round((right / seen) * 100) : null };
 }
 
-/* Same story as LAST_DAY: RANKS is non-empty, so a computed index resolves. */
-const rankAt = (i: number): Rank => RANKS[i] ?? RANKS[0];
+/* Same story as lastDay: a ladder is non-empty, so a computed index resolves. */
+const rankAt = (ranks: NonEmpty<Rank>, i: number): Rank => ranks[i] ?? ranks[0];
 
-export function rankIdx(xp: number): number {
+export function rankIdx(ranks: NonEmpty<Rank>, xp: number): number {
   let i = 0;
-  for (let k = 0; k < RANKS.length; k++) {
-    const r = RANKS[k];
+  for (let k = 0; k < ranks.length; k++) {
+    const r = ranks[k];
     if (r && xp >= r[1]) i = k;
   }
   return i;
@@ -194,13 +296,13 @@ export interface RankProgress {
   nextLabel: string;
 }
 
-export function rankProgress(xp: number): RankProgress {
-  const i = rankIdx(xp);
-  const next = RANKS[i + 1];
-  const lo = rankAt(i)[1];
+export function rankProgress(ranks: NonEmpty<Rank>, xp: number): RankProgress {
+  const i = rankIdx(ranks, xp);
+  const next = ranks[i + 1];
+  const lo = rankAt(ranks, i)[1];
   return {
     idx: i,
-    name: rankAt(i)[0],
+    name: rankAt(ranks, i)[0],
     pct: next ? Math.min(100, Math.round(((xp - lo) / (next[1] - lo)) * 100)) : 100,
     nextLabel: next ? next[1] - xp + " XP to " + next[0] : "Terminus rank reached",
   };
@@ -255,18 +357,22 @@ function _touchStreak(c: Ctx): void {
   if (st.cur >= 7) _award(c, "streak7");
 }
 
-function _addXP(c: Ctx, n: number, why?: string, quiet?: boolean): void {
-  const before = rankIdx(c.d.xp);
-  c.d.xp = Math.max(0, c.d.xp + n); // XP floors at 0
-  const after = rankIdx(c.d.xp);
+/* XP lands on one line and climbs that line's ladder; the streak it touches
+   is shared, because studying is studying whichever train you're on. */
+function _addXP(c: Ctx, track: TrackId, n: number, why?: string, quiet?: boolean): void {
+  const T = TRACKS[track];
+  const t = c.d.tracks[track];
+  const before = rankIdx(T.ranks, t.xp);
+  t.xp = Math.max(0, t.xp + n); // XP floors at 0
+  const after = rankIdx(T.ranks, t.xp);
   if (n > 0) {
     _touchStreak(c);
     if (!quiet) toast(c, "+" + n + " XP" + (why ? " · " + why : ""));
   }
   if (after > before) {
-    toast(c, "Rank up — " + rankAt(after)[0], true);
+    toast(c, "Rank up — " + rankAt(T.ranks, after)[0], true);
     confetti(c, 60);
-    if (after === RANKS.length - 1) _award(c, "noogler");
+    if (after === T.ranks.length - 1) _award(c, T.award.top);
   }
 }
 
@@ -274,35 +380,63 @@ const out = (c: Ctx): Mutation => ({ data: c.d, fx: c.fx });
 
 /* -------------------------------- the line -------------------------------- */
 
-export function toggleProb(data: PersistedData, id: string, opts?: EngineOpts): Mutation {
-  const p = PROBS[id];
-  const day = DAY_OF[id];
-  /* Both indexes are built in one pass, so this is really one check: an id the
-     plan no longer contains, arriving from a stale export. */
-  if (!p || !day) return { data, fx: [] };
-  const c = ctxOf(data, opts);
+/* Ticking a problem: XP on its own line, the line's first-problem badge, and
+   a station clear if this was the station's last one. */
+function _check(c: Ctx, ref: ProblemRef): void {
+  const { prob: p, day, track } = ref;
+  const T = TRACKS[track];
+  const t = c.d.tracks[track];
+  t.done[p.id] = true;
+  _addXP(c, track, probXP(p), p.n.length > 26 ? p.n.slice(0, 24) + "…" : p.n);
+  _award(c, T.award.first);
 
-  if (c.d.done[id]) {
-    delete c.d.done[id];
-    _addXP(c, -probXP(p), "", true); // unchecking refunds silently
-    return out(c);
-  }
-
-  c.d.done[id] = true;
-  _addXP(c, probXP(p), p.n.length > 26 ? p.n.slice(0, 24) + "…" : p.n);
-  _award(c, "first");
-
-  if (dayDone(c.d, day)) {
+  if (dayDone(t, day)) {
     toast(c, day.stn + " cleared", true);
     confetti(c, 50);
-    const cleared = stationsCleared(c.d);
-    if (cleared >= Math.ceil(PLAN.length / 2)) _award(c, "half");
-    if (cleared === PLAN.length) {
-      _award(c, "line");
+    const cleared = T.plan.filter((d) => dayDone(t, d)).length;
+    if (cleared >= Math.ceil(T.plan.length / 2)) _award(c, T.award.half);
+    if (cleared === T.plan.length) {
+      _award(c, T.award.line);
       confetti(c, 90);
     }
   } else {
     confetti(c, 12);
+  }
+}
+
+export function toggleProb(data: PersistedData, id: string, opts?: EngineOpts): Mutation {
+  /* An id no line carries any more, arriving from a stale export. */
+  const ref = PROB_INDEX[id];
+  if (!ref) return { data, fx: [] };
+  const c = ctxOf(data, opts);
+  const t = c.d.tracks[ref.track];
+
+  if (t.done[id]) {
+    delete t.done[id];
+    _addXP(c, ref.track, -probXP(ref.prob), "", true); // unchecking refunds silently
+    return out(c);
+  }
+  _check(c, ref);
+  return out(c);
+}
+
+/** Every test passed in the workspace. Ticks the problem if it wasn't (with
+ *  everything a tick earns), and remembers the pass for the editor badges —
+ *  once: passing again changes nothing, so it writes nothing. */
+export function acceptProb(data: PersistedData, id: string, opts?: EngineOpts): Mutation {
+  const ref = PROB_INDEX[id];
+  if (!ref) return { data, fx: [] };
+  const was = data.tracks[ref.track];
+  const first = !was.accepted[id];
+  if (!first && was.done[id]) return { data, fx: [] };
+
+  const c = ctxOf(data, opts);
+  const t = c.d.tracks[ref.track];
+  if (first) t.accepted[id] = c.now;
+  if (!t.done[id]) _check(c, ref);
+  if (first) {
+    _award(c, "green");
+    if (acceptedTotal(c.d) >= 25) _award(c, "green25");
   }
   return out(c);
 }
@@ -312,14 +446,17 @@ export function toggleRitual(
   dayId: string,
   opts?: EngineOpts
 ): Mutation {
+  const ref = DAY_INDEX[dayId];
+  if (!ref) return { data, fx: [] };
   const c = ctxOf(data, opts);
-  if (c.d.rituals[dayId]) {
-    delete c.d.rituals[dayId];
-    _addXP(c, -RITUAL_XP, "", true);
+  const t = c.d.tracks[ref.track];
+  if (t.rituals[dayId]) {
+    delete t.rituals[dayId];
+    _addXP(c, ref.track, -RITUAL_XP, "", true);
   } else {
-    c.d.rituals[dayId] = c.today;
-    _addXP(c, RITUAL_XP, "ritual");
-    if (Object.keys(c.d.rituals).length >= 5) _award(c, "ritual5");
+    t.rituals[dayId] = c.today;
+    _addXP(c, ref.track, RITUAL_XP, "ritual");
+    if (Object.keys(t.rituals).length >= 5) _award(c, "ritual5");
   }
   return out(c);
 }
@@ -464,7 +601,7 @@ export function answerCard(
       if (st.bugRight >= 20) _award(c, "bugs20");
     }
     st.missed = st.missed.filter((id) => id !== q.id); // redemption served
-    _addXP(c, gain, "", true); // silent: the run's own counter is the feedback
+    _addXP(c, c.d.track, gain, "", true); // silent: the run's own counter is the feedback
   } else {
     s.streak = 0;
     if (st.missed.indexOf(q.id) === -1) st.missed.push(q.id);
@@ -493,7 +630,7 @@ export function nextCard(
     if (s.right === s.ids.length && s.ids.length >= STOPS) {
       c.d.quiz.perfect++;
       _award(c, "perfect");
-      _addXP(c, 20, "perfect run");
+      _addXP(c, c.d.track, 20, "perfect run");
       confetti(c, 70);
     }
   } else {
@@ -505,15 +642,8 @@ export function nextCard(
   return { data: c.d, session: s, fx: c.fx };
 }
 
-export function runResultCopy(right: number, n: number): string {
-  if (right === n) return "Perfect run. The doors open at Google.";
+export function runResultCopy(track: Track, right: number, n: number): string {
+  if (right === n) return track.perfectCopy;
   if (right >= n * 0.7) return "Solid. The missed ones went to Redemption.";
   return "Rough stop — Redemption deck is waiting.";
-}
-
-export function terminusCopy(cleared: number): string {
-  return cleared === PLAN.length
-    ? "All " + PLAN.length + " stations cleared. Walk in like you own the whiteboard."
-    : cleared + " of " + PLAN.length +
-      " stations behind you. The terminus isn't going anywhere — you are.";
 }

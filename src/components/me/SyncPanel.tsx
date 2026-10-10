@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useApp } from "../../state/AppState";
 import * as sync from "../../lib/sync";
+import { hasAnyProgress } from "../../lib/engine";
 import type { SyncStatus, SyncPhase } from "../../lib/sync";
 import Icon, { type IconName } from "../shared/Icon";
 import LinkConfirm from "./LinkConfirm";
@@ -119,11 +120,7 @@ export default function SyncPanel() {
   const [, setTick] = useState(0);
   const pop = useSettledPop(status.phase);
 
-  const hasProgress =
-    state.data.xp > 0 ||
-    Object.keys(state.data.done).length > 0 ||
-    Object.keys(state.data.rituals).length > 0 ||
-    state.data.quiz.answered > 0;
+  const hasProgress = hasAnyProgress(state.data);
 
   /* A consent card and a live square must never share the screen: the card is
      a decision being made, and the sheet's poll would be making another one

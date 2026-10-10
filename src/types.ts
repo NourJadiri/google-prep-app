@@ -36,8 +36,8 @@ export interface Problem {
   slug?: string;
   /** The timed mocks carry a full url instead. */
   url?: string;
-  /** The premium classics carry a drill id instead: the row's ↗ opens the
-   *  in-app reader (DrillSheet) on DRILLS[drill] rather than leaving the app. */
+  /** The premium classics carry a drill id instead of a slug: there is no
+   *  LeetCode page worth linking, and the workspace is the only way in. */
   drill?: string;
   /** Overrides the difficulty's XP; only the timed mocks set it. */
   xp?: number;
@@ -48,7 +48,7 @@ export interface Problem {
 
 export interface Day {
   id: string;
-  /** Day number, 1-14. */
+  /** Station number along its line, from 1. */
   d: number;
   /** Station name on the line. */
   stn: string;
@@ -59,7 +59,9 @@ export interface Day {
   mock?: true;
   name: string;
   note: string;
-  ritual: string;
+  /** The morning template drill. The Google line has one every day; the
+   *  Local runs without — no ritual row, nothing for the dojo to log. */
+  ritual?: string;
   probs: Problem[];
 }
 
@@ -136,17 +138,48 @@ export interface StreakData {
   best: number;
 }
 
-/** The persisted blob, and the entire export format. Bump `v` and you break
- *  compatibility with exports from the original single-file app. */
-export interface PersistedData {
-  v: 1;
+/** The two lines the app can ride: the Google onsite express, and the
+ *  easy-only Amazon local. */
+export type TrackId = "google" | "aws";
+
+/** Everything that belongs to one line. Problem and day ids are unique
+ *  across lines, so a stale id can never land on the wrong one. */
+export interface TrackData {
   xp: number;
   /** Problem id -> true. Sparse; absent means not done. */
   done: Record<string, true>;
   /** Day id -> the "YYYY-MM-DD" it was logged. Sparse. */
   rituals: Record<string, string>;
+  /** Problem id -> when every test first passed in the workspace. Sparse;
+   *  outlives unticking, because it happened. */
+  accepted: Record<string, number>;
+}
+
+/** The persisted blob, and the entire export format.
+ *
+ *  v2 split progress by line: what v1 kept at the top level (xp, done,
+ *  rituals) is now `tracks.google`, and `track` says which line is showing.
+ *  The quiz, the badges and the streak stay shared — one person, one habit.
+ *  normalize() still reads every v1 export, the reference app's included,
+ *  and upgrades it on the way in. */
+export interface PersistedData {
+  v: 2;
+  /** The line the app is showing. Synced: it's where you are, not a setting. */
+  track: TrackId;
+  tracks: Record<TrackId, TrackData>;
   quiz: QuizData;
   /** Badge id -> the timestamp it was awarded. Badges are never revoked. */
+  badges: Record<string, number>;
+  streak: StreakData;
+}
+
+/** A blob from before the line split — the original app's export format. */
+export interface PersistedDataV1 {
+  v: 1;
+  xp: number;
+  done: Record<string, true>;
+  rituals: Record<string, string>;
+  quiz: QuizData;
   badges: Record<string, number>;
   streak: StreakData;
 }
@@ -200,6 +233,37 @@ export interface Session {
 /* --------------------------------- misc ---------------------------------- */
 
 export type Tab = "line" | "metro" | "dojo" | "me";
+
+/** A line's identity and content: everything that differs between riding
+ *  to Google and riding to Amazon. */
+export interface Track {
+  id: TrackId;
+  /** The line's name, as the picker prints it. */
+  name: string;
+  /** Who's at the end of it. */
+  company: string;
+  /** The line bullet: one letter in a coloured disc. */
+  bullet: string;
+  /** Hero heading, plain part then bold part. */
+  title: readonly [string, string];
+  blurb: string;
+  /** The terminus card's heading. */
+  terminus: string;
+  /** What a station is called in running copy: "Day 4", "Stop 4". */
+  unit: string;
+  plan: NonEmpty<Day>;
+  ranks: NonEmpty<Rank>;
+  /** Rank dot colours, one per rung. */
+  rankCol: readonly string[];
+  /** The badges this line's Me tab shows, in order. */
+  badges: readonly string[];
+  /** Which badge ids the engine awards for this line's milestones. */
+  award: { first: string; half: string; line: string; top: string };
+  /** The line under the terminus heading, given stations cleared. */
+  terminusCopy: (cleared: number) => string;
+  /** What a perfect metro run says on this line. */
+  perfectCopy: string;
+}
 
 /** A device-linking instruction carried by a QR code or a share link: what
  *  THIS device should do with the code — send its progress under it, or

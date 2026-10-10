@@ -8,10 +8,12 @@ import type { Day } from "../../types";
 
 interface RitualRowProps {
   day: Day;
+  /** The day's ritual — a Google-line day always has one; the caller checks. */
+  ritual: string;
   done: boolean;
 }
 
-export default function RitualRow({ day, done }: RitualRowProps) {
+export default function RitualRow({ day, ritual, done }: RitualRowProps) {
   const { actions } = useApp();
 
   return (
@@ -26,7 +28,7 @@ export default function RitualRow({ day, done }: RitualRowProps) {
       >
         <Icon name="check" size={12} strokeWidth={3} />
       </span>
-      <span style={{ flex: 1, textAlign: "left" }}>{day.ritual}</span>
+      <span style={{ flex: 1, textAlign: "left" }}>{ritual}</span>
       <span className="xpv">{"+" + RITUAL_XP}</span>
     </button>
   );
