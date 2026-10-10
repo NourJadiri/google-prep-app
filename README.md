@@ -252,7 +252,8 @@ How it runs:
   the problem says so, floats to 1e-5, `true` never equal to `1`), captures stdout, and
   streams each test's result back the moment it finishes.
 - **Time limits** live on the main thread (`src/runner/runner.ts`), since a worker busy
-  in `while True:` can't watch a clock. Each test gets four seconds. When one runs
+  in `while True:` can't watch a clock. Each test gets four seconds, unless its problem
+  sets a tighter limit to separate a quadratic answer from a linear one. When one runs
   out — or you press Stop — the runner raises a `KeyboardInterrupt` inside Python
   through a shared interrupt buffer, and the interpreter stays warm; if Python doesn't
   come back within a second (or the page isn't cross-origin isolated), the worker is
