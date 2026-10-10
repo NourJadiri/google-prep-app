@@ -1,0 +1,33 @@
+{
+  "id": "minimum-path-sum",
+  "title": "Minimum Path Sum",
+  "difficulty": "M",
+  "lc": {"num": 64, "slug": "minimum-path-sum"},
+  "topics": ["dynamic programming", "matrix"],
+  "kind": "function",
+  "entry": "minPathSum",
+  "params": [{"name": "grid"}],
+  "starter": "class Solution:\n    def minPathSum(self, grid: List[List[int]]) -> int:\n        pass\n",
+  "tests": [
+    {"args": [[[1, 1, 7], [4, 8, 9], [1, 1, 1]]], "expected": 8, "show": true},
+    {"args": [[[4, 0, 7, 1]]], "expected": 12, "show": true},
+    {"args": [[[5]]], "expected": 5, "show": true},
+    {"args": [[[0]]], "expected": 0, "label": "1 x 1, free"},
+    {"args": [[[3], [0], [2]]], "expected": 5, "label": "one column"},
+    {"args": [[[1, 2], [3, 4]]], "expected": 7, "label": "2 x 2"},
+    {"args": [[[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]], "expected": 0, "label": "all zeros"},
+    {"args": [[[7, 7, 7, 7], [7, 7, 7, 7], [7, 7, 7, 7]]], "expected": 42, "label": "all equal"},
+    {"args": [[[200, 200, 200, 200, 200], [200, 200, 200, 200, 200], [200, 200, 200, 200, 200], [200, 200, 200, 200, 200], [200, 200, 200, 200, 200]]], "expected": 1800, "label": "every cell at the maximum"},
+    {"args": [[[1, 1, 1], [9, 9, 1], [9, 9, 1]]], "expected": 5, "label": "cheapest route: along the top, down the right"},
+    {"args": [[[1, 2, 0, 0, 0], [0, 9, 9, 9, 0], [0, 9, 9, 9, 0], [0, 0, 0, 3, 1]]], "expected": 4, "label": "two cheap corridors, the top one cheaper"},
+    {"args": [[[2, 1, 1, 1, 9], [9, 9, 9, 1, 9], [1, 1, 1, 1, 9], [1, 9, 9, 9, 9], [1, 1, 1, 1, 1]]], "expected": 18, "label": "the cheapest-looking step is a trap"},
+    {"argsPy": "r = rng(641)\nargs = [[[r.randint(0, 200) for _ in range(200)]]]", "expected": 19564, "label": "one row of 200"},
+    {"argsPy": "r = rng(642)\nargs = [[[r.randint(0, 200)] for _ in range(200)]]", "expected": 19546, "label": "one column of 200"},
+    {"args": [[[140, 99, 195], [131, 87, 134], [50, 23, 74]]], "expected": 418, "label": "random"},
+    {"args": [[[124, 81, 110, 27, 157, 115], [151, 142, 137, 45, 55, 8], [92, 129, 124, 199, 162, 173], [184, 108, 94, 177, 22, 85]]], "expected": 708, "label": "random"},
+    {"args": [[[50, 159, 39, 106, 198], [27, 72, 6, 122, 197], [55, 198, 78, 68, 6], [84, 64, 80, 70, 27], [198, 139, 84, 11, 132], [172, 19, 47, 187, 10], [184, 94, 174, 83, 182]]], "expected": 658, "label": "random"},
+    {"args": [[[146, 150, 83, 187, 134, 157, 51, 182], [184, 136, 98, 189, 181, 95, 109, 40], [95, 143, 165, 94, 82, 138, 197, 37], [64, 6, 191, 106, 184, 119, 136, 125], [122, 82, 70, 25, 164, 80, 45, 111], [192, 81, 84, 101, 14, 94, 192, 70], [50, 40, 10, 118, 9, 155, 119, 162], [172, 194, 59, 106, 140, 129, 185, 191]]], "expected": 1423, "label": "random"},
+    {"argsPy": "r = rng(647)\nargs = [[[r.randint(0, 200) for _ in range(200)] for _ in range(200)]]", "expected": 20522, "label": "large: 200 x 200, random", "perf": true},
+    {"argsPy": "r = rng(648)\ngrid = [[200] * 200 for _ in range(200)]\nmoves = ['D'] * 199 + ['R'] * 199\nr.shuffle(moves)\ni = j = 0\ngrid[0][0] = 1\nfor mv in moves:\n    if mv == 'D':\n        i += 1\n    else:\n        j += 1\n    grid[i][j] = 1\nargs = [grid]", "expected": 399, "label": "large: 200 x 200, one winding cheap corridor", "perf": true}
+  ]
+}
