@@ -4,6 +4,8 @@
 
 import type { PersistedData } from "../types";
 
+/* The app was Onsite Express before it was YALC. The key keeps the old name:
+   renaming it would strand every saved run. Same for drafts.ts and sync.ts. */
 export const KEY = "onsite-express-v1";
 const DEBOUNCE_MS = 350;
 

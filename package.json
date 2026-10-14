@@ -1,9 +1,9 @@
 {
-  "name": "onsite-express",
+  "name": "yalc",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Interview prep ridden like a metro line: a Google onsite express, an Amazon local, and Python in every problem.",
+  "description": "YALC, yet another LeetCode clone — interview prep ridden like a metro line: a Google onsite express, an Amazon local, and Python in every problem.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

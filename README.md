@@ -1,7 +1,7 @@
-# Onsite Express
+# YALC
 
-Interview prep ridden like a metro line — two lines, one app, and a Python editor in
-every problem.
+**Y**et **A**nother **L**eetCode **C**lone. Interview prep ridden like a metro line — two
+lines, one app, and a Python editor in every problem.
 
 - **Onsite Express** (Google): a 24-day onsite study plan.
 - **Day One Local** (Amazon): the slow train — thirteen stops through Seattle, one idea
@@ -117,14 +117,14 @@ Progress can mirror across devices through a Pages Function backed by Cloudflare
 One-time setup, all in the dashboard:
 
 1. **Create the database**: dashboard → **Storage & Databases** → **D1** →
-   **Create database** — any name, e.g. `onsite-express`.
+   **Create database** — any name, e.g. `yalc`.
 2. **Bind it to the Pages project**: your Pages project → **Settings** → **Bindings**
    (older UI: Functions → D1 database bindings) → **Add** → type **D1 database**,
    variable name **`DB`**, pick the database. Add it for **Production** and **Preview**.
 3. **Redeploy** (retry the latest deployment or push any commit) so the binding takes.
 
 There is no schema step — the function creates its one table on first contact. The CLI
-equivalent of step 1 is `npx wrangler d1 create onsite-express`; the binding still
+equivalent of step 1 is `npx wrangler d1 create yalc`; the binding still
 happens in the project's settings.
 
 Then, in the app: **Me → Sync → Turn on sync** on one device, and **I have a code →
@@ -447,7 +447,8 @@ Every v1 export still imports — the original single-file app's included.
 top level, and all of it was the Google line's, so it becomes `tracks.google` and the
 Local starts empty. Otherwise `normalize()` fills in anything a partial payload is
 missing and returns a fresh state for anything that isn't a v1 or v2 export. Persistence writes to `localStorage`
-under `onsite-express-v1`, debounced 350 ms, with an in-memory fallback so a private
+under `onsite-express-v1` (the app's name before it was YALC, kept so saved progress
+survives the rename), debounced 350 ms, with an in-memory fallback so a private
 window or a cookie-blocked embed degrades instead of crashing.
 
 ## Rules, in one place

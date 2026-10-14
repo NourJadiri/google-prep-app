@@ -1,7 +1,7 @@
 {
-  "name": "Onsite Express",
-  "short_name": "Onsite",
-  "description": "A Google onsite study plan, ridden like a metro line.",
+  "name": "YALC — Yet Another LeetCode Clone",
+  "short_name": "YALC",
+  "description": "Yet another LeetCode clone: interview prep ridden like a metro line, with Python in every problem.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

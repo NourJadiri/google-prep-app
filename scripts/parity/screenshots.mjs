@@ -17,7 +17,7 @@ import { chromium } from "playwright";
 import fs from "node:fs";
 import { PNG } from "pngjs";
 
-const OUT = process.env.PARITY_OUT || "/tmp/onsite-express-parity";
+const OUT = process.env.PARITY_OUT || "/tmp/yalc-parity";
 fs.mkdirSync(OUT, { recursive: true });
 
 const REF = new URL("../../reference/onsite-express.html", import.meta.url).href;
