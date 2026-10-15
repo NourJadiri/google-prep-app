@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { useApp } from "../../state/AppState";
 import { DIFFN, LC } from "../../data/plan";
 import { PROB_INDEX, TRACKS, specOf, type ProblemRef } from "../../data/tracks";
@@ -12,10 +12,15 @@ import Stopwatch from "./Stopwatch";
 import ProblemPane from "./ProblemPane";
 import ConsolePane, { isEdited, type CaseDraft, type PlanItem, type RunView } from "./ConsolePane";
 import { verdictOf } from "./verdict";
-import { claudePrompt } from "./claude";
+import { claudePrompt, runReport } from "./claude";
+import { withoutLead } from "./Markdown";
+import type { AskContext } from "./Assistant";
 import { useRunnerStatus } from "./useRunner";
 import Icon from "../shared/Icon";
 import "./workspace.css";
+
+/* The assistant and the AI SDK behind it load on the first ⌘K, not before. */
+const Assistant = lazy(() => import("./Assistant"));
 
 /* The workspace: a problem, an editor, and the tests, over everything else.
  *
@@ -27,7 +32,8 @@ import "./workspace.css";
  * Code is saved per problem as you type (lib/drafts), tests run in the
  * Pyodide worker (runner/), and a Submit where every test passes ticks the
  * problem through the same rule as the check circle — XP, station clears
- * and all — plus the editor badges.
+ * and all — plus the editor badges. ⌘K (Ctrl+K) floats the assistant over
+ * all of it: a small chat that sees the problem, the code and the last run.
  */
 
 export default function Workspace({ pid }: { pid: string }) {
@@ -147,6 +153,9 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
   const [mobileTab, setMobileTab] = useState<"problem" | "code" | "tests">("problem");
   const [run, setRun] = useState<RunView | null>(null);
   const [copied, setCopied] = useState(false);
+  /* summon counts the presses that should pull focus into the assistant;
+     loaded stays true once it has been opened, so closing keeps the chat. */
+  const [ask, setAsk] = useState({ open: false, summon: 0, loaded: false });
 
   /* Drafts: saved 400ms after the last keystroke, and on the way out. A draft
      identical to the starter is no draft at all. */
@@ -220,6 +229,11 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
     if (mode === "submit" && verdict.tone === "ok") actions.accept(pid);
   }
 
+  /* The assistant. The Ask button opens and closes it; ⌘K from anywhere
+     brings it up (or focus back into it), and from inside puts it away. */
+  const openAsk = useCallback(() => setAsk((a) => ({ open: true, summon: a.summon + 1, loaded: true })), []);
+  const closeAsk = useCallback(() => setAsk((a) => ({ ...a, open: false })), []);
+
   /* Shortcuts that work wherever focus is; the editor has its own copies. */
   const startRef = useRef(start);
   startRef.current = start;
@@ -231,13 +245,18 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
       if (mod && e.key === "Enter") {
         e.preventDefault();
         void startRef.current(e.shiftKey ? "submit" : "run");
+      } else if (e.key.toLowerCase() === "k" && !e.shiftKey && !e.altKey && (onMac() ? e.metaKey : e.ctrlKey)) {
+        /* Ctrl alone on a Mac stays the editor's: Ctrl-K deletes to the end of the line there. */
+        e.preventDefault();
+        if (e.target instanceof HTMLElement && e.target.closest(".asst:not([hidden])")) closeAsk();
+        else openAsk();
       } else if (e.key === "Escape" && !(e.target instanceof HTMLElement && e.target.closest(".cm-editor, textarea"))) {
         actions.closeWork();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [actions]);
+  }, [actions, openAsk, closeAsk]);
 
   const errorLine =
     run?.outcome?.compileError?.line ??
@@ -257,20 +276,45 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
     setDocRev((n) => n + 1);
   };
 
-  const copyForClaude = () => {
+  /* The last run, as both the paste and the assistant describe it. */
+  const lastRun = () => {
     const v = run?.verdict ?? null;
     const focus = v && run?.outcome ? run.outcome.results[v.focus] ?? null : null;
+    return v ? { verdict: v, focus, label: focus ? labelFor(spec, run, focus.i) : null } : null;
+  };
+
+  const copyForClaude = () => {
     const text = claudePrompt({
       title: spec.title,
       source: sourceOf(spec),
       statement: content.statement,
       code,
-      last: v ? { verdict: v, focus, label: focus ? labelFor(spec, run, focus.i) : null } : null,
+      last: lastRun(),
     });
     navigator.clipboard?.writeText(text).catch(() => {});
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2200);
   };
+
+  /* What a question takes along, read the moment it is sent. Behind a ref,
+     so the assistant's props hold still while you type in the editor. */
+  const askNow = (): AskContext => {
+    const last = lastRun();
+    return {
+      problem: { title: spec.title, source: sourceOf(spec), statement: withoutLead(content.statement).trim() },
+      code,
+      run: last ? runReport(last) : null,
+    };
+  };
+  const askRef = useRef(askNow);
+  askRef.current = askNow;
+  const readAsk = useCallback(() => askRef.current(), []);
+
+  const assistant = ask.loaded && (
+    <Suspense fallback={null}>
+      <Assistant open={ask.open} summon={ask.summon} onClose={closeAsk} context={readAsk} wide={wide} />
+    </Suspense>
+  );
 
   const lcLink = spec.lc?.slug ? LC(spec.lc.slug) : null;
   const stationTag = `${T.unit} ${day.d} · ${day.stn}`;
@@ -306,6 +350,15 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
       </div>
       <div className="ws-actions">
         {wide && <Stopwatch />}
+        <button
+          className="ws-btn ghost"
+          onClick={ask.open ? closeAsk : openAsk}
+          aria-pressed={ask.open}
+          title={"Ask the assistant (" + modKey() + "+K)"}
+        >
+          <Icon name="sparkles" size={14} />
+          {wide && "Ask"}
+        </button>
         <button className={"ws-btn ghost" + (copied ? " ok" : "")} onClick={copyForClaude} title="Problem, code and last result, ready to paste into Claude">
           <Icon name={copied ? "check" : "copy"} size={14} />
           {wide && (copied ? "Copied" : "Copy for Claude")}
@@ -412,6 +465,7 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
             </Split>
           </Split>
         </div>
+        {assistant}
       </>
     );
   }
@@ -435,6 +489,7 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
         <div className={"ws-pane" + (mobileTab === "code" ? " on" : "")}>{editorPane}</div>
         <div className={"ws-pane" + (mobileTab === "tests" ? " on" : "")}>{consolePane}</div>
       </div>
+      {assistant}
     </>
   );
 }
@@ -446,7 +501,8 @@ function labelFor(spec: Spec, run: RunView | null, i: number): string {
   return run?.mode === "submit" ? `test ${p.test + 1}${t?.label ? ` (${t.label})` : ""}` : "an example";
 }
 
-const modKey = () => (/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl");
+const onMac = () => /Mac|iPhone|iPad/.test(navigator.platform);
+const modKey = () => (onMac() ? "⌘" : "Ctrl");
 
 function RunnerBadge({ phase }: { phase: runner.RunnerPhase }) {
   const copy: Record<runner.RunnerPhase, string> = {
