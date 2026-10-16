@@ -238,12 +238,17 @@ function Assistant({
     if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
   };
 
-  /* The composer grows with what you type, up to a few lines. */
+  /* The composer grows with what you type, up to a few lines. scrollHeight
+     leaves out the borders that border-box counts, so they go back on, or the
+     box comes up 2px short and grows a scrollbar for nothing. Below the cap
+     there is nothing to scroll, so none can show up for a rounding error. */
   useLayoutEffect(() => {
     const el = input.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 140) + "px";
+    const full = el.scrollHeight + el.offsetHeight - el.clientHeight;
+    el.style.height = Math.min(full, 140) + "px";
+    el.style.overflowY = full > 140 ? "auto" : "hidden";
   }, [draft, password]);
 
   function ask(raw: string) {

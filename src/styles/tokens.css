@@ -5,6 +5,9 @@
    System fonts only — the app has to work on a plane, so nothing is fetched. */
 
 :root {
+  /* Both themes are handled here, so what the browser draws itself —
+     scrollbars, form controls — follows the OS theme like the tokens do. */
+  color-scheme: light dark;
   --blue: #1a73e8; --red: #d93025; --yellow: #f9ab00; --green: #1e8e3e;
   --bg: #f8f9fa; --surface: #ffffff; --sunken: #f1f3f4;
   --ink: #202124; --ink2: #5f6368; --line: #dadce0;
