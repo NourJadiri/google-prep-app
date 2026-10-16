@@ -53,8 +53,9 @@ Each line keeps its own progress, XP and ranks; the streak, the metro card stats
 the badge case are shared, because studying is studying whichever train you're on.
 
 Nothing is fetched from another origin. No webfonts, no analytics; the network
-requests at runtime are the optional cloud sync's, the problem you open, and — the
-first time you open one — the Python interpreter, served from this same origin and
+requests at runtime are the optional cloud sync's, the optional assistant's (to this
+origin's own Function, which is what talks to Anthropic), the problem you open, and —
+the first time you open one — the Python interpreter, served from this same origin and
 cached for good after that. Progress lives in localStorage first, and the cloud copy
 is a mirror, never a dependency.
 
@@ -71,7 +72,9 @@ npm run problems   # validate the problem bank in the real interpreter (below)
 
 Runtime dependencies are `react` and `react-dom`, `jsqr` for the scanner and `qrcode`
 for the square, CodeMirror 6 (`codemirror` and the `@codemirror/*` packages it is made
-of) for the editor, and `marked` for problem statements. `pyodide` is a dev dependency:
+of) for the editor, `marked` for problem statements, and for the assistant the AI SDK
+(`ai`, `@ai-sdk/react`) in the browser and Anthropic's SDK (`@anthropic-ai/sdk`) in its
+Function. `pyodide` is a dev dependency:
 the build copies the interpreter out of it and serves it as static files (below), so
 none of it is bundled. No router (tabs are component state), no CSS framework, no state
 library. The workspace is its own lazy chunk: the line loads as light as it always did.
@@ -223,6 +226,69 @@ On an iPhone, **Share → Add to Home Screen** gives a standalone window: the
 `apple-mobile-web-app-*` meta tags, `viewport-fit=cover` and the safe-area insets are all
 in place.
 
+## The assistant (optional, Anthropic API)
+
+Press `⌘K` (`Ctrl+K`) in the workspace, or **Ask** in its header, and a small window
+floats over the editor: ask about syntax, your approach or a bug, and Claude Haiku 5.5
+answers with the problem, your code and your last run already in front of it. It needs
+an Anthropic API key, which lives only in Cloudflare, and a password, which keeps
+everyone else out. One-time setup:
+
+1. **Anthropic Console** (console.anthropic.com): create a workspace for this app (say
+   `onsite-express`), set its **monthly spend limit** low — $5 is plenty — and create
+   an API key inside it. A Claude.ai subscription doesn't cover API calls; the key
+   spends the Console's own credit.
+2. **Make a password**: anything long and random, e.g. `openssl rand -base64 32`.
+3. **Cloudflare**: your Pages project → **Settings** → **Variables and Secrets** → add
+   `ANTHROPIC_API_KEY` and `ASSISTANT_PASSWORD`, both of type **Secret**, for
+   **Production** only. Redeploy so they take.
+4. **In the app**: open any problem, press `⌘K`, paste the password. That browser
+   remembers it; do the same once on each device.
+
+How it stays yours:
+
+- **The key never leaves Cloudflare.** It is a Pages secret only
+  `functions/api/assistant.ts` can read — never in the bundle (it is not a `VITE_`
+  variable, which Vite would bake into the public JavaScript), never in git, never in
+  a browser.
+- **The Function is the door, and the password its lock.** Every request carries the
+  password as a bearer token, compared in constant time; a wrong one gets a 401 before
+  anything is spent. It is a separate secret from the sync code on purpose: sync codes
+  ride in QR codes and links, and seeing one shouldn't let anyone spend money.
+- **It fails closed.** Without both secrets (every preview deploy, since they are set
+  for Production only — preview URLs are public), the Function answers 503 and calls
+  nothing.
+- **It isn't a proxy.** The browser sends the problem and the conversation, nothing
+  else. The model, the token cap, the effort and the system prompt are fixed in the
+  Function, so even a leaked password buys a chat with Haiku about Python — never the
+  key, never a bigger model.
+- **The spend limit is the backstop.** If everything above failed at once, the
+  workspace's monthly cap is the most it could cost. If the password leaks, change the
+  secret and redeploy; if the key does, revoke it in the Console.
+- **Answers can't run code in the page.** They are rendered by their own `marked`
+  instance (`answer.ts`) that shows raw HTML as text, never loads an image (a markdown
+  image is a request to whatever URL the text names), and links only to http(s).
+
+Each question takes along a snapshot of your code when it changed since the last one,
+and the latest run's report when it's new, so the conversation reads like a pairing
+session and stays append-only. The chat lives in the tab: closing the window keeps it,
+a new problem starts a fresh one, and nothing about it syncs. Haiku 5.5 costs $0.10
+per million input tokens and $0.50 per million output, so a question with its problem,
+code and a few turns of history comes to well under a tenth of a cent.
+
+To run it locally, put the two secrets in a `.dev.vars` file at the repo root (it is
+gitignored, as is `.env*`) and serve the build through wrangler:
+
+```bash
+printf 'ANTHROPIC_API_KEY=sk-ant-...\nASSISTANT_PASSWORD=...\n' > .dev.vars
+npm run build
+npx wrangler pages dev dist
+```
+
+`npm run dev` has no Functions, so there the window says the endpoint is missing. An
+optional third variable, `ANTHROPIC_BASE_URL`, points the Function somewhere other than
+api.anthropic.com — Cloudflare AI Gateway for logs and analytics, or a local mock.
+
 ## The workspace: Python in the browser
 
 Open any problem from its row (the `</>` button) and the workspace takes the whole
@@ -249,6 +315,9 @@ a Problem / Code / Tests switch.
 - **Copy for Claude** puts the statement, your current code and the last failing case
   on the clipboard, with an instruction that makes Claude an interviewer rather than
   an answer key.
+- **Ask** (`⌘K` / `Ctrl+K`) floats a small chat over the workspace for quick
+  questions — syntax, your approach, a bug — answered by Claude Haiku 5.5. It sees the
+  problem, your code and your last run without being told. Optional; setup below.
 - A quiet **stopwatch** starts when the workspace opens. Tap to pause.
 
 How it runs:
@@ -314,6 +383,8 @@ scripts/problems/               validate.mjs (the bank's validator), specfmt.py 
 
 worker/index.ts                 the sync endpoint: one D1 row per code, last-write-wins,
                                 self-migrating schema, refuses schema downgrades
+functions/api/assistant.ts      the assistant endpoint: password gate, the only holder of
+                                the Anthropic key, streams Claude's answer back
 wrangler.jsonc                  the Worker: dist/ as static assets, the D1 binding
 public/_headers                 cross-origin isolation + immutable /pyodide/* caching
 
@@ -339,6 +410,7 @@ src/
   lib/          engine.ts       every rule, as pure functions
                 storage.ts      localStorage with an in-memory fallback
                 drafts.ts       your code per problem, and workspace prefs — local only
+                assistant.ts    the assistant's password and window spot — local only
                 sync.ts         mirrors the blob to /api/state; offline-first
                 link.ts         the link a QR carries: #sync=<code>&do=send|recv
                 qr.ts           the QR matrix, via the qrcode package
@@ -346,7 +418,8 @@ src/
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
   components/   layout/ line/ metro/ dojo/ me/ shared/
-                workspace/      the editor, the panes, results, verdicts, Copy for Claude
+                workspace/      the editor, the panes, results, verdicts, Copy for Claude,
+                                and the assistant (Assistant.tsx, answer.ts)
 ```
 
 ### What the types are actually doing

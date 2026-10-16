@@ -18,21 +18,26 @@ export interface ClaudeInput {
 
 const indent = (lines: string[]) => lines.map((l) => "    " + l).join("\n");
 
+/** What the last run said, failing case and all. The paste ends with it, and
+ *  the assistant gets it with a question whenever there is a new one. */
+export function runReport(last: NonNullable<ClaudeInput["last"]>): string {
+  const parts = [`## Last run: ${last.verdict.title}`, "", last.verdict.detail];
+  const r = last.focus;
+  if (r && r.status !== "pass") {
+    parts.push("", `On ${last.label ?? "this case"}:`, "", "Input:", indent(r.input));
+    if (r.got !== undefined) parts.push("Output:", indent([r.got]));
+    if (r.expected !== undefined) parts.push("Expected:", indent([r.expected]));
+    if (r.message) parts.push(r.message);
+    if (r.error) parts.push("Error:", indent(r.error.traceback.split("\n")));
+    if (r.stdout) parts.push("Printed:", indent(r.stdout.trimEnd().split("\n").slice(0, 30)));
+  }
+  return parts.join("\n");
+}
+
 export function claudePrompt({ title, source, statement, code, last }: ClaudeInput): string {
   const parts = [`# ${title} (${source})`, "", withoutLead(statement).trim(), "", "## My code so far", "", "```python", code.trimEnd(), "```"];
 
-  if (last) {
-    parts.push("", `## Last run: ${last.verdict.title}`, "", last.verdict.detail);
-    const r = last.focus;
-    if (r && r.status !== "pass") {
-      parts.push("", `On ${last.label ?? "this case"}:`, "", "Input:", indent(r.input));
-      if (r.got !== undefined) parts.push("Output:", indent([r.got]));
-      if (r.expected !== undefined) parts.push("Expected:", indent([r.expected]));
-      if (r.message) parts.push(r.message);
-      if (r.error) parts.push("Error:", indent(r.error.traceback.split("\n")));
-      if (r.stdout) parts.push("Printed:", indent(r.stdout.trimEnd().split("\n").slice(0, 30)));
-    }
-  }
+  if (last) parts.push("", runReport(last));
 
   parts.push(
     "",

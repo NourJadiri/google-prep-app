@@ -12,6 +12,8 @@
     "problems": "node scripts/problems/validate.mjs"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4.0.146",
+    "@anthropic-ai/sdk": "^0.135.0",
     "@codemirror/autocomplete": "^6.20.3",
     "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-python": "^6.2.1",
@@ -20,6 +22,7 @@
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.14",
     "@lezer/highlight": "^1.2.5",
+    "ai": "^7.0.142",
     "codemirror": "^6.0.2",
     "jsqr": "^1.4.0",
     "marked": "^18.1.0",
