@@ -54,7 +54,7 @@ the badge case are shared, because studying is studying whichever train you're o
 
 Nothing is fetched from another origin. No webfonts, no analytics; the network
 requests at runtime are the optional cloud sync's, the optional assistant's (to this
-origin's own Function, which is what talks to Anthropic), the problem you open, and —
+origin's own Worker, which is what talks to Anthropic), the problem you open, and —
 the first time you open one — the Python interpreter, served from this same origin and
 cached for good after that. Progress lives in localStorage first, and the cloud copy
 is a mirror, never a dependency.
@@ -73,8 +73,8 @@ npm run problems   # validate the problem bank in the real interpreter (below)
 Runtime dependencies are `react` and `react-dom`, `jsqr` for the scanner and `qrcode`
 for the square, CodeMirror 6 (`codemirror` and the `@codemirror/*` packages it is made
 of) for the editor, `marked` for problem statements, and for the assistant the AI SDK
-(`ai`, `@ai-sdk/react`) in the browser and Anthropic's SDK (`@anthropic-ai/sdk`) in its
-Function. `pyodide` is a dev dependency:
+(`ai`, `@ai-sdk/react`) in the browser and Anthropic's SDK (`@anthropic-ai/sdk`) in the
+Worker. `pyodide` is a dev dependency:
 the build copies the interpreter out of it and serves it as static files (below), so
 none of it is bundled. No router (tabs are component state), no CSS framework, no state
 library. The workspace is its own lazy chunk: the line loads as light as it always did.
@@ -85,9 +85,10 @@ typechecks before it bundles, so a type error fails the build rather than reachi
 ## Deploying to Cloudflare Workers
 
 The app is one Worker with static assets: `dist/` is served as files, and the Worker in
-`worker/index.ts` only answers `/api/*` (cloud sync, below). `wrangler.jsonc` at the repo
-root holds the whole config: the name, the assets directory, the entry point and the D1
-binding. `wrangler deploy` reads it, and so does the dashboard's Git integration.
+`worker/` only answers `/api/*`, for cloud sync and the assistant (both below).
+`wrangler.jsonc` at the repo root holds the whole config: the name, the assets directory,
+the entry point and the D1 binding. Only the assistant's two secrets live outside it, in
+the dashboard. `wrangler deploy` reads it, and so does the dashboard's Git integration.
 
 1. Push this repo to GitHub.
 2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Workers** →
@@ -103,8 +104,9 @@ binding. `wrangler deploy` reads it, and so does the dashboard's Git integration
 
 The Worker's name in the dashboard must match `name` in `wrangler.jsonc` (`yalc`), or
 the build fails. Pushes to `main` deploy to production; other branches upload a version
-with its own preview URL and don't touch production. Previews use the same D1 database
-as production, so syncing from a preview writes real rows.
+with its own preview URL and don't touch production. A preview is a version of the same
+Worker, so it shares production's D1 database (syncing from one writes real rows) and
+its secrets (the assistant, below).
 
 From a terminal instead: `npx wrangler login`, then `npm run build && npx wrangler deploy`.
 
@@ -235,36 +237,41 @@ an Anthropic API key, which lives only in Cloudflare, and a password, which keep
 everyone else out. One-time setup:
 
 1. **Anthropic Console** (console.anthropic.com): create a workspace for this app (say
-   `onsite-express`), set its **monthly spend limit** low — $5 is plenty — and create
+   `yalc`), set its **monthly spend limit** low — $5 is plenty — and create
    an API key inside it. A Claude.ai subscription doesn't cover API calls; the key
    spends the Console's own credit.
 2. **Make a password**: anything long and random, e.g. `openssl rand -base64 32`.
-3. **Cloudflare**: your Pages project → **Settings** → **Variables and Secrets** → add
-   `ANTHROPIC_API_KEY` and `ASSISTANT_PASSWORD`, both of type **Secret**, for
-   **Production** only. Redeploy so they take.
+3. **Cloudflare**: your Worker → **Settings** → **Variables and Secrets** → add
+   `ANTHROPIC_API_KEY` and `ASSISTANT_PASSWORD`, both of type **Secret**, and deploy.
+   Or from a terminal: `npx wrangler secret put ANTHROPIC_API_KEY`, then the same for
+   `ASSISTANT_PASSWORD`. Either way they take effect at once, with no rebuild, and later
+   deploys leave them alone. Make them secrets, not plain-text variables: a deploy
+   deletes any variable that `wrangler.jsonc` doesn't list.
 4. **In the app**: open any problem, press `⌘K`, paste the password. That browser
    remembers it; do the same once on each device.
 
 How it stays yours:
 
-- **The key never leaves Cloudflare.** It is a Pages secret only
-  `functions/api/assistant.ts` can read — never in the bundle (it is not a `VITE_`
-  variable, which Vite would bake into the public JavaScript), never in git, never in
-  a browser.
-- **The Function is the door, and the password its lock.** Every request carries the
+- **The key never leaves Cloudflare.** It is a Worker secret, and
+  `worker/assistant.ts` is the only code that reads it — never in the bundle (it is not
+  a `VITE_` variable, which Vite would bake into the public JavaScript), never in git,
+  never in a browser.
+- **The Worker is the door, and the password its lock.** Every request carries the
   password as a bearer token, compared in constant time; a wrong one gets a 401 before
   anything is spent. It is a separate secret from the sync code on purpose: sync codes
   ride in QR codes and links, and seeing one shouldn't let anyone spend money.
-- **It fails closed.** Without both secrets (every preview deploy, since they are set
-  for Production only — preview URLs are public), the Function answers 503 and calls
-  nothing.
+- **It fails closed.** Without both secrets (a fork, a fresh Worker, `wrangler dev`
+  without a `.dev.vars`), the endpoint answers 503 and calls nothing. Preview URLs are
+  the exception: a Worker's secrets go with every version of it, previews included, so
+  on a preview the password is the whole door. `"preview_urls": false` in
+  `wrangler.jsonc` turns previews off if you'd rather have none.
 - **It isn't a proxy.** The browser sends the problem and the conversation, nothing
   else. The model, the token cap, the effort and the system prompt are fixed in the
-  Function, so even a leaked password buys a chat with Haiku about Python — never the
+  Worker, so even a leaked password buys a chat with Haiku about Python — never the
   key, never a bigger model.
 - **The spend limit is the backstop.** If everything above failed at once, the
   workspace's monthly cap is the most it could cost. If the password leaks, change the
-  secret and redeploy; if the key does, revoke it in the Console.
+  secret (it takes effect at once); if the key does, revoke it in the Console.
 - **Answers can't run code in the page.** They are rendered by their own `marked`
   instance (`answer.ts`) that shows raw HTML as text, never loads an image (a markdown
   image is a request to whatever URL the text names), and links only to http(s).
@@ -282,12 +289,14 @@ gitignored, as is `.env*`) and serve the build through wrangler:
 ```bash
 printf 'ANTHROPIC_API_KEY=sk-ant-...\nASSISTANT_PASSWORD=...\n' > .dev.vars
 npm run build
-npx wrangler pages dev dist
+npx wrangler dev
 ```
 
-`npm run dev` has no Functions, so there the window says the endpoint is missing. An
-optional third variable, `ANTHROPIC_BASE_URL`, points the Function somewhere other than
-api.anthropic.com — Cloudflare AI Gateway for logs and analytics, or a local mock.
+`npm run dev` has no Worker, so there the window says the endpoint is missing. An
+optional third variable, `ANTHROPIC_BASE_URL`, points the Worker somewhere other than
+api.anthropic.com — Cloudflare AI Gateway for logs and analytics, or a local mock. It
+isn't secret: in production it goes under `vars` in `wrangler.jsonc`, locally in
+`.dev.vars`.
 
 ## The workspace: Python in the browser
 
@@ -381,10 +390,12 @@ scripts/parity/                 harness that diffs this app against the referenc
 
 scripts/problems/               validate.mjs (the bank's validator), specfmt.py (spec writer)
 
-worker/index.ts                 the sync endpoint: one D1 row per code, last-write-wins,
+worker/index.ts                 the Worker's router: /api/state/<code> and /api/assistant
+worker/sync.ts                  the sync endpoint: one D1 row per code, last-write-wins,
                                 self-migrating schema, refuses schema downgrades
-functions/api/assistant.ts      the assistant endpoint: password gate, the only holder of
+worker/assistant.ts             the assistant endpoint: password gate, the only holder of
                                 the Anthropic key, streams Claude's answer back
+worker/http.ts                  the no-store JSON both endpoints answer with
 wrangler.jsonc                  the Worker: dist/ as static assets, the D1 binding
 public/_headers                 cross-origin isolation + immutable /pyodide/* caching
 

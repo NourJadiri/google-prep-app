@@ -1,227 +1,48 @@
-/* The sync endpoint: one row per sync code, holding the whole export blob.
+/* The Worker: the app's two endpoints, in front of its static files.
  *
- * Deliberately a dumb store. Versioning and vetting stay client-side in
- * engine.normalize, exactly where they already live for import. The server
- * reads exactly two labels off the blob and nothing else: its schema version
- * (`v`) and the line it was last riding (`track`), each mirrored into its own
- * column. All it adds is last-write-wins: every payload carries the client's
- * `updatedAt`, and an older write loses, atomically, in the upsert's WHERE
- * clause. The loser gets the current row back in the response so the stale
- * device can adopt it instead of retrying forever.
- *
- * The `v` column is what makes the v1 -> v2 split safe to deploy. A tab that
- * was open across the deploy still runs the v1 build, and its next push would
- * otherwise overwrite a v2 blob — and every line but Google with it — just by
- * being newer. The same WHERE clause refuses any write whose schema is older
- * than the row's; the stale tab gets the v2 row back, can't read it, and parks
- * (sync's `held`) until it reloads into a build that can.
- *
- * Runs as the Worker's entry point (wrangler.jsonc's `main`) against a D1
- * binding named DB. Static assets in dist/ are served before the Worker ever
- * runs, so the only requests that reach it are /api/* (run_worker_first) and
- * paths with no file behind them, which go back to the assets binding for its
- * 404. The schema maintains itself: the table creates itself on first contact
- * ("no such table" -> CREATE -> retry once), and a table created by an older
- * deploy grows the new columns the same way ("no such column" -> ALTER ->
- * retry), so deploying still needs a database and a binding, but no migration
- * step.
+ * Everything in dist/ is served before this runs (wrangler.jsonc's assets),
+ * so what reaches it is /api/* (run_worker_first) and paths with no file
+ * behind them, which go back to the assets binding for its 404. Each endpoint
+ * is its own module and declares the bindings it reads; this file only maps
+ * paths and methods onto them, the way Pages did from file names and
+ * onRequest exports.
  */
 
-interface Env {
-  DB: D1Database;
+import { ask, type AssistantEnv } from "./assistant";
+import { err } from "./http";
+import { deleteState, getState, putState, type SyncEnv } from "./sync";
+
+interface Env extends SyncEnv, AssistantEnv {
   ASSETS: Fetcher;
 }
 
-interface Row {
-  data: string;
-  updated_at: number;
-  v: number;
-  track: string;
-}
+/* /api/state/<code>: one path segment, as Pages' [id].ts had it. */
+const STATE = /^\/api\/state\/([^/]+)$/;
 
-/* UUIDs and anything hand-typed within reason; blocks path games and junk. */
-const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$/;
-
-/* An export is a few KB today; 256 KB is "someone is not syncing progress". */
-const MAX_BYTES = 256 * 1024;
-
-const SCHEMA = `CREATE TABLE IF NOT EXISTS states (
-  id TEXT PRIMARY KEY,
-  data TEXT NOT NULL,
-  updated_at INTEGER NOT NULL,
-  v INTEGER NOT NULL DEFAULT 1,
-  track TEXT NOT NULL DEFAULT 'google'
-)`;
-
-/* What a table from an earlier deploy is missing, in order. Every row that
-   predates a column is a v1 blob on the Google line, which is exactly what
-   the defaults say. Each statement fails harmlessly ("duplicate column") on a
-   table that already has its column. */
-const MIGRATIONS = [
-  "ALTER TABLE states ADD COLUMN v INTEGER NOT NULL DEFAULT 1",
-  "ALTER TABLE states ADD COLUMN track TEXT NOT NULL DEFAULT 'google'",
-];
-
-/* Lines are short lowercase ids ("google", "aws"); anything else is noise. */
-const TRACK_RE = /^[a-z][a-z0-9-]{0,23}$/;
-
-const json = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "content-type": "application/json",
-      /* Progress must never come back stale from an edge cache. */
-      "cache-control": "no-store",
-    },
-  });
-
-const err = (status: number, error: string): Response => json(status, { error });
-
-async function migrate(db: D1Database): Promise<void> {
-  for (const sql of MIGRATIONS) {
-    try {
-      await db.prepare(sql).run();
-    } catch (e) {
-      if (!String(e).includes("duplicate column")) throw e;
-    }
-  }
-}
-
-/* First request ever (or a fresh local dev database) has no table yet; the
-   first request after a deploy that added columns finds them missing. Either
-   way: fix the schema, retry once. */
-async function withTable<T>(db: D1Database, run: () => Promise<T>): Promise<T> {
-  try {
-    return await run();
-  } catch (e) {
-    const msg = String(e);
-    if (msg.includes("no such table")) {
-      await db.prepare(SCHEMA).run();
-    } else if (msg.includes("no such column") || msg.includes("has no column named")) {
-      await migrate(db);
-    } else {
-      throw e;
-    }
-    return run();
-  }
-}
-
-/* The two labels the server reads off a blob. A v1 blob has no track: it is
-   the Google line's, by definition. */
-function labels(data: object): { v: number; track: string } {
-  const d = data as { v?: unknown; track?: unknown };
-  const v = typeof d.v === "number" && Number.isInteger(d.v) && d.v > 0 ? d.v : 1;
-  const track = typeof d.track === "string" && TRACK_RE.test(d.track) ? d.track : "google";
-  return { v, track };
-}
-
-async function get(env: Env, key: string): Promise<Response> {
-  const row = await withTable(env.DB, () =>
-    env.DB.prepare("SELECT data, updated_at, v, track FROM states WHERE id = ?1")
-      .bind(key)
-      .first<Row>()
-  );
-  if (!row) return err(404, "no state under this code");
-
-  try {
-    return json(200, {
-      updatedAt: row.updated_at,
-      v: row.v,
-      track: row.track,
-      data: JSON.parse(row.data),
-    });
-  } catch {
-    /* A corrupt row should read as "nothing here" so the client re-seeds it. */
-    return err(404, "no state under this code");
-  }
-}
-
-async function put(env: Env, key: string, request: Request): Promise<Response> {
-  const text = await request.text();
-  if (text.length > MAX_BYTES) return err(413, "payload too large");
-
-  let updatedAt: number;
-  let data: unknown;
-  try {
-    const body: unknown = JSON.parse(text);
-    if (!body || typeof body !== "object") throw new Error("not an object");
-    ({ updatedAt, data } = body as { updatedAt: number; data: unknown });
-  } catch {
-    return err(400, "body must be JSON");
-  }
-  if (typeof updatedAt !== "number" || !Number.isFinite(updatedAt) || updatedAt <= 0) {
-    return err(400, "updatedAt must be a positive number");
-  }
-  if (!data || typeof data !== "object") return err(400, "data must be an object");
-
-  const { v, track } = labels(data);
-
-  /* The whole LWW rule, atomically: a tied or newer stamp wins, an older one
-     changes nothing — and neither does an older schema, however new its
-     stamp. meta.changes says which branch ran. */
-  const result = await withTable(env.DB, () =>
-    env.DB.prepare(
-      `INSERT INTO states (id, data, updated_at, v, track) VALUES (?1, ?2, ?3, ?4, ?5)
-       ON CONFLICT(id) DO UPDATE SET
-         data = excluded.data, updated_at = excluded.updated_at,
-         v = excluded.v, track = excluded.track
-       WHERE excluded.updated_at >= states.updated_at AND excluded.v >= states.v`
-    )
-      .bind(key, JSON.stringify(data), Math.floor(updatedAt), v, track)
-      .run()
-  );
-
-  if (result.meta.changes > 0) return json(200, { applied: true, updatedAt: Math.floor(updatedAt) });
-
-  /* Lost the race (or wrote an older schema): hand back the winner so the
-     caller can adopt it — or, if it can't read it, park. */
-  const row = await env.DB.prepare("SELECT data, updated_at, v, track FROM states WHERE id = ?1")
-    .bind(key)
-    .first<Row>();
-  if (!row) return err(500, "write rejected but no row found");
-  try {
-    return json(200, {
-      applied: false,
-      updatedAt: row.updated_at,
-      v: row.v,
-      track: row.track,
-      data: JSON.parse(row.data),
-    });
-  } catch {
-    return err(500, "stored state is corrupt");
-  }
-}
-
-/* No UI calls this; it exists so a leaked code can be cleaned up with curl. */
-async function remove(env: Env, key: string): Promise<Response> {
-  await withTable(env.DB, () =>
-    env.DB.prepare("DELETE FROM states WHERE id = ?1").bind(key).run()
-  );
-  return json(200, { deleted: true });
-}
-
-/* The one route: /api/state/<code>, one path segment, as Pages' [id].ts had it. */
-const ROUTE = /^\/api\/state\/([^/]+)$/;
+const notAllowed = (allow: string): Response => new Response(null, { status: 405, headers: { allow } });
 
 export default {
   async fetch(request, env): Promise<Response> {
     const { pathname } = new URL(request.url);
     if (!pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
 
-    const match = ROUTE.exec(pathname);
-    if (!match) return err(404, "no such endpoint");
-    const key = match[1];
-    if (!key || !ID_RE.test(key)) return err(400, "bad sync code");
-
-    switch (request.method) {
-      case "GET":
-        return get(env, key);
-      case "PUT":
-        return put(env, key, request);
-      case "DELETE":
-        return remove(env, key);
-      default:
-        return new Response(null, { status: 405, headers: { allow: "GET, PUT, DELETE" } });
+    const code = STATE.exec(pathname)?.[1];
+    if (code !== undefined) {
+      switch (request.method) {
+        case "GET":
+          return getState(env, code);
+        case "PUT":
+          return putState(env, code, request);
+        case "DELETE":
+          return deleteState(env, code);
+      }
+      return notAllowed("GET, PUT, DELETE");
     }
+
+    if (pathname === "/api/assistant") {
+      return request.method === "POST" ? ask(request, env) : notAllowed("POST");
+    }
+
+    return err(404, "no such endpoint");
   },
 } satisfies ExportedHandler<Env>;

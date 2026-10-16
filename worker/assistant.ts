@@ -1,11 +1,13 @@
 /* The assistant endpoint: the only place the Anthropic key is ever used.
  *
- * The key is a Cloudflare secret (ANTHROPIC_API_KEY) that only this Function
- * can read — it is never in the bundle, never in git, never in a browser. The
- * door in front of it is a second secret, ASSISTANT_PASSWORD: every request
- * carries it as a bearer token, compared in constant time. If either secret is
- * missing (a preview deploy, a fork, a fresh project) the answer is 503 and
- * nothing is called; the door fails closed.
+ * The key is a Worker secret (ANTHROPIC_API_KEY), and this is the only code
+ * that reads it — it is never in the bundle, never in git, never in a
+ * browser. The door in front of it is a second secret, ASSISTANT_PASSWORD:
+ * every request carries it as a bearer token, compared in constant time. If
+ * either secret is missing (a fork, a fresh Worker, `wrangler dev` without a
+ * .dev.vars) the answer is 503 and nothing is called; the door fails closed.
+ * Preview URLs are versions of the same Worker and carry its secrets, so on
+ * a preview the password is the whole door.
  *
  * Deliberately not a proxy. The browser sends the problem and the
  * conversation, nothing else: the model, the token cap, the effort and the
@@ -19,8 +21,9 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { createUIMessageStream, createUIMessageStreamResponse, type FinishReason, type UIMessageChunk } from "ai";
+import { err } from "./http";
 
-interface Env {
+export interface AssistantEnv {
   ANTHROPIC_API_KEY?: string;
   ASSISTANT_PASSWORD?: string;
   /* Optional: route through Cloudflare AI Gateway, or a local mock in dev. */
@@ -64,14 +67,6 @@ interface Turn {
   /** User turns only: the latest run's report, when there is a new one. */
   run?: string;
 }
-
-const json = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json", "cache-control": "no-store" },
-  });
-
-const err = (status: number, error: string): Response => json(status, { error });
 
 /* Hashing first gives timingSafeEqual the equal lengths it requires, and
    keeps the password's length out of the timing too. */
@@ -164,7 +159,7 @@ function describe(e: unknown): string {
   if (e instanceof Anthropic.APIError) {
     switch (e.type) {
       case "authentication_error":
-        return "Anthropic rejected the API key. Check ANTHROPIC_API_KEY in the Cloudflare project.";
+        return "Anthropic rejected the API key. Check the Worker's ANTHROPIC_API_KEY secret.";
       case "permission_error":
         return "This API key isn't allowed to use Claude Haiku 5.5.";
       case "billing_error":
@@ -183,7 +178,7 @@ function describe(e: unknown): string {
   return "Something went wrong on the server.";
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
+export async function ask(request: Request, env: AssistantEnv): Promise<Response> {
   const apiKey = env.ANTHROPIC_API_KEY;
   const password = env.ASSISTANT_PASSWORD;
   if (!apiKey || !password) return err(503, "the assistant is not set up on this deployment");
@@ -259,4 +254,4 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
   });
 
   return createUIMessageStreamResponse({ stream, headers: { "cache-control": "no-store" } });
-};
+}

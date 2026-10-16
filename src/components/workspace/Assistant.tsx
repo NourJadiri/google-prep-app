@@ -16,7 +16,7 @@ import "./assistant.css";
  * when there is a new one. So the history reads like a pairing session and
  * the newest snapshot is always the editor as it is now. The problem rides
  * along in every request and becomes the system prompt server-side
- * (functions/api/assistant.ts), which also owns the model, the caps and the
+ * (worker/assistant.ts), which also owns the model, the caps and the
  * key. All this window holds is the password, in lib/assistant.
  *
  * Lives inside Body, which is keyed by problem: a new problem is a new chat.
@@ -41,7 +41,7 @@ interface Meta {
 
 type Msg = UIMessage<Meta>;
 
-/* The Function refuses a conversation longer than this. */
+/* The Worker refuses a conversation longer than this. */
 const MAX_TURNS = 40;
 
 const STARTERS = ["Why does my code fail?", "Is my approach on the right track?", "What's the complexity of my code?"];
@@ -58,7 +58,7 @@ function lastSent(messages: Msg[], key: "code" | "run"): string | undefined {
   return undefined;
 }
 
-/* The wire shape the Function checks, field by field. */
+/* The wire shape the Worker checks, field by field. */
 function toTurn(m: Msg) {
   const text = textOf(m);
   if (m.role !== "user") return { role: "assistant" as const, text };
@@ -84,11 +84,11 @@ function troubleOf(e: Error): Trouble {
       case 503:
         return {
           kind: "setup",
-          text: "The assistant isn't set up on this deployment. It needs ANTHROPIC_API_KEY and ASSISTANT_PASSWORD as secrets in the Cloudflare project.",
+          text: "The assistant isn't set up on this deployment. It needs ANTHROPIC_API_KEY and ASSISTANT_PASSWORD as secrets on the Cloudflare Worker.",
         };
       case 404:
       case 405:
-        return { kind: "setup", text: "No assistant endpoint here. Locally, run the app through wrangler pages dev (see the README)." };
+        return { kind: "setup", text: "No assistant endpoint here. Locally, run the app through wrangler dev (see the README)." };
       case 413:
         return { kind: "full", text: "This conversation is too long to send. Start a new one." };
     }
@@ -101,7 +101,7 @@ function troubleOf(e: Error): Trouble {
     return { kind: "other", text: typeof said === "string" ? `The server said: ${said}.` : `The server answered ${e.statusCode ?? "with an error"}.` };
   }
   if (e instanceof TypeError) return { kind: "other", text: "Couldn't reach the server. Check the connection and retry." };
-  /* Errors from inside the stream arrive already worded by the Function. */
+  /* Errors from inside the stream arrive already worded by the Worker. */
   return { kind: "other", text: e.message || "Something went wrong." };
 }
 

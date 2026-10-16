@@ -11,7 +11,7 @@ npm-debug.log*
 # wrangler's local state (miniflare D1, logs) from `wrangler dev`
 .wrangler/
 
-# Secrets never enter git: .dev.vars is where `wrangler pages dev` reads the
+# Secrets never enter git: .dev.vars is where `wrangler dev` reads the
 # assistant's key and password locally, and a .env could hold the same.
 .dev.vars*
 .env*

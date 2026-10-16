@@ -5,9 +5,10 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
 // Static SPA, single route — no base path, no proxying. The only runtime fetches are
-// cloud sync's /api/state calls, served by the Worker (not by this dev server —
-// `wrangler dev` after a build is the full-stack loop; here sync just reports offline),
-// and the Python interpreter, which is ours: Pyodide is served from this origin
+// cloud sync's /api/state calls and the assistant's /api/assistant, both served by the
+// Worker (not by this dev server — `wrangler dev` after a build is the full-stack loop;
+// here sync reports offline and the assistant finds no endpoint), and the Python
+// interpreter, which is ours: Pyodide is served from this origin
 // under /pyodide/<version>/, never from a CDN.
 
 const PYODIDE_DIR = fileURLToPath(new URL("./node_modules/pyodide/", import.meta.url));
