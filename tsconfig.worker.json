@@ -7,7 +7,7 @@
     /* The Workers runtime, not the DOM — fetch/Response/crypto come from here. */
     "types": ["@cloudflare/workers-types"],
 
-    /* Pages bundles Functions itself (esbuild); tsc only ever checks. */
+    /* wrangler bundles the Worker itself (esbuild); tsc only ever checks. */
     "noEmit": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
@@ -21,5 +21,5 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true
   },
-  "include": ["functions"]
+  "include": ["worker"]
 }

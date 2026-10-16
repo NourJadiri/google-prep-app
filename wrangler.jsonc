@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "yalc",
+  "compatibility_date": "2026-10-16",
+  // The sync endpoint (worker/index.ts). Everything else is static.
+  "main": "./worker/index.ts",
+  "assets": {
+    // `npm run build` must run first: wrangler uploads this directory as is.
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Files are served before the Worker runs. /api/* never matches a file,
+    // but saying so here keeps a stray dist/api/ from shadowing the endpoint.
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "a572e8b5-a6e2-446c-9066-4d268607b69a"
+    }
+  ]
+}

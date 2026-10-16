@@ -8,7 +8,7 @@ npm-debug.log*
 # tsc -b writes these even under noEmit
 *.tsbuildinfo
 
-# wrangler's local state (miniflare D1, logs) from `wrangler pages dev`
+# wrangler's local state (miniflare D1, logs) from `wrangler dev`
 .wrangler/
 
 # CPython writes these when a script imports the harness to generate tests

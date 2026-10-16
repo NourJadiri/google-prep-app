@@ -1,4 +1,5 @@
-# Cloudflare Pages response headers.
+# Response headers for the static assets (Workers reads this from dist/; it does
+# not apply to responses the Worker itself builds, i.e. /api/*).
 #
 # Cross-origin isolation, so the Python runner can share an interrupt buffer
 # with its worker: Stop and the time limits end a run without reloading the

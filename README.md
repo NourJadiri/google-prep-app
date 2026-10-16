@@ -77,26 +77,37 @@ none of it is bundled. No router (tabs are component state), no CSS framework, n
 library. The workspace is its own lazy chunk: the line loads as light as it always did.
 
 Written in TypeScript under `strict` plus `noUncheckedIndexedAccess`. `npm run build`
-typechecks before it bundles, so a type error fails the build rather than reaching Pages.
+typechecks before it bundles, so a type error fails the build rather than reaching Cloudflare.
 
-## Deploying to Cloudflare Pages
+## Deploying to Cloudflare Workers
+
+The app is one Worker with static assets: `dist/` is served as files, and the Worker in
+`worker/index.ts` only answers `/api/*` (cloud sync, below). `wrangler.jsonc` at the repo
+root holds the whole config: the name, the assets directory, the entry point and the D1
+binding. `wrangler deploy` reads it, and so does the dashboard's Git integration.
 
 1. Push this repo to GitHub.
-2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**,
-   and pick the repository.
+2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Workers** →
+   **Import a repository**, and pick the repository. (Already created? The same
+   settings live under the Worker → **Settings** → **Build**.)
 3. Build settings:
-   - **Framework preset**: `React (Vite)` — or set it manually:
-   - **Build command**: `npm run build`
-   - **Build output directory**: `dist`
+   - **Build command**: `npm run build`. Required: wrangler uploads `dist/` as is and
+     fails if it doesn't exist.
+   - **Deploy command**: `npx wrangler deploy`
+   - **Non-production branch deploy command**: `npx wrangler versions upload`
    - **Root directory**: leave at the repo root
 4. Save and deploy.
 
-Pushes to `main` deploy to production; every other branch gets its own preview URL.
+The Worker's name in the dashboard must match `name` in `wrangler.jsonc` (`yalc`), or
+the build fails. Pushes to `main` deploy to production; other branches upload a version
+with its own preview URL and don't touch production. Previews use the same D1 database
+as production, so syncing from a preview writes real rows.
+
+From a terminal instead: `npx wrangler login`, then `npm run build && npx wrangler deploy`.
 
 No `_redirects` file is needed — the app is a single route, so there is no client-side
-routing for Pages to rewrite. `dist/` is fully static and can be hosted anywhere; the
-`functions/` directory is picked up by Pages automatically and only matters if you want
-cloud sync (below).
+routing to rewrite, and a path with no file behind it is a plain 404. `dist/` is fully
+static and can be hosted anywhere; the Worker only matters if you want cloud sync.
 
 `public/_headers` ships two rules with the build:
 
@@ -109,23 +120,24 @@ cloud sync (below).
 - **Immutable caching for `/pyodide/*`.** The interpreter (about 13 MB: a 9.6 MB wasm,
   the 2.5 MB standard library, the loader) lives under its version number,
   `/pyodide/314.0.7/`, so a path never changes content and moves once per upgrade.
-  Every file is under Pages' 25 MiB per-file limit.
+  Every file is under Workers' 25 MiB per-asset limit.
 
 ## Cloud sync (optional, free tier)
 
-Progress can mirror across devices through a Pages Function backed by Cloudflare D1.
-One-time setup, all in the dashboard:
+Progress can mirror across devices through the Worker, backed by Cloudflare D1.
+`wrangler.jsonc` binds it as `DB` to the database whose `database_id` it names, so the
+only setup is a database to point at:
 
 1. **Create the database**: dashboard → **Storage & Databases** → **D1** →
-   **Create database** — any name, e.g. `yalc`.
-2. **Bind it to the Pages project**: your Pages project → **Settings** → **Bindings**
-   (older UI: Functions → D1 database bindings) → **Add** → type **D1 database**,
-   variable name **`DB`**, pick the database. Add it for **Production** and **Preview**.
-3. **Redeploy** (retry the latest deployment or push any commit) so the binding takes.
+   **Create database** — any name, e.g. `yalc` — or `npx wrangler d1 create yalc`.
+2. **Point the config at it**: put its ID in `database_id` under `d1_databases` in
+   `wrangler.jsonc`, and push. The next deploy carries the binding.
 
-There is no schema step — the function creates its one table on first contact. The CLI
-equivalent of step 1 is `npx wrangler d1 create yalc`; the binding still
-happens in the project's settings.
+There is no schema step — the Worker creates its one table on first contact. Don't add
+the binding in the dashboard as well: `wrangler.jsonc` is the source of truth, and each
+deploy replaces whatever bindings the dashboard holds with the ones it lists. A fork
+without a database of its own should delete the `d1_databases` block; sync then reports
+the cloud as unreachable and everything else works.
 
 Then, in the app: **Me → Sync → Turn on sync** on one device, and **I have a code →
 Connect** with that code on the next. The code is the only credential — anyone holding
@@ -199,12 +211,12 @@ read it, and parks until it reloads into a build that can.
 Free-tier arithmetic: D1 allows 100k row writes/day and 5M reads/day; one keen day of
 studying is a few hundred writes. Not a concern.
 
-To develop against the function locally (`npm run dev` has no functions — sync just
-reports the cloud as unreachable there):
+To develop against the Worker locally (`npm run dev` has no Worker — sync just reports
+the cloud as unreachable there):
 
 ```bash
 npm run build
-npx wrangler pages dev dist --d1=DB   # local Miniflare D1, no account needed
+npx wrangler dev   # wrangler.jsonc's bindings, with a local Miniflare D1; no account needed
 ```
 
 On an iPhone, **Share → Add to Home Screen** gives a standalone window: the
@@ -300,8 +312,9 @@ scripts/parity/                 harness that diffs this app against the referenc
 
 scripts/problems/               validate.mjs (the bank's validator), specfmt.py (spec writer)
 
-functions/api/state/[id].ts     the sync endpoint: one D1 row per code, last-write-wins,
+worker/index.ts                 the sync endpoint: one D1 row per code, last-write-wins,
                                 self-migrating schema, refuses schema downgrades
+wrangler.jsonc                  the Worker: dist/ as static assets, the D1 binding
 public/_headers                 cross-origin isolation + immutable /pyodide/* caching
 
 src/
@@ -515,7 +528,7 @@ change a pixel:
 - **44px touch targets.** The 26px check circle and 34px link button keep their size but
   get a transparent `::after` overlay that brings the tappable area up to 44px.
 - **Storage.** The reference's Claude-artifact storage branch is gone — there is no
-  artifact host on Cloudflare Pages. Corrupt JSON in `localStorage` no longer downgrades
+  artifact host on Cloudflare. Corrupt JSON in `localStorage` no longer downgrades
   the app to memory-only, and a `pagehide`/`visibilitychange` flush stops iOS from
   discarding the last 350 ms of debounced progress when it reclaims a backgrounded tab.
 - **Clipboard.** The reference's export throws an unhandled rejection when clipboard

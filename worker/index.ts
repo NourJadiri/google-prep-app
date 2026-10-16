@@ -16,15 +16,20 @@
  * than the row's; the stale tab gets the v2 row back, can't read it, and parks
  * (sync's `held`) until it reloads into a build that can.
  *
- * Runs as a Cloudflare Pages Function against a D1 binding named DB. The
- * schema maintains itself: the table creates itself on first contact ("no
- * such table" -> CREATE -> retry once), and a table created by an older deploy
- * grows the new columns the same way ("no such column" -> ALTER -> retry), so
- * deploying still needs a database and a binding, but no migration step.
+ * Runs as the Worker's entry point (wrangler.jsonc's `main`) against a D1
+ * binding named DB. Static assets in dist/ are served before the Worker ever
+ * runs, so the only requests that reach it are /api/* (run_worker_first) and
+ * paths with no file behind them, which go back to the assets binding for its
+ * 404. The schema maintains itself: the table creates itself on first contact
+ * ("no such table" -> CREATE -> retry once), and a table created by an older
+ * deploy grows the new columns the same way ("no such column" -> ALTER ->
+ * retry), so deploying still needs a database and a binding, but no migration
+ * step.
  */
 
 interface Env {
   DB: D1Database;
+  ASSETS: Fetcher;
 }
 
 interface Row {
@@ -110,15 +115,7 @@ function labels(data: object): { v: number; track: string } {
   return { v, track };
 }
 
-function id(params: Record<string, string | string[]>): string | null {
-  const raw = params["id"];
-  return typeof raw === "string" && ID_RE.test(raw) ? raw : null;
-}
-
-export const onRequestGet: PagesFunction<Env> = async ({ env, params }) => {
-  const key = id(params);
-  if (!key) return err(400, "bad sync code");
-
+async function get(env: Env, key: string): Promise<Response> {
   const row = await withTable(env.DB, () =>
     env.DB.prepare("SELECT data, updated_at, v, track FROM states WHERE id = ?1")
       .bind(key)
@@ -137,12 +134,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, params }) => {
     /* A corrupt row should read as "nothing here" so the client re-seeds it. */
     return err(404, "no state under this code");
   }
-};
+}
 
-export const onRequestPut: PagesFunction<Env> = async ({ env, params, request }) => {
-  const key = id(params);
-  if (!key) return err(400, "bad sync code");
-
+async function put(env: Env, key: string, request: Request): Promise<Response> {
   const text = await request.text();
   if (text.length > MAX_BYTES) return err(413, "payload too large");
 
@@ -196,14 +190,38 @@ export const onRequestPut: PagesFunction<Env> = async ({ env, params, request })
   } catch {
     return err(500, "stored state is corrupt");
   }
-};
+}
 
 /* No UI calls this; it exists so a leaked code can be cleaned up with curl. */
-export const onRequestDelete: PagesFunction<Env> = async ({ env, params }) => {
-  const key = id(params);
-  if (!key) return err(400, "bad sync code");
+async function remove(env: Env, key: string): Promise<Response> {
   await withTable(env.DB, () =>
     env.DB.prepare("DELETE FROM states WHERE id = ?1").bind(key).run()
   );
   return json(200, { deleted: true });
-};
+}
+
+/* The one route: /api/state/<code>, one path segment, as Pages' [id].ts had it. */
+const ROUTE = /^\/api\/state\/([^/]+)$/;
+
+export default {
+  async fetch(request, env): Promise<Response> {
+    const { pathname } = new URL(request.url);
+    if (!pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+
+    const match = ROUTE.exec(pathname);
+    if (!match) return err(404, "no such endpoint");
+    const key = match[1];
+    if (!key || !ID_RE.test(key)) return err(400, "bad sync code");
+
+    switch (request.method) {
+      case "GET":
+        return get(env, key);
+      case "PUT":
+        return put(env, key, request);
+      case "DELETE":
+        return remove(env, key);
+      default:
+        return new Response(null, { status: 405, headers: { allow: "GET, PUT, DELETE" } });
+    }
+  },
+} satisfies ExportedHandler<Env>;
