@@ -37,7 +37,7 @@ export default function ProblemRow({ prob, done, passed }: ProblemRowProps) {
         <div className="pmeta">
           <span className={"diff " + prob.diff}>{DIFFN[prob.diff]}</span>
           {prob.warm && <span className="tag">warm-up</span>}
-          {prob.drill && <span className="tag">premium</span>}
+          {prob.drill && <span className="tag">{prob.orig ? "original" : "premium"}</span>}
           {passed && <span className="tag passed">passed</span>}
           <span className="xpv">{"+" + probXP(prob) + " XP"}</span>
         </div>

@@ -39,6 +39,9 @@ export interface Problem {
   /** The premium classics carry a drill id instead of a slug: there is no
    *  LeetCode page worth linking, and the workspace is the only way in. */
   drill?: string;
+  /** Marks a drill that is our own problem, not a stand-in for a premium
+   *  LeetCode one, so its row says "original" instead of "premium". */
+  orig?: true;
   /** Overrides the difficulty's XP; only the timed mocks set it. */
   xp?: number;
   /** Marks the day's last problem as a warm-up. Week 1 warms seed the heaps

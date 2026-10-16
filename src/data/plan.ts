@@ -268,7 +268,7 @@ export const PLAN: NonEmpty<Day> = [
     ]},
   { id:"d23", d:23, stn:"Design District", color:"var(--red)", ph:"ds",
     name:"Design questions — O(1) or it didn't happen",
-    note:"Google's fifth food group, and all five of today's are on its tagged lists. LRU is a hashmap holding hands with a doubly-linked list; GetRandom is swap-to-end-then-pop; Pick with Weight is binary search over a prefix ramp; the KV store is bisect over timestamps. State each operation's cost before you code — that is the question.",
+    note:"Google's fifth food group, and all five of today's are on its tagged lists. LRU is a hashmap holding hands with a doubly-linked list; GetRandom is swap-to-end-then-pop; Pick with Weight is binary search over a prefix ramp; the KV store is bisect over timestamps. State each operation's cost before you code — that is the question. The spreadsheet is the OOD bonus: cached values on top of a dependency graph, recomputed in topological order, cycles rejected.",
     ritual:"Say LRU's two structures and why neither survives alone, then write get/put in pseudocode.",
     probs:[
       { id:"lru",   n:"LRU Cache", slug:"lru-cache", diff:"M" },
@@ -276,6 +276,7 @@ export const PLAN: NonEmpty<Day> = [
       { id:"rpw",   n:"Random Pick with Weight", slug:"random-pick-with-weight", diff:"M" },
       { id:"tbkv",  n:"Time Based Key-Value Store", slug:"time-based-key-value-store", diff:"M" },
       { id:"dhc",   n:"Design Hit Counter (if time)", drill:"design-hit-counter", diff:"M" },
+      { id:"xls",   n:"Spreadsheet Engine (OOD)", drill:"design-spreadsheet-engine", diff:"H", orig:true },
       { id:"mpsub", n:"Maximum Product Subarray", slug:"maximum-product-subarray", diff:"M", warm:true },
     ]},
   { id:"d24", d:24, stn:"Final Approach", color:"var(--blue)", ph:"mix", mock:true,
