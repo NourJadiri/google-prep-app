@@ -10,3 +10,8 @@
 .mbtn:disabled { opacity: .5; cursor: default; }
 .mbtn.danger { color: var(--red); border-color: var(--red); }
 .mbtn.danger:not(:disabled):active { background: var(--bad-bg); }
+/* `button.` keeps hover above the link sheet's `.qrsheet .mbtn:active`, which ties it on class count and loads later. */
+@media (hover: hover) {
+  button.mbtn:not(:disabled):hover { background: var(--sunken); border-color: color-mix(in srgb, var(--ink2) 35%, var(--line)); }
+  .mbtn.danger:not(:disabled):hover { background: var(--bad-bg); border-color: var(--red); }
+}

@@ -13,9 +13,3 @@
 :root[data-track="aws"] .gdots i:nth-child(2){background:var(--aws-teal)}
 :root[data-track="aws"] .gdots i:nth-child(3){background:var(--aws-ink)}
 :root[data-track="aws"] .gdots i:nth-child(4){background:var(--aws-rust)}
-
-/* PillButton's hover, kept below every component sheet: the link sheet's `.qrsheet .mbtn` ties it on specificity, and hover has always won. */
-@media (hover: hover) {
-  .mbtn:not(:disabled):hover { background: var(--sunken); border-color: color-mix(in srgb, var(--ink2) 35%, var(--line)); }
-  .mbtn.danger:not(:disabled):hover { background: var(--bad-bg); border-color: var(--red); }
-}
