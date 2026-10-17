@@ -29,7 +29,7 @@ that stands.
 | 1 | Workspace: problem pane, editor, console, Python runner, the assistant, plus the first shared UI primitives | done |
 | 2 | Me tab and sync: sync panel, link sheet, scanner, `lib/sync.ts` | done |
 | 3 | Line, Metro and Dojo tabs, the app shell, shared components (`Icon`, celebrations) | done |
-| 4 | State and domain: `lib/engine.ts`, `state/AppState.tsx`, `types.ts`, data files | |
+| 4 | State and domain: `lib/engine.ts`, `state/AppState.tsx`, `types.ts`, data files | done |
 
 The domain layer (step 4) is the safest mechanical split, but the components are what reads worst,
 so they go first. When step 4 comes, `lib/engine.ts` can stay as a re-exporting barrel so no UI
@@ -124,6 +124,35 @@ Left for later, on purpose:
   its badge, before any rank-up; the station that becomes current opens; Dojo template headers
   are 44 px tall. Left as is: a 1.5 px border draws as 1 px on a 1x screen, which is how
   browsers round borders, and phones draw it as designed.
+
+## Step 4 result
+
+The domain and state layer went from 13 files to 35, 2725 lines to 2555, and the largest code
+file from 679 lines (`lib/engine.ts`) to 147; comments in the engine, state and types went from
+13% of lines to 7%. `lib/engine/` splits the rulebook into the schema and its migration,
+selectors, ranks, the XP and badge kernel, the Line's rules, deck building and runs, behind an
+`index.ts` that exports what the UI uses, so no import changed. `state/` keeps the provider in
+`AppState.tsx` (37 lines) over a reducer module, the action types and creators, and one hook
+per effect (saving, cloud sync, `#sync=` links, the flush on exit). `types/` splits the
+vocabulary by kind. Dead exports went from the engine (`STOPS`, `blankTrack`, `buildSession`,
+`pickWeighted`, `shuffle`, `dayDone` and `acceptedTotal` are internal now), the data
+(`PROBS`, `DAY_OF`, `TOTAL`) and storage (`storageMode`). The audit was wrong about
+`multiplier`: the quiz header uses it.
+
+Checked with the three suites (all identical) and a new differential test,
+`scripts/regress/engine-diff.mjs`, which plays the same seeded 24,000-step game on the engine
+at the base commit and on the new one and compares every result, celebration, selector and
+object identity: no mismatch. Before trusting it, it was run against 45 planted mutations of
+the engine and caught all but two that changed nothing.
+
+Left for later, on purpose:
+- `normalize` doesn't vet the inside of `quiz.perQ` entries or the values in `done` and
+  `rituals`: a hand-edited export with `perQ: {id: 5}` turns into `NaN` stats on the next
+  answer, and `done: {id: false}` counts as progress. A badge stamped `0` in an import would be
+  announced again. A streak date in the future resets the streak to 1.
+- `src/data/templates.ts` keeps its generated header: `scripts/extract-data.mjs` still writes
+  it byte for byte from the reference.
+- `drafts.ts` holds both the per-problem drafts and the workspace prefs.
 
 ## Audit (October 2026)
 

@@ -408,7 +408,8 @@ src/
   app/          views.ts        which view each tab shows
                 hooks/          useTrackTheme: tints the app for the line
                 WorkspaceHost   lazy-loads the workspace modal
-  types.ts                      the whole vocabulary: content, state, effects
+  types/                        the whole vocabulary, by kind: content, progress (the
+                                persisted blob), quiz, fx, ui; index.ts re-exports it all
   styles/       tokens.css      the custom properties, light and dark, per line
                 base.css        reset, and the 44px touch-target overlays
                 layout.css      page frame and the hero type every tab uses; each
@@ -425,7 +426,10 @@ src/
                 worker.ts       Pyodide in a module worker
                 runner.ts       one run at a time, time limits, Stop, crash recovery
                 types.ts        the wire format between the three
-  lib/          engine.ts       every rule, as pure functions
+  lib/          engine/         every rule, as pure functions: schema.ts (blank,
+                                normalize), selectors, ranks, the XP and badge kernel,
+                                line.ts (ticks, passes, rituals), deck.ts and metro.ts
+                                (runs); index.ts is the API the UI imports
                 storage.ts      localStorage with an in-memory fallback
                 drafts.ts       your code per problem, and workspace prefs — local only
                 cx.ts           class-name joiner; platform.ts: Mac or not, ⌘ or Ctrl
@@ -436,7 +440,13 @@ src/
                                 carries, #sync=<code>&do=send|recv
                 dates.ts        calendar-day helpers; motion.ts: reduced motion;
                                 scroll.ts: back to the top on tab and line changes
-  state/        AppState.tsx    Context + useReducer + persistence
+  state/        AppState.tsx    the context, the provider and useApp
+                reducer.ts      every action's effect on the state, then `settle`
+                                (the current station opens, an empty Redemption
+                                deck hands the choice back to Mix)
+                actions.ts, useActions.ts  the actions, and the creators that stamp
+                                the clock; shape.ts: the state and how it boots
+                hooks/          saving, cloud sync, #sync= links, the flush on exit
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
   hooks/        shared by more than one area: useMedia, useLatest, useCopied,
                 useCopyToast, useDialogBehavior (focus in and out, Escape), useTrack
@@ -470,9 +480,9 @@ src/
 
 ### What the types are actually doing
 
-`src/types.ts` holds every shape in one file, split into content (ported from the
-reference, never mutated) and state (the persisted blob, which is also the export
-format). Three of them carry real weight:
+`src/types/` holds every shape, split by kind: content (ported from the reference, never
+mutated), progress (the persisted blob, which is also the export format), the quiz
+session, celebrations and UI. Three of them carry real weight:
 
 - **`Fx`** is a discriminated union of `ToastFx | ConfettiFx`. `Celebrations` splits the
   queue by `kind`, and a toast can no longer be handed to the confetti renderer.
@@ -482,14 +492,14 @@ format). Three of them carry real weight:
   is the only function in the app that takes `unknown`; everything downstream is real.
 
 `noUncheckedIndexedAccess` is on, which matters more here than it sounds: `done`,
-`rituals`, `badges`, `perQ`, `PROBS` and `Q_BY_ID` are all sparse maps keyed by ids that a
+`rituals`, `badges`, `perQ`, `PROB_INDEX` and `Q_BY_ID` are all sparse maps keyed by ids that a
 stale export can populate with anything. Every read has to admit it can miss. Where a
 lookup genuinely cannot fail — the current rank, the terminus day — `PLAN` and `RANKS` are
 typed as non-empty tuples so it resolves at compile time instead of with an assertion.
 
 ### The engine is pure
 
-`lib/engine.js` holds the rulebook. Mutators take the persisted state and return a new
+`lib/engine/` holds the rulebook. Mutators take the persisted state and return a new
 state plus an ordered queue of celebrations:
 
 ```ts
@@ -679,6 +689,13 @@ python3 -I scripts/regress/ws-diff.py tabs-before tabs-after
 
 `me-check.sh` and `tabs-check.sh` are `REGRESS_SUITE=me` / `=tabs ws-check.sh`; `WS_ONLY=03,06` runs only the scenarios whose
 id starts with those numbers.
+
+The engine has its own check, without a browser: `node scripts/regress/engine-diff.mjs <ref>`
+bundles `lib/engine` from that commit and from the working tree, plays the same seeded
+game on both (ticks, passes, rituals, line switches, whole runs, `normalize` on fuzzed
+blobs, a calendar that moves) and stops at the first step where data, celebrations,
+sessions, selectors or object identity differ. 24,000 steps take about 15 seconds;
+`--steps=N` and `--seed=N` change the game.
 
 Compare runs made on the same machine: Chromium's text antialiasing can differ between
 environments (see below), though two runs in one environment have matched pixel for

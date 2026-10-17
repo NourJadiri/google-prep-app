@@ -257,14 +257,15 @@ someone about to get on a plane, that is worth knowing. A UTC-based day would tr
 oddity for another; the honest fix is storing the timezone offset alongside `last`.
 
 **`done` keeps ids the plan no longer has.**
-Derivations already filter through `PROBS`, so a stale id can't inflate any count — but it
+Derivations already look ids up in `PROB_INDEX`, so a stale id can't inflate any count — but it
 stays in the export forever. `normalize()` could drop unknown problem ids the way it
 already drops unknown ids from `quiz.missed`.
 
 **A Redemption run can't earn the perfect-run bonus.**
 `nextCard` guards on `ids.length >= 10`, so clearing a 6-card Redemption deck perfectly
 pays nothing extra. That is the reference's rule and probably intentional — a short deck
-is an easier ten — but it surprises the first time it happens.
+is an easier ten. The result screen now says "All won back" instead of the perfect-run
+line, so it no longer promises a bonus it doesn't pay.
 
 **No keyboard path through the quiz.**
 The brief is explicit that Metro mode is thumbs-only, so this is by design. If it ever
@@ -299,8 +300,9 @@ reference file is going to keep living in the repo. It is now the only automated
 any kind, which raises the value of wiring it up.
 
 **No component tests.**
-`lib/engine.ts` has no coverage at all now, and the browser harness covers only the
-rendered result — there is nothing in between, and nothing below. A jsdom render of, say,
+`lib/engine/` has no unit tests. `scripts/regress/engine-diff.mjs` proves a change kept
+its behaviour against an earlier commit, and the regression suites cover the rendered
+result, but nothing states the rules themselves as tests. A jsdom render of, say,
 `QuizCard` asserting that a revealed card locks its options would be the first thing to
 add if the app starts changing again.
 
