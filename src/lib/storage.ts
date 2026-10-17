@@ -1,17 +1,11 @@
-/* Persistence. localStorage when the browser allows it, an in-memory shim when
-   it doesn't (private windows, cookie-blocked embeds) so nothing ever throws
-   its way up into React. */
-
 import type { PersistedData } from "../types";
 
-/* The app was Onsite Express before it was YALC. The key keeps the old name:
-   renaming it would strand every saved run. Same for drafts.ts and sync/config.ts. */
-export const KEY = "onsite-express-v1";
+// Key names predate the YALC rename; changing any (here, drafts.ts, sync/config.ts) would strand saved runs.
+const KEY = "onsite-express-v1";
 const DEBOUNCE_MS = 350;
 
-type Mode = "mem" | "local";
-
-let mode: Mode = "mem";
+// localStorage when the browser allows it, memory when it doesn't (private windows, blocked embeds).
+let mode: "mem" | "local" = "mem";
 let memValue: unknown = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let pending: PersistedData | null = null;
@@ -27,9 +21,6 @@ function probe(): boolean {
   }
 }
 
-/* Called once on boot. Returns the raw parsed blob for engine.normalize to
-   vet — deliberately `unknown`, because at this point it is exactly that:
-   whatever JSON happened to be sitting under our key. */
 export function load(): unknown {
   if (!probe()) {
     mode = "mem";
@@ -40,19 +31,18 @@ export function load(): unknown {
     const raw = localStorage.getItem(KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
-    // Corrupt payload: start fresh, but stay in local mode so the next save
-    // overwrites the bad blob instead of silently downgrading to memory.
+    // Corrupt payload: stay in local mode so the next save overwrites it rather than downgrading to memory.
     return null;
   }
 }
 
-export function persist(state: PersistedData): void {
+function persist(state: PersistedData): void {
   if (mode === "local") {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
       return;
     } catch {
-      // Quota or a mid-session permission change — fall through to memory.
+      // Quota or a mid-session permission change: fall through to memory.
     }
   }
   memValue = state;
@@ -68,7 +58,7 @@ export function save(state: PersistedData): void {
   }, DEBOUNCE_MS);
 }
 
-/* iOS discards backgrounded tabs without warning; don't lose the last 350ms. */
+// iOS discards backgrounded tabs without warning: don't lose the pending write.
 export function flush(): void {
   if (timer === null) return;
   clearTimeout(timer);
@@ -76,10 +66,6 @@ export function flush(): void {
   const s = pending;
   pending = null;
   if (s) persist(s);
-}
-
-export function storageMode(): Mode {
-  return mode;
 }
 
 export function storeNote(): string {

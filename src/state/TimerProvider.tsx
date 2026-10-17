@@ -3,14 +3,7 @@ import type { ReactNode } from "react";
 import { MOCK_SECONDS } from "../lib/engine";
 import { useApp } from "./AppState";
 
-/* The Day-7 mock clock lives above the views so it keeps counting while you
- * collapse the day or wander off to the Metro tab — the reference got that for
- * free from a module-level interval. Its own context keeps the once-a-second
- * tick from re-rendering the entire line.
- */
-
 interface TimerValue {
-  /** Seconds remaining. */
   left: number;
   running: boolean;
   /** Under five minutes — the readout goes red. */
@@ -22,6 +15,8 @@ interface TimerValue {
 
 const TimerCtx = createContext<TimerValue | null>(null);
 
+// Above the views so the mock clock keeps counting through tab switches; its own context keeps the
+// once-a-second tick from re-rendering the whole line.
 export function TimerProvider({ children }: { children: ReactNode }) {
   const { actions } = useApp();
   const [left, setLeft] = useState(MOCK_SECONDS);

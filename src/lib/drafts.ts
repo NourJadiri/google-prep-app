@@ -1,11 +1,4 @@
-/* Your code, per problem, in this browser.
- *
- * Kept apart from the progress blob on purpose: drafts change on every
- * keystroke, can run to kilobytes each, and are nobody's business but this
- * machine's — so they never sync and never land in an export. Same
- * never-throw contract as storage.ts: no localStorage, no persistence, no
- * drama. Keyed by problem id, so a problem on each line keeps its own. */
-
+// Kept apart from the progress blob: drafts change on every keystroke and must never sync or export.
 const KEY = "onsite-express-code-v1";
 const PREFS_KEY = "onsite-express-workspace-v1";
 
@@ -31,7 +24,7 @@ function writeAll(all: Record<string, Draft>): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(all));
   } catch {
-    /* Quota or no storage: the draft lives as long as the tab. */
+    // Quota or no storage: the draft lives as long as the tab.
   }
 }
 
@@ -53,9 +46,7 @@ export function clearDraft(id: string): void {
   writeAll(all);
 }
 
-/* --------------------------- workspace prefs --------------------------- */
-
-export interface WorkspacePrefs {
+interface WorkspacePrefs {
   /** Editor font size in px. */
   font: number;
   /** Statement pane's share of the width, desktop only. */
@@ -86,6 +77,6 @@ export function savePrefs(p: WorkspacePrefs): void {
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify(p));
   } catch {
-    /* fine */
+    // Quota or no storage: prefs just don't persist.
   }
 }
