@@ -1,13 +1,14 @@
+import Hero from "../ui/Hero";
+
 export default function DojoHero() {
   return (
-    <div className="hero">
-      <h1>
-        The <b>dojo</b>
-      </h1>
-      <p>
-        The daily ritual: write the day's template from a blank page, from memory. Then
-        reveal and diff — the gap is the lesson.
-      </p>
-    </div>
+    <Hero
+      heading={
+        <>
+          The <b>dojo</b>
+        </>
+      }
+      blurb="The daily ritual: write the day's template from a blank page, from memory. Then reveal and diff — the gap is the lesson."
+    />
   );
 }
