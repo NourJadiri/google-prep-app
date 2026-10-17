@@ -387,7 +387,7 @@ writing one.
 reference/onsite-express.html   the original single-file app — ground truth for all content
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
-scripts/regress/                the workspace's regression check: scripted sessions + screenshots
+scripts/regress/                regression checks (workspace; Me tab + sync): scripted sessions + screenshots
 
 scripts/problems/               validate.mjs (the bank's validator), specfmt.py (spec writer)
 
@@ -599,25 +599,45 @@ node scripts/parity/behaviour.mjs    # timers, toasts, shuffling, import guards
 node scripts/parity/screenshots.mjs  # side-by-side PNGs to flip between
 ```
 
-### Workspace regression check
+### Regression checks: the workspace, and the Me tab with sync
 
-`scripts/regress/` drives the editor workspace through 18 scripted sessions (392
-assertions, 44 screenshots), desktop and phone, light and dark. It covers runs,
-submits, Stop and time limits, test cases, drafts, the layout, and the assistant
-against a fake Anthropic server. It builds the app, serves it with `wrangler dev`,
-and writes each run to `$REGRESS_OUT/runs/<label>/` (default `/tmp/yalc-regress`).
-Comparing two runs flags any assertion whose outcome changed and any screenshot
-pixel that moved. It was written for refactors: run it before a change and after,
-and the two runs should be identical.
+`scripts/regress/` holds two suites of scripted browser sessions, desktop and phone, light
+and dark, run by one runner. Each builds the app, serves it with `wrangler dev` (against a
+fresh local D1), and writes its run to `$REGRESS_OUT/runs/<label>/` (default
+`/tmp/yalc-regress`): assertions in `results.json`, screenshots as PNGs. Comparing two runs
+flags any assertion whose outcome changed and any screenshot pixel that moved. They were
+written for refactors: run one before a change and after, and the two runs should be
+identical.
+
+- **Workspace** (`ws-regress.mjs`): 18 sessions, 392 assertions, 44 screenshots. Runs,
+  submits, Stop and time limits, test cases, drafts, the layout, and the assistant against
+  a fake Anthropic server.
+- **Me tab and sync** (`me-regress.mjs`): 14 sessions, 436 assertions, 55 screenshots. The
+  stats, ladder and badges (the `#meArea` markup is hashed), Export, Import and Reset,
+  turning sync on and the status card through its phases, joining by code, the link sheet in
+  both modes, the consent card, the scanner against a fake camera showing a real QR,
+  last-write-wins between two devices, a cloud copy from a newer schema, offline and retry
+  paths, and what the Worker's D1 holds after each step. Two devices are two browser
+  contexts against the same `wrangler dev`. To make two runs comparable the page is served
+  from a fixed origin (`https://yalc.test`, forwarded to the real server), `crypto.randomUUID`
+  and the clock are controlled, toasts and phone scrollbars are left out of the pictures, and
+  each picture comes with a digest of the page's computed styles, which sees the changes too
+  small for the pixel diff; `me-lib.mjs` explains each.
 
 ```bash
-npm install --no-save playwright                        # Chromium too, if you don't have one:
-npx playwright install chromium                         # or point CHROMIUM_PATH at yours
-scripts/regress/ws-check.sh . 8810 before               # ports 8810-8812; WS_JOBS=3 runs 3 at once
+npm install --no-save playwright                           # Chromium too, if you don't have one:
+npx playwright install chromium                            # or point CHROMIUM_PATH at yours
+scripts/regress/ws-check.sh . 8810 ws-before               # workspace: ports 8810-8812; WS_JOBS=3 runs 3 at once
+scripts/regress/me-check.sh . 8910 me-before               # Me tab and sync: ports 8910 and 8912, ~1 minute (~30 s with WS_JOBS=3)
 # ...change the code...
-scripts/regress/ws-check.sh . 8810 after
-python3 -I scripts/regress/ws-diff.py before after      # needs Pillow; exit 0 = identical
+scripts/regress/ws-check.sh . 8810 ws-after
+scripts/regress/me-check.sh . 8910 me-after
+python3 -I scripts/regress/ws-diff.py ws-before ws-after   # needs Pillow; exit 0 = identical
+python3 -I scripts/regress/ws-diff.py me-before me-after
 ```
+
+`me-check.sh` is `REGRESS_SUITE=me ws-check.sh`; `WS_ONLY=03,06` runs only the scenarios whose
+id starts with those numbers.
 
 Compare runs made on the same machine: Chromium's text antialiasing can differ between
 environments (see below), though two runs in one environment have matched pixel for

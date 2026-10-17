@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # ws-check.sh <repo-dir> <port> <label>
 #
-# Regression harness for the workspace. Builds <repo-dir>, serves it
-# with `wrangler dev` on <port> (mock Anthropic on <port+1>, inspector on
-# <port+2>), runs the Playwright suite (ws-regress.mjs) and leaves
+# Regression harness. Builds <repo-dir>, serves it with `wrangler dev` on <port>
+# (mock Anthropic on <port+1>, inspector on <port+2>), runs a Playwright suite and leaves
 #   <out>/runs/<label>/{results.json,*.png,summary.txt,*.log}
 # behind, where <out> is $REGRESS_OUT (default /tmp/yalc-regress). Safe to run
 # concurrently for different ports / checkouts: it only ever signals the process
@@ -14,8 +13,15 @@
 # different checkouts / ports. A pre-existing <repo>/.dev.vars and .wrangler/ are kept.
 #
 # Optional environment:
+#   REGRESS_SUITE=ws|me  which suite to run (default ws). ws: the workspace and the
+#                assistant (ws-regress.mjs, against the mock Anthropic). me: the Me tab and
+#                cross-device sync (me-regress.mjs; no mock, so <port+1> stays free).
+#                me-check.sh is this script with REGRESS_SUITE=me.
 #   WS_JOBS=3    run the scenarios three at a time (about 1 minute instead of 2)
 #   WS_ONLY=03,06  run only the scenarios whose id starts with one of these
+#
+# Every run gets a fresh --persist-to directory (deleted before and after), so the local
+# D1 behind /api/state starts empty and nothing leaks from one run into the next.
 #
 # Compare two runs afterwards with:  python3 -I ws-diff.py <labelA> <labelB>
 
@@ -38,6 +44,13 @@ case "$LABEL" in ''|*[!A-Za-z0-9._-]*) echo "ws-check: label must match [A-Za-z0
 MOCK_PORT=$((PORT + 1))
 INSPECT_PORT=$((PORT + 2))
 
+SUITE="${REGRESS_SUITE:-ws}"
+case "$SUITE" in
+  ws) SUITE_SCRIPT="$HERE/ws-regress.mjs"; NEEDS_MOCK=1; PORTS="$PORT $MOCK_PORT $INSPECT_PORT" ;;
+  me) SUITE_SCRIPT="$HERE/me-regress.mjs"; NEEDS_MOCK=0; PORTS="$PORT $INSPECT_PORT" ;;
+  *) echo "ws-check: REGRESS_SUITE must be ws or me, not '$SUITE'" >&2; exit 2 ;;
+esac
+
 OUT="$SCRATCH/runs/$LABEL"
 STATE="$SCRATCH/wrangler-state-$PORT"
 MOCK_LOG="$OUT/mock-requests.jsonl"
@@ -45,9 +58,9 @@ BASE="http://127.0.0.1:$PORT"
 
 port_open() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
 
-for p in "$PORT" "$MOCK_PORT" "$INSPECT_PORT"; do
+for p in $PORTS; do
   if port_open "$p"; then
-    echo "ws-check: port $p is already in use (a run needs $PORT, $MOCK_PORT and $INSPECT_PORT)" >&2
+    echo "ws-check: port $p is already in use (a run needs $PORTS)" >&2
     exit 2
   fi
 done
@@ -146,22 +159,28 @@ if [ -e .dev.vars ]; then
   cat .dev.vars >"$DEV_VARS_BACKUP"
 fi
 [ -e .wrangler ] && WRANGLER_DIR_EXISTED=1
-cat >.dev.vars <<EOF
+if [ "$NEEDS_MOCK" = 1 ]; then
+  cat >.dev.vars <<EOF
 ANTHROPIC_API_KEY=sk-ant-test
 ASSISTANT_PASSWORD=pw-test
 ANTHROPIC_BASE_URL=http://127.0.0.1:$MOCK_PORT
 EOF
 
-: >"$MOCK_LOG"
-setsid node "$HERE/mock-anthropic.mjs" "$MOCK_PORT" "$MOCK_LOG" >"$OUT/mock.out" 2>&1 &
-MOCK_PID=$!
+  : >"$MOCK_LOG"
+  setsid node "$HERE/mock-anthropic.mjs" "$MOCK_PORT" "$MOCK_LOG" >"$OUT/mock.out" 2>&1 &
+  MOCK_PID=$!
+fi
 
 WRANGLER_STATE_DIR="$STATE"
 WRANGLER_SEND_METRICS=false setsid npx wrangler dev --port "$PORT" --inspector-port "$INSPECT_PORT" \
   --persist-to "$WRANGLER_STATE_DIR" >"$OUT/wrangler.log" 2>&1 &
 WRANGLER_PID=$!
 
-echo "ws-check[$LABEL]: waiting for the mock (:$MOCK_PORT) and wrangler dev (:$PORT) ..."
+if [ "$NEEDS_MOCK" = 1 ]; then
+  echo "ws-check[$LABEL]: waiting for the mock (:$MOCK_PORT) and wrangler dev (:$PORT) ..."
+else
+  echo "ws-check[$LABEL]: waiting for wrangler dev (:$PORT) ..."
+fi
 ready=0
 for i in $(seq 1 240); do
   if ! kill -0 "$WRANGLER_PID" 2>/dev/null; then
@@ -169,12 +188,12 @@ for i in $(seq 1 240); do
     cat "$OUT/wrangler.log" >&2
     exit 1
   fi
-  if ! kill -0 "$MOCK_PID" 2>/dev/null; then
+  if [ "$NEEDS_MOCK" = 1 ] && ! kill -0 "$MOCK_PID" 2>/dev/null; then
     echo "ws-check[$LABEL]: the mock exited early:" >&2
     cat "$OUT/mock.out" >&2
     exit 1
   fi
-  if port_open "$MOCK_PORT" && [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "$BASE/" 2>/dev/null)" = "200" ]; then
+  if { [ "$NEEDS_MOCK" != 1 ] || port_open "$MOCK_PORT"; } && [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "$BASE/" 2>/dev/null)" = "200" ]; then
     ready=1
     break
   fi
@@ -185,13 +204,14 @@ if [ "$ready" != 1 ]; then
   cat "$OUT/wrangler.log" >&2
   exit 1
 fi
-echo "ws-check[$LABEL]: servers up ($((SECONDS - T0))s), running the suite against $BASE"
+echo "ws-check[$LABEL]: servers up ($((SECONDS - T0))s), running the $SUITE suite against $BASE"
 
 # ---------------------------------------------------------------- suite
 SUITE_T0=$SECONDS
 # In the background + `wait`, so that Ctrl-C / SIGTERM interrupt this script at once and the trap
-# can take the suite down with the servers. (ws-regress.mjs writes $OUT/summary.txt itself.)
-WS_MOCK_LOG="$MOCK_LOG" setsid node "$HERE/ws-regress.mjs" "$BASE" "$OUT" &
+# can take the suite down with the servers. (The suite writes $OUT/summary.txt itself.)
+[ "$NEEDS_MOCK" = 1 ] && export WS_MOCK_LOG="$MOCK_LOG"
+setsid node "$SUITE_SCRIPT" "$BASE" "$OUT" &
 SUITE_PID=$!
 wait "$SUITE_PID"
 status=$?

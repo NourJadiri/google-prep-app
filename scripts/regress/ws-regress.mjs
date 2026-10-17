@@ -17,15 +17,14 @@
 import { chromium } from "playwright";
 import fs from "node:fs";
 import path from "node:path";
+import { Scenario, runSuite, sleep, isEqual } from "./harness.mjs";
 
 const [BASE, OUT] = process.argv.slice(2);
 if (!BASE || !OUT) {
   console.error("usage: node ws-regress.mjs <base-url> <out-dir>");
   process.exit(2);
 }
-fs.mkdirSync(path.join(OUT, "failures"), { recursive: true });
 const MOCK_LOG = process.env.WS_MOCK_LOG || null;
-const ONLY = process.env.WS_ONLY ? process.env.WS_ONLY.split(",") : null;
 
 /* ------------------------------ the problem ------------------------------ */
 
@@ -82,12 +81,6 @@ const PRINTS = `class Solution:
 
 /* ------------------------------ plumbing ------------------------------ */
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const show = (v) => (typeof v === "string" ? JSON.stringify(v) : JSON.stringify(v));
-const canon = (v) =>
-  Array.isArray(v) ? v.map(canon) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
-const isEqual = (a, b) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
-
 const DESKTOP = { viewport: { width: 1280, height: 860 }, deviceScaleFactor: 1 };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
 
@@ -126,68 +119,9 @@ const INIT_SCRIPT = () => {
   }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
 };
 
-const results = {};
 let browser;
-const SUMMARY = path.join(OUT, "summary.txt");
-fs.writeFileSync(SUMMARY, "");
-const say = (text) => {
-  console.log(text);
-  fs.appendFileSync(SUMMARY, text + "\n");
-};
 
-class Scenario {
-  constructor(id, title) {
-    this.id = id;
-    this.title = title;
-    this.assertions = [];
-    this.screenshots = [];
-    this.pageErrors = [];
-    this.consoleErrors = [];
-    this.dialogs = [];
-    this.acceptDialogs = false;
-    this.names = new Map();
-    this.ms = 0;
-  }
-
-  uniq(name) {
-    const n = (this.names.get(name) ?? 0) + 1;
-    this.names.set(name, n);
-    return n === 1 ? name : `${name} #${n}`;
-  }
-
-  ok(name, pass, detail) {
-    const a = { name: this.uniq(name), ok: !!pass };
-    if (!pass && detail !== undefined) a.detail = String(detail);
-    this.assertions.push(a);
-    return !!pass;
-  }
-
-  /* Poll `getter` until it matches (equal value, regexp, or predicate). */
-  async expect(name, getter, expected, { timeout = 1500 } = {}) {
-    const match =
-      typeof expected === "function"
-        ? expected
-        : expected instanceof RegExp
-          ? (v) => typeof v === "string" && expected.test(v)
-          : (v) => isEqual(v, expected);
-    const t0 = Date.now();
-    let value;
-    let err = null;
-    for (;;) {
-      try {
-        value = await getter();
-        err = null;
-        if (match(value)) return this.ok(name, true);
-      } catch (e) {
-        err = e;
-      }
-      if (timeout <= 0 || Date.now() - t0 > timeout) break;
-      await sleep(60);
-    }
-    const want = typeof expected === "function" ? "predicate" : expected instanceof RegExp ? String(expected) : show(expected);
-    return this.ok(name, false, err ? `threw: ${err.message.split("\n")[0]}` : `got ${show(value)}, expected ${want}`);
-  }
-
+class WsScenario extends Scenario {
   /* Screenshot of the page (or a locator), deterministic. */
   async shot(page, name, { locator = null, hover = true, runner = true } = {}) {
     await settle(page, runner);
@@ -221,17 +155,6 @@ class Scenario {
       });
     }
     if (!this.screenshots.includes(file)) this.screenshots.push(file);
-  }
-
-  toJSON() {
-    return {
-      title: this.title,
-      ms: this.ms,
-      assertions: this.assertions,
-      screenshots: this.screenshots,
-      consoleErrors: this.consoleErrors,
-      dialogs: this.dialogs,
-    };
   }
 }
 
@@ -1596,52 +1519,17 @@ scenario("18-runner-failure", "Python fails to load: badge, Retry, 'Nothing to r
 
 /* ------------------------------ driver ------------------------------ */
 
-async function main() {
-  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, ignoreDefaultArgs: ["--hide-scrollbars"] });
-  let failed = 0;
-  let total = 0;
-  const t0 = Date.now();
-  const jobs = Math.max(1, Number(process.env.WS_JOBS || 1));
-  const todo = scenarios.filter((sc) => !ONLY || ONLY.some((p) => sc.id.startsWith(p)));
-
-  const runOne = async (sc) => {
-    const s = new Scenario(sc.id, sc.title);
-    const t1 = Date.now();
-    try {
-      await sc.fn(s);
-    } catch (e) {
-      s.ok("scenario ran to the end without throwing", false, (e && e.stack ? e.stack : String(e)).split("\n").slice(0, 4).join(" / "));
-    }
-    s.ms = Date.now() - t1;
-    results[sc.id] = s;
-    const bad = s.assertions.filter((a) => !a.ok);
-    total += s.assertions.length;
-    failed += bad.length;
-    const lines = [`${bad.length ? "FAIL" : "PASS"}  ${sc.id.padEnd(22)} ${String(s.assertions.length - bad.length).padStart(3)}/${s.assertions.length} assertions  ${s.screenshots.length} screenshots  ${(s.ms / 1000).toFixed(1)}s  ${sc.title}`];
-    for (const a of bad) lines.push(`        x ${a.name}${a.detail ? "\n            " + a.detail.slice(0, 600) : ""}`);
-    if (s.consoleErrors.length) lines.push(`        (console errors: ${s.consoleErrors.length}, e.g. ${s.consoleErrors[0]})`);
-    say(lines.join("\n"));
-  };
-
-  // Scenarios run one at a time unless WS_JOBS > 1; the ones that read the mock's request log always run alone, last.
-  const pool = todo.filter((sc) => !sc.serial);
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(jobs, pool.length || 1) }, async () => {
-      while (next < pool.length) await runOne(pool[next++]);
-    })
-  );
-  for (const sc of todo.filter((x) => x.serial)) await runOne(sc);
-
-  await browser.close();
-  const ordered = Object.fromEntries(Object.keys(results).sort().map((k) => [k, results[k]]));
-  fs.writeFileSync(path.join(OUT, "results.json"), JSON.stringify(ordered, null, 2) + "\n");
-  const nPass = Object.values(results).filter((r) => r.assertions.every((a) => a.ok)).length;
-  say(`\n${nPass}/${Object.keys(results).length} scenarios passed, ${total - failed}/${total} assertions, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
-  process.exit(failed ? 1 : 0);
-}
-
-main().catch((e) => {
-  console.error("ws-regress crashed:", e);
-  process.exit(2);
-});
+runSuite({
+  out: OUT,
+  scenarios,
+  makeScenario: (sc) => new WsScenario(sc.id, sc.title),
+  setup: async () => {
+    browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, ignoreDefaultArgs: ["--hide-scrollbars"] });
+  },
+  teardown: () => browser.close(),
+})
+  .then((status) => process.exit(status))
+  .catch((e) => {
+    console.error("ws-regress crashed:", e);
+    process.exit(2);
+  });
