@@ -570,7 +570,10 @@ this shape — version 2, which split progress by line:
 
 `track` is the line on screen — synced, because it's where you are rather than a
 setting. `accepted` records when every test of a problem first passed in the
-workspace; it outlives unticking, because it happened. Problem and station ids are
+workspace; it outlives unticking, because it happened. Two optional keys appear only after
+an untick took something back: `peak`, the XP held before it cost a rank, and
+`uncleared`, the stations it opened again. They keep ticking it back in from replaying
+the rank-up and the station clear, and they go away once caught up with. Problem and station ids are
 unique across lines (short ids on the Google line, slugs on the Local), so a stale id
 can never land on the wrong one.
 
@@ -589,13 +592,15 @@ window or a cookie-blocked embed degrades instead of crashing.
 |---|---|
 | XP | Easy 10 · Medium 20 · Hard 40 · timed mocks 30 · ritual 15 |
 | Quiz XP | 2 per correct card, ×2 at streak ≥3, ×3 at ≥6, awarded silently |
-| Perfect run | 10/10 on a full ten-card run: +20 XP, badge, confetti |
+| Perfect run | 10/10 on a full ten-card run: +20 XP (counted in the run's XP), badge, confetti. A shorter Redemption run can't be perfect |
+| Run result | Solid from 70% right, rounded (so 2 of 3); Rough below |
 | Ranks (Google) | Wanderer 0 · Pathfinder 100 · Backtracker 250 · Memoizer 450 · Tabulator 700 · Pattern Oracle 1000 · Noogler 1350 · Graph Whisperer 1800 · DP Sensei 2250 · Offer Letter 2750 |
 | Ranks (Local) | Applicant 0 · Online Assessment 40 · Phone Screen 100 · On the Loop 180 · Bar Raiser 280 · Offer Extended 400 · Day One 560 |
 | Lines | XP, ticks, rituals and ranks are per line; quiz XP goes to the line on screen; the streak, card stats and badges are shared |
 | Accepted | a Submit where every test passes ticks the problem (if it wasn't) with the usual XP; the first one earns All Green, 25 earn Test Pilot |
 | Streak | consecutive calendar days on which anything earned XP |
-| Unchecking | refunds the same XP, silently; XP floors at 0; badges are never revoked |
+| Unchecking | refunds the same XP, silently; XP floors at 0; badges are never revoked; ticking it again earns the XP but doesn't re-announce a rank or a station clear |
+| Celebration order | the XP toast, then a rank-up, then the streak badges it earned, then the station |
 | Deck weighting | weakest cards first: `(right+1)/(seen+2) + random()*0.55`, ascending |
 | Mix deck | up to 3 Redemption cards + `ceil(remaining/2)` from the focus phase + the rest |
 | Focus phase | Day 1 graphs · Days 2–3 backtracking · Days 4–6 DP · Days 8 & 12 heaps/stacks (ds) · all other days none |

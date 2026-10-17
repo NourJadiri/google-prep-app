@@ -156,6 +156,11 @@ export interface TrackData {
   /** Problem id -> when every test first passed in the workspace. Sparse;
    *  outlives unticking, because it happened. */
   accepted: Record<string, number>;
+  /** The XP held before an untick took a rank back; gone once XP is back up to it. */
+  peak?: number;
+  /** Day id -> true for a cleared station an untick has opened again. Re-clearing
+   *  it is not celebrated twice. */
+  uncleared?: Record<string, true>;
 }
 
 /** The persisted blob, and the entire export format.

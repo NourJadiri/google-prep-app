@@ -114,19 +114,16 @@ Left for later, on purpose:
   which of two equal-specificity rules wins.
 - `ui/` candidates seen twice or more but not extracted yet: a hero block, the run card, a
   status pill.
-- Quirks the new suite pinned rather than fixed. It asserts today's behavior, so fixing one means
-  updating its expectation:
-  - Unticking a problem silently takes a rank back; re-ticking replays the rank-up and
-    station-clear celebrations (only badges are once-only), and re-completing the line fires the
-    90-piece burst again.
-  - A Redemption run is as long as what is owed (1 to 10 cards), but its button always says
-    "10 stops"; a 1/1 run gets the perfect-run copy with no bonus, and 2/3 reads "Rough".
-  - An emptied Redemption deck stays selected, disabled and "NOW BOARDING".
-  - A streak badge toast shows before the XP toast that earned it.
-  - The perfect-run bonus can itself rank you up; the result row shows the run's XP, not the bonus.
-  - Clearing a station makes the next one current without opening its card.
-  - The Dojo template header is 41 px tall on a phone, under the 44 px floor; the ritual row's
-    1.5 px border draws as 1 px at 1x.
+- Quirks the new suite found. Fixed right after the step, with the suite's expectations moved
+  to match: ticking a problem back in after an untick no longer replays the rank-up, the
+  station clear or the end-of-line burst (an untick that takes something back leaves `peak` or
+  `uncleared` on the line's data); the Board button counts the stops a Redemption run will
+  really have, a short all-right Redemption run no longer claims the perfect-run copy, and 2 of
+  3 is Solid; an emptied Redemption deck hands the choice back to Mix; the XP toast comes before
+  the streak badge it earned; a perfect run's result counts the bonus, and its burst plays with
+  its badge, before any rank-up; the station that becomes current opens; Dojo template headers
+  are 44 px tall. Left as is: a 1.5 px border draws as 1 px on a 1x screen, which is how
+  browsers round borders, and phones draw it as designed.
 
 ## Audit (October 2026)
 

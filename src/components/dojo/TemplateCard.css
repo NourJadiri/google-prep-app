@@ -1,5 +1,5 @@
 .tcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); margin-top: 12px; overflow: hidden; }
-.thead { width: 100%; text-align: left; padding: 12px 14px; display: flex; align-items: center; gap: 10px; transition: background .15s; }
+.thead { width: 100%; min-height: 44px; text-align: left; padding: 12px 14px; display: flex; align-items: center; gap: 10px; transition: background .15s; }
 .thead:active { background: var(--sunken); }
 .thead h3 { margin: 0; font-size: 14.5px; font-weight: 600; flex: 1; }
 .thead .chev { color: var(--ink2); flex: none; transition: transform .2s; }

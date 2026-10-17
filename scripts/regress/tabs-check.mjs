@@ -5,7 +5,7 @@ import { finish } from "./me-lib.mjs";
 import { TODAY, YESTERDAY } from "./tabs-fixtures.mjs";
 import {
   D, F, edit, hdr, hdrModel, rail, railModel, rowsAt, rowsModel, terminusCopy, TERMINUS, clearedOf, doneCount, totalOf, planOf,
-  probById, focusOf, feedOf, shape, scrollToStn, consecutive, xpToast, heroLine,
+  probById, focusOf, feedOf, shape, scrollToStn, consecutive, xpToast, heroLine, ticked, unticked,
 } from "./tabs-kit.mjs";
 import { dayHead } from "./tabs-line.mjs";
 
@@ -14,14 +14,10 @@ const statsText = (b) => `${doneCount(b)} / ${totalOf(b.track)} problems · ${cl
 const maxKey = (fx) => Math.max(...fx.map((e) => Number(e.key)));
 const minKey = (fx) => Math.min(...fx.map((e) => Number(e.key)));
 
-/** Mark `id` done on the blob's line, as a tick does to the numbers. */
-const ticked = (b, id, xp, track = b.track) => {
-  b.tracks[track].done[id] = true;
-  b.tracks[track].xp += xp;
-};
-const unticked = (b, id, xp, track = b.track) => {
-  delete b.tracks[track].done[id];
-  b.tracks[track].xp = Math.max(0, b.tracks[track].xp - xp);
+/** The open cards once the data went from `before` to `after`: a station that became current opens. */
+const opened = (open, before, after) => {
+  const focus = focusOf(after).id;
+  return focus === focusOf(before).id || open.includes(focus) ? open : [...open, focus];
 };
 
 export default function register(scenario) {
@@ -50,9 +46,9 @@ export default function register(scenario) {
       b.streak = { last: TODAY, cur: 3, best: 3 };
       b.badges.streak3 = 1;
     });
-    await s.expect("ticking N-Queens (HARD, 40 XP) carries the streak to three days, so: the Heating Up badge (gold), the XP toast, a burst of 12", async () => feedOf(await A.fx()), ["* Badge — Heating Up", "+40 XP · N-Queens", "confetti 12"]);
+    await s.expect("ticking N-Queens (HARD, 40 XP) carries the streak to three days, so: the XP toast, then the Heating Up badge (gold) it earned, a burst of 12", async () => feedOf(await A.fx()), ["+40 XP · N-Queens", "* Badge — Heating Up", "confetti 12"]);
     await s.expect("…each celebration got the next id, in order", async () => consecutive([...(await A.fx())].sort((a, b) => a.key - b.key)), true);
-    await s.expect("…and on the page: the badge toast above the XP toast, one burst of 12 pieces", () => A.live(), { toasts: ["* Badge — Heating Up", "+40 XP · N-Queens"], bursts: [12] });
+    await s.expect("…and on the page: the XP toast above the badge toast, one burst of 12 pieces", () => A.live(), { toasts: ["+40 XP · N-Queens", "* Badge — Heating Up"], bursts: [12] });
     const ids1 = await A.fx();
     await agree("after the tick", blob);
     await s.expect("the row is done: aria-pressed, label 'Uncheck N-Queens', the struck-through name; the card's hairline is at 75%, the header's streak says 3", async () => ({
@@ -124,7 +120,7 @@ export default function register(scenario) {
     await S.open();
     await S.clearFx();
     await pcheck(S.page, "N-Queens", false).click();
-    await s.expect("the seventh day running: Heating Up and Full Week are both announced (in that order), then the XP toast", async () => feedOf(await S.fx()), ["* Badge — Heating Up", "* Badge — Full Week", "+40 XP · N-Queens", "confetti 12"]);
+    await s.expect("the seventh day running: the XP toast, then Heating Up and Full Week (in that order)", async () => feedOf(await S.fx()), ["+40 XP · N-Queens", "* Badge — Heating Up", "* Badge — Full Week", "confetti 12"]);
     await s.expect("…and the header's streak is 7", async () => (await hdr(S.page)).streak, "Streak 7/7");
     await s.expect("…saved: streak 7, best 7, both badges", async () => { const b = await S.saved(); return { streak: b.streak, badges: Object.keys(b.badges).sort() }; }, { streak: { last: TODAY, cur: 7, best: 7 }, badges: ["first", "streak3", "streak7"] });
     const gap = edit(F.mid, (b) => { b.streak = { last: "2026-03-05", cur: 5, best: 5 }; delete b.tracks.google.done.pp; b.tracks.google.xp -= 20; });
@@ -165,8 +161,9 @@ export default function register(scenario) {
         toasts: feed.filter((f) => !f.startsWith("confetti")),
         bursts: feed.filter((f) => f.startsWith("confetti")).map((f) => Number(f.slice(9))),
       });
-      await agreeWith(A, label, after, open);
-      return { A, page, after, open, p };
+      const now = opened(open, seed, after);
+      await agreeWith(A, label, after, now);
+      return { A, page, after, open: now, p };
     }
 
     /* The header, the rail, the counts and the saved blob agree with `b`, with `open` as the open cards. */
@@ -181,7 +178,8 @@ export default function register(scenario) {
       await s.expect(`${label}: what is saved is that blob`, async () => shape(await A.saved()), shape(b));
     }
 
-    /* Untick `id` (silent) and tick it again, on a device `ride` returned. */
+    /* Untick `id` (silent) and tick it again, on a device `ride` returned. The second tick is a plain one: the rank and
+       the station it wins back were celebrated the first time. */
     async function undo({ A, page, after, open }, id, label, feed) {
       const p = probById(after.track, id);
       await A.clearFx();
@@ -207,8 +205,8 @@ export default function register(scenario) {
       feed: [xpToast(tkf), "* Rank up — Backtracker", "confetti 60", "* Constraint St. cleared", "confetti 50"],
     });
     await s.expect("clearing day 3: the XP toast comes first, then the rank-up and its 60-piece burst, then the station's and its 50", async () => feedOf(await nc.A.fx()), ["+20 XP · Top K Frequent Elements", "* Rank up — Backtracker", "confetti 60", "* Constraint St. cleared", "confetti 50"]);
-    await s.expect("…day 3 is done and still open, day 4 is now the focus and still closed; the header says Backtracker, Day 4 Memo Bridge, and the bar is empty", async () => ({ rail: (await rail(nc.page)).slice(1, 5).map((r) => r.cls), hdr: await hdr(nc.page) }), {
-      rail: ["stn done", "stn done open", "stn now", "stn"],
+    await s.expect("…day 3 is done and still open, day 4 is now the focus and opens; the header says Backtracker, Day 4 Memo Bridge, and the bar is empty", async () => ({ rail: (await rail(nc.page)).slice(1, 5).map((r) => r.cls), hdr: await hdr(nc.page) }), {
+      rail: ["stn done", "stn done open", "stn now open", "stn"],
       hdr: { rank: "Backtracker", dot: "var(--yellow)", streak: "Streak 3/3", xp: "250", fill: "0%", where: "Day 4 | Memo Bridge", next: "200 XP to Memoizer" },
     });
     await s.expect("…the terminus counts three stations", () => terminusCopy(nc.page), "3 of 24 stations behind you. The terminus isn't going anywhere — you are.");
@@ -217,7 +215,7 @@ export default function register(scenario) {
     await nc.A.setDark(true);
     await nc.A.shot("station-cleared");
     await nc.A.setDark(false);
-    await undo(nc, "pp", "day 3", [xpToast(pp), "* Rank up — Backtracker", "confetti 60", "* Constraint St. cleared", "confetti 50"]);
+    await undo(nc, "pp", "day 3", [xpToast(pp), "confetti 12"]);
 
     // ---- the half-way station
     const lsk = probById("google", "lsk");
@@ -230,7 +228,7 @@ export default function register(scenario) {
     });
     await s.expect("…the cut name: 41 characters, so 24 and an ellipsis", async () => toastOf(await half.A.fx(), 0), "+20 XP · Longest Substring with A…");
     await s.expect("…twelve stations behind you", () => terminusCopy(half.page), "12 of 24 stations behind you. The terminus isn't going anywhere — you are.");
-    await undo(half, "lsk", "half-way", [xpToast(lsk), "* Union Depot cleared", "confetti 50"]);
+    await undo(half, "lsk", "half-way", [xpToast(lsk), "confetti 12"]);
 
     // ---- the end of the line, and the top of the ladder
     const mock4 = probById("google", "mock4");
@@ -251,7 +249,7 @@ export default function register(scenario) {
     await end.A.setDark(true);
     await end.A.shot("line-end", { tall: true });
     await end.A.setDark(false);
-    await undo(end, "mock4", "end of the line", [xpToast(mock4), "* Rank up — Offer Letter", "confetti 60", "* Final Approach cleared", "confetti 50", "confetti 90"]);
+    await undo(end, "mock4", "end of the line", [xpToast(mock4), "confetti 12"]);
 
     // ---- the Local
     const sub = probById("aws", "is-subsequence");

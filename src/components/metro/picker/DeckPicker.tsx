@@ -1,3 +1,4 @@
+import { stopsFor } from "../../../lib/engine";
 import { useApp } from "../../../state/AppState";
 import BoardButton from "./BoardButton";
 import DepartureBoard from "./DepartureBoard";
@@ -10,7 +11,7 @@ export default function DeckPicker() {
   return (
     <>
       <DepartureBoard data={data} selected={state.deck} onSelect={actions.setDeck} />
-      <BoardButton deck={state.deck} onBoard={actions.startRun} />
+      <BoardButton deck={state.deck} stops={stopsFor(data, state.deck)} onBoard={actions.startRun} />
       <LifetimeNote quiz={data.quiz} />
     </>
   );

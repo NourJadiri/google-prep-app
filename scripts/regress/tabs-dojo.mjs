@@ -212,7 +212,7 @@ export default function register(scenario) {
     // ---- the ritual log
     await A.clearFx();
     await page.locator("#dojoArea .dojo-log button").click();
-    await s.expect("logging the ritual carries the streak to 3 (Heating Up) and adds +15 XP · ritual, no confetti; the log reads Logged with a check and goes solid", async () => ({ feed: feedOf(await A.fx()), log: await log(page) }), { feed: ["* Badge — Heating Up", "+15 XP · ritual"], log: { cls: "dojo-log logged", b: "Day 3 ritual:", p: "Day 3 ritual: " + planOf("google")[2].ritual, btn: "Logged", pressed: "true", glyph: "check", dot: false } });
+    await s.expect("logging the ritual adds +15 XP · ritual and carries the streak to 3 (Heating Up), no confetti; the log reads Logged with a check and goes solid", async () => ({ feed: feedOf(await A.fx()), log: await log(page) }), { feed: ["+15 XP · ritual", "* Badge — Heating Up"], log: { cls: "dojo-log logged", b: "Day 3 ritual:", p: "Day 3 ritual: " + planOf("google")[2].ritual, btn: "Logged", pressed: "true", glyph: "check", dot: false } });
     await s.expect("a logged log is solid-outlined with a quiet grey button", () => A.props("#dojoArea .dojo-log button", ["background-color", "color"]), { "background-color": "rgb(241, 243, 244)", color: RGB.ink2 });
     await s.expect("the header took the 15 XP (200 to 215)", async () => (await hdr(page)).xp, "215");
     await A.shot("dojo-logged");

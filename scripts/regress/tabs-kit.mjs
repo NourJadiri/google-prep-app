@@ -27,6 +27,33 @@ export const totalOf = (track) => planOf(track).reduce((n, d) => n + d.probs.len
 export const probById = (track, id) => planOf(track).flatMap((d) => d.probs).find((p) => p.id === id);
 export const dayById = (track, id) => planOf(track).find((d) => d.id === id);
 
+const dayOf = (track, id) => planOf(track).find((d) => d.probs.some((p) => p.id === id));
+
+/** A tick, as the blob sees it: done, the XP, and the notes an untick left (see `unticked`) dropped once caught up with. */
+export const ticked = (b, id, xp, track = b.track) => {
+  const t = b.tracks[track];
+  const day = dayOf(track, id);
+  t.done[id] = true;
+  t.xp += xp;
+  if (t.peak !== undefined && t.xp >= t.peak) delete t.peak;
+  if (t.uncleared?.[day.id] && allDone(t, day)) {
+    delete t.uncleared[day.id];
+    if (!Object.keys(t.uncleared).length) delete t.uncleared;
+  }
+};
+
+/** An untick: the XP refunded down to 0 at most; a station it opens again is noted in `uncleared`, a rank it takes back
+ *  leaves the XP held before in `peak`, so ticking it again is not celebrated twice. */
+export const unticked = (b, id, xp, track = b.track) => {
+  const t = b.tracks[track];
+  const day = dayOf(track, id);
+  if (allDone(t, day)) t.uncleared = { ...t.uncleared, [day.id]: true };
+  delete t.done[id];
+  const was = t.xp;
+  t.xp = Math.max(0, was - xp);
+  if (rankModel(track, t.xp).idx < rankModel(track, was).idx) t.peak = Math.max(t.peak ?? 0, was);
+};
+
 /** A copy of `blob` with `fn` applied to the draft: how a scenario says "the same, but...". */
 export const edit = (blob, fn) => {
   const b = JSON.parse(JSON.stringify(blob));

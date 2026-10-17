@@ -99,10 +99,12 @@ function normQuiz(x: unknown): QuizData {
 }
 
 function normTrack(x: unknown): TrackData {
-  const t = isObj(x) ? x : {};
+  const { peak, uncleared, ...t } = isObj(x) ? x : {};
   const accepted = isObj(t["accepted"]) ? t["accepted"] : {};
   return {
     ...(t as unknown as TrackData),
+    ...(typeof peak === "number" && Number.isFinite(peak) ? { peak } : {}),
+    ...(isObj(uncleared) ? { uncleared: { ...uncleared } as Record<string, true> } : {}),
     xp: xpOf(t["xp"]),
     done: isObj(t["done"]) ? ({ ...t["done"] } as Record<string, true>) : {},
     rituals: isObj(t["rituals"]) ? ({ ...t["rituals"] } as Record<string, string>) : {},
@@ -172,6 +174,7 @@ const cloneTrack = (t: TrackData): TrackData => ({
   done: { ...t.done },
   rituals: { ...t.rituals },
   accepted: { ...t.accepted },
+  ...(t.uncleared ? { uncleared: { ...t.uncleared } } : {}),
 });
 
 const clone = (d: PersistedData): PersistedData => ({
@@ -339,11 +342,12 @@ const confetti = (c: Ctx, n: number): void => {
   c.fx.push({ kind: "confetti", n });
 };
 
-function _award(c: Ctx, id: string): void {
-  if (c.d.badges[id]) return; // badges are never revoked, never re-announced
+function _award(c: Ctx, id: string): boolean {
+  if (c.d.badges[id]) return false; // badges are never revoked, never re-announced
   c.d.badges[id] = c.now;
   const b = BADGES.find((x) => x.id === id);
   if (b) toast(c, "Badge — " + b.n, true);
+  return true;
 }
 
 /* A streak is consecutive calendar days on which anything earned XP. */
@@ -358,22 +362,27 @@ function _touchStreak(c: Ctx): void {
 }
 
 /* XP lands on one line and climbs that line's ladder; the streak it touches
-   is shared, because studying is studying whichever train you're on. */
+   is shared, because studying is studying whichever train you're on.
+   A refund that drops a rank leaves `peak` behind, so earning the rank back
+   is not announced a second time. */
 function _addXP(c: Ctx, track: TrackId, n: number, why?: string, quiet?: boolean): void {
   const T = TRACKS[track];
   const t = c.d.tracks[track];
-  const before = rankIdx(T.ranks, t.xp);
-  t.xp = Math.max(0, t.xp + n); // XP floors at 0
+  const was = t.xp;
+  const best = rankIdx(T.ranks, Math.max(was, t.peak ?? 0));
+  t.xp = Math.max(0, was + n); // XP floors at 0
   const after = rankIdx(T.ranks, t.xp);
-  if (n > 0) {
-    _touchStreak(c);
-    if (!quiet) toast(c, "+" + n + " XP" + (why ? " · " + why : ""));
-  }
-  if (after > before) {
+  if (after < rankIdx(T.ranks, was)) t.peak = Math.max(t.peak ?? 0, was);
+  else if (t.peak !== undefined && t.xp >= t.peak) delete t.peak;
+  if (n <= 0) return;
+
+  if (!quiet) toast(c, "+" + n + " XP" + (why ? " · " + why : ""));
+  if (after > best) {
     toast(c, "Rank up — " + rankAt(T.ranks, after)[0], true);
     confetti(c, 60);
     if (after === T.ranks.length - 1) _award(c, T.award.top);
   }
+  _touchStreak(c);
 }
 
 const out = (c: Ctx): Mutation => ({ data: c.d, fx: c.fx });
@@ -381,7 +390,8 @@ const out = (c: Ctx): Mutation => ({ data: c.d, fx: c.fx });
 /* -------------------------------- the line -------------------------------- */
 
 /* Ticking a problem: XP on its own line, the line's first-problem badge, and
-   a station clear if this was the station's last one. */
+   a station clear if this was the station's last one — unless an untick had
+   taken that clear back, in which case it is just a tick. */
 function _check(c: Ctx, ref: ProblemRef): void {
   const { prob: p, day, track } = ref;
   const T = TRACKS[track];
@@ -390,18 +400,26 @@ function _check(c: Ctx, ref: ProblemRef): void {
   _addXP(c, track, probXP(p), p.n.length > 26 ? p.n.slice(0, 24) + "…" : p.n);
   _award(c, T.award.first);
 
-  if (dayDone(t, day)) {
-    toast(c, day.stn + " cleared", true);
-    confetti(c, 50);
-    const cleared = T.plan.filter((d) => dayDone(t, d)).length;
-    if (cleared >= Math.ceil(T.plan.length / 2)) _award(c, T.award.half);
-    if (cleared === T.plan.length) {
-      _award(c, T.award.line);
-      confetti(c, 90);
-    }
-  } else {
+  if (!dayDone(t, day)) {
     confetti(c, 12);
+    return;
   }
+  if (t.uncleared?.[day.id]) {
+    forgetUnclear(t, day.id);
+    confetti(c, 12);
+    return;
+  }
+  toast(c, day.stn + " cleared", true);
+  confetti(c, 50);
+  const cleared = T.plan.filter((d) => dayDone(t, d)).length;
+  if (cleared >= Math.ceil(T.plan.length / 2)) _award(c, T.award.half);
+  if (cleared === T.plan.length && _award(c, T.award.line)) confetti(c, 90);
+}
+
+function forgetUnclear(t: TrackData, dayId: string): void {
+  if (!t.uncleared) return;
+  delete t.uncleared[dayId];
+  if (!Object.keys(t.uncleared).length) delete t.uncleared;
 }
 
 export function toggleProb(data: PersistedData, id: string, opts?: EngineOpts): Mutation {
@@ -412,6 +430,7 @@ export function toggleProb(data: PersistedData, id: string, opts?: EngineOpts): 
   const t = c.d.tracks[ref.track];
 
   if (t.done[id]) {
+    if (dayDone(t, ref.day)) t.uncleared = { ...t.uncleared, [ref.day.id]: true };
     delete t.done[id];
     _addXP(c, ref.track, -probXP(ref.prob), "", true); // unchecking refunds silently
     return out(c);
@@ -558,6 +577,15 @@ export function startSession(
   };
 }
 
+const PERFECT_XP = 20;
+
+/* Only a full-length run can be perfect; a short Redemption run can't earn the bonus. */
+const perfectRun = (right: number, n: number): boolean => right === n && n >= STOPS;
+
+/** How many stops a run on this deck will have: Redemption deals only what is owed. */
+export const stopsFor = (data: PersistedData, deck: DeckId): number =>
+  deck === "redo" ? Math.min(data.quiz.missed.length, STOPS) : STOPS;
+
 export const multiplier = (streak: number): number =>
   streak >= 6 ? 3 : streak >= 3 ? 2 : 1;
 
@@ -627,11 +655,12 @@ export function nextCard(
   if (s.i + 1 >= s.ids.length) {
     s.phase = "done";
     c.d.quiz.sessions++;
-    if (s.right === s.ids.length && s.ids.length >= STOPS) {
+    if (perfectRun(s.right, s.ids.length)) {
       c.d.quiz.perfect++;
       _award(c, "perfect");
-      _addXP(c, c.d.track, 20, "perfect run");
       confetti(c, 70);
+      _addXP(c, c.d.track, PERFECT_XP, "perfect run");
+      s.xp += PERFECT_XP;
     }
   } else {
     s.i++;
@@ -643,7 +672,8 @@ export function nextCard(
 }
 
 export function runResultCopy(track: Track, right: number, n: number): string {
-  if (right === n) return track.perfectCopy;
-  if (right >= n * 0.7) return "Solid. The missed ones went to Redemption.";
+  if (perfectRun(right, n)) return track.perfectCopy;
+  if (right === n) return "All won back. The Redemption deck is clear.";
+  if (right >= Math.round(n * 0.7)) return "Solid. The missed ones went to Redemption.";
   return "Rough stop — Redemption deck is waiting.";
 }

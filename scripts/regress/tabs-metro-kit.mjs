@@ -37,6 +37,12 @@ const subline = (id, n, pct) => {
 };
 
 /** What the departures board ought to be for `blob` with deck `sel` chosen. */
+/* Redemption deals only what is owed, up to the usual ten. */
+const stopsOf = (blob, deck) => {
+  const n = deck === "redo" ? Math.min(blob.quiz.missed.length, 10) : 10;
+  return n + (n === 1 ? " stop" : " stops");
+};
+
 export function boardModel(blob, sel) {
   const q = blob.quiz;
   return {
@@ -62,7 +68,7 @@ export function boardModel(blob, sel) {
         tag: on ? "dtag:NOW BOARDING" + tagStyle : d.id === "redo" && n > 0 ? `dtag:DELAYED · ${n}` + tagStyle : `dplat:P${i + 1}`,
       };
     }),
-    boardBtn: `Board ${D.DECKS.find((d) => d.id === sel).n} — 10 stops`,
+    boardBtn: `Board ${D.DECKS.find((d) => d.id === sel).n} — ${stopsOf(blob, sel)}`,
     note: q.answered ? `${q.correct}/${q.answered} lifetime · best streak ${q.bestStreak} · ${q.sessions} runs` : FRESH_NOTE,
   };
 }

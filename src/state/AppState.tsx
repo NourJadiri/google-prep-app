@@ -113,7 +113,7 @@ function withFx(
 const toggle = (list: string[], id: string): string[] =>
   list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
 
-function reducer(state: AppStateShape, action: Action): AppStateShape {
+function step(state: AppStateShape, action: Action): AppStateShape {
   switch (action.type) {
     case "TAB":
       return { ...state, tab: action.tab };
@@ -227,6 +227,22 @@ function reducer(state: AppStateShape, action: Action): AppStateShape {
       return state;
   }
 }
+
+/* Whatever changed the data, a station that just became current opens, and an
+   emptied Redemption deck stops being the chosen one. */
+function settle(prev: AppStateShape, next: AppStateShape): AppStateShape {
+  if (next.data === prev.data) return next;
+  let out = next;
+  const focus = engine.focusDay(next.data).id;
+  if (focus !== engine.focusDay(prev.data).id && !out.openDays.includes(focus)) {
+    out = { ...out, openDays: [...out.openDays, focus] };
+  }
+  if (out.deck === "redo" && !out.data.quiz.missed.length) out = { ...out, deck: "mix" };
+  return out;
+}
+
+const reducer = (state: AppStateShape, action: Action): AppStateShape =>
+  settle(state, step(state, action));
 
 /** Everything the UI is allowed to do, with the clock already read. */
 export interface Actions {

@@ -116,7 +116,7 @@ export default function register(scenario) {
     await page.locator("#dojoArea .tcard").first().locator(".thead").click();
     await overlay(s, P, "the veil's Reveal & diff", page.locator("#dojoArea .tcard").first().locator(".veil button"), { l: 0, r: 0, t: 4, b: 4 });
     await overlay(s, P, "the ritual log's button", page.locator("#dojoArea .dojo-log button"), { l: 0, r: 0, t: 4, b: 4 });
-    s.pin("a template's header row is this tall", (await P.rect(page.locator("#dojoArea .thead").first())).h);
+    await s.expect("a template's header row is a full 44px thumb target", async () => (await P.rect(page.locator("#dojoArea .thead").first())).h, 44);
 
     // ---- the shell
     await P.tab("Line");

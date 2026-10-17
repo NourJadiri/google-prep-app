@@ -337,8 +337,8 @@ export default function register(scenario) {
     await s.expect("the 4th answer took the XP over 100 (90 + 2 + 2 + 4 + 4 = 102): a rank-up toast and a burst of 60 came up mid-run, and nothing else", async () => feedOf(await P.fx()), ["* Rank up — Pathfinder", "confetti 60"]);
     await P.clearFx();
     await P.press(nextBtn(page));
-    await s.expect("Finish on a perfect run: the Perfect Run badge, the +20 bonus toast, a burst of 70 (in that order)", async () => feedOf(await P.fx()), ["* Badge — Perfect Run", "+20 XP · perfect run", "confetti 70"]);
-    await s.expect("the result: 10/10, the Google line's perfect copy, 46 XP (the run's own, not the bonus), best streak 10, none to redemption", () => result(page), { cls: "qwrap result", big: "10/10", sub: "Perfect run. The doors open at Google.", row: ["+46|XP", "10|best streak", "0|to redemption"], btns: ["Run it again", "Decks"] });
+    await s.expect("Finish on a perfect run: the Perfect Run badge and its burst of 70, then the +20 bonus toast (in that order)", async () => feedOf(await P.fx()), ["* Badge — Perfect Run", "confetti 70", "+20 XP · perfect run"]);
+    await s.expect("the result: 10/10, the Google line's perfect copy, 66 XP (the run's 46 and the 20 bonus), best streak 10, none to redemption", () => result(page), { cls: "qwrap result", big: "10/10", sub: "Perfect run. The doors open at Google.", row: ["+66|XP", "10|best streak", "0|to redemption"], btns: ["Run it again", "Decks"] });
     const pb = await P.saved();
     await s.expect("saved: 90 + 46 + 20 = 156 XP, the run counted as perfect, 30 answered, best streak 10, the badge there", () => ({ xp: pb.tracks.google.xp, perfect: pb.quiz.perfect, sessions: pb.quiz.sessions, answered: pb.quiz.answered, correct: pb.quiz.correct, best: pb.quiz.bestStreak, badge: !!pb.badges.perfect }), { xp: 156, perfect: 1, sessions: 2, answered: 30, correct: 25, best: 10, badge: true });
     await s.expect("the header: Pathfinder, 156 XP", async () => ({ rank: (await hdr(page)).rank, xp: (await hdr(page)).xp }), { rank: "Pathfinder", xp: "156" });
@@ -378,31 +378,32 @@ export default function register(scenario) {
     await s.expect("Redemption deals exactly the three cards owed, in some order", async () => [...redo.ids].sort(), [...owed].sort());
     await s.expect("…the last card offers Finish, and the stops track has three ticks, not ten", async () => ({ nav: (await card(D3.page)).nav, ticks: await D3.page.locator("#quizArea .stops-track i").count() }), { nav: ["quit:End run", "next:Finish"], ticks: 3 });
     await D3.press(nextBtn(D3.page));
-    await s.expect("2/3 is under 70%: the Rough line, 2 + 2 = 4 XP, best streak 1, one to redemption", () => result(D3.page), { cls: "qwrap result", big: "2/3", sub: "Rough stop — Redemption deck is waiting.", row: ["+4|XP", "1|best streak", "1|to redemption"], btns: ["Run it again", "Decks"] });
+    await s.expect("2/3 rounds to the 70% line: Solid, 2 + 2 = 4 XP, best streak 1, one to redemption", () => result(D3.page), { cls: "qwrap result", big: "2/3", sub: "Solid. The missed ones went to Redemption.", row: ["+4|XP", "1|best streak", "1|to redemption"], btns: ["Run it again", "Decks"] });
     const d3b = await D3.saved();
     await s.expect("a right answer takes a card off the owed list, a wrong one leaves it there: only the second card is still owed", async () => d3b.quiz.missed, [redo.ids[1]]);
     await s.expect("a run of three is not a perfect run: no bonus, no badge, no burst", async () => ({ feed: feedOf(await D3.fx()), perfect: d3b.quiz.perfect }), { feed: [], perfect: 0 });
     await D3.resume();
 
-    // ---- a run of one, and then an empty deck that is still the chosen one
+    // ---- a run of one, and then an empty deck that hands the choice back to Mix
     const O = await open(F.redoOne);
     await chooseDeck(O, "redo");
+    await s.expect("with one card owed the Board button promises one stop", async () => (await board(O.page)).boardBtn, "Board Redemption — 1 stop");
     await O.clearFx();
     await boardIt(O, 71);
-    await s.expect("with one card owed the Board button still promises ten stops; the run is one card long: 1/1 and a single tick", async () => ({ meta: (await card(O.page)).meta[0], ticks: await O.page.locator("#quizArea .stops-track i").count() }), { meta: "-:1/1", ticks: 1 });
+    await s.expect("the run is one card long: 1/1 and a single tick", async () => ({ meta: (await card(O.page)).meta[0], ticks: await O.page.locator("#quizArea .stops-track i").count() }), { meta: "-:1/1", ticks: 1 });
     const one = await play(s, O, { label: "Redemption run of one", plan: "R", n: 1 });
     await O.press(nextBtn(O.page));
-    await s.expect("1/1: every card right, so the perfect copy — but no bonus for a run under ten stops", async () => ({ res: await result(O.page), feed: feedOf(await O.fx()) }), { res: { cls: "qwrap result", big: "1/1", sub: "Perfect run. The doors open at Google.", row: ["+2|XP", "1|best streak", "0|to redemption"], btns: ["Run it again", "Decks"] }, feed: [] });
+    await s.expect("1/1: every card won back, but a run under ten stops is not a perfect run: its own copy, no bonus", async () => ({ res: await result(O.page), feed: feedOf(await O.fx()) }), { res: { cls: "qwrap result", big: "1/1", sub: "All won back. The Redemption deck is clear.", row: ["+2|XP", "1|best streak", "0|to redemption"], btns: ["Run it again", "Decks"] }, feed: [] });
     const ob = await O.saved();
     await s.expect("…the owed list is empty now, and the run is counted but not as perfect", () => ({ missed: ob.quiz.missed, sessions: ob.quiz.sessions, perfect: ob.quiz.perfect, owedWas: one.ids.length }), { missed: [], sessions: 2, perfect: 0, owedWas: 1 });
     await O.resume();
     await O.press(O.page.locator("#quizArea .mbtn", { hasText: "Decks" }));
-    await s.expect("back on the board Redemption is still the chosen deck — NOW BOARDING — but closed and dimmed: 'no misses yet — clean sheet'", async () => (await board(O.page)).rows[5], { cls: "drow sel", disabled: true, pressed: "true", rdl: "rdl", glyph: "R", bg: "var(--med)", ring: "0 0 0 2px var(--sunken), 0 0 0 3.5px var(--med)", name: "Redemption", sub: "no misses yet — clean sheet", tag: "dtag:NOW BOARDING:var(--med):color-mix(in srgb, var(--med) 14%, transparent)" });
-    await s.expect("…so the board is the model for an empty Redemption deck chosen", () => board(O.page), boardModel(ob, "redo"));
+    await s.expect("back on the board the emptied Redemption deck is no longer chosen: closed and dimmed on its platform, 'no misses yet — clean sheet'", async () => (await board(O.page)).rows[5], { cls: "drow", disabled: true, pressed: "false", rdl: "rdl", glyph: "R", bg: "var(--med)", ring: "", name: "Redemption", sub: "no misses yet — clean sheet", tag: "dplat:P6" });
+    await s.expect("…Mix is boarding again, and the board is the model for that", () => board(O.page), boardModel(ob, "mix"));
+    await both(O, "board-empty-deck");
     await O.clearFx();
     await O.press(boardBtn(O.page));
-    await s.expect("pressing Board on the empty deck says so in a plain (not gold) toast and starts nothing", async () => ({ feed: feedOf(await O.fx()), picker: await O.page.locator("#quizArea .dboard").count(), card: await O.page.locator("#quizArea .qwrap").count() }), { feed: ["That deck is empty right now"], picker: 1, card: 0 });
-    await both(O, "board-empty-deck");
+    await s.expect("pressing Board starts a Mix run, with nothing to announce", async () => ({ feed: feedOf(await O.fx()), picker: await O.page.locator("#quizArea .dboard").count(), card: await O.page.locator("#quizArea .qwrap").count() }), { feed: [], picker: 0, card: 1 });
 
     // ---- the Local says its own thing
     const L = await open(F.awsRun);
@@ -411,9 +412,9 @@ export default function register(scenario) {
     await boardIt(L, 81);
     await rush(L, "RRRRRRRRRR", { seedBase: 300 });
     await L.press(nextBtn(L.page));
-    await s.expect("a perfect run on the Local: the Local's copy, the same bonus and badge, and the bonus itself carries the Local over 100 XP into Phone Screen (86 + 20), so the rank-up comes after the bonus toast and before the 70-piece burst", async () => ({ feed: feedOf(await L.fx()), res: await result(L.page) }), {
-      feed: ["* Badge — Perfect Run", "+20 XP · perfect run", "* Rank up — Phone Screen", "confetti 60", "confetti 70"],
-      res: { cls: "qwrap result", big: "10/10", sub: "Perfect run. Day One is getting closer.", row: ["+46|XP", "10|best streak", "0|to redemption"], btns: ["Run it again", "Decks"] },
+    await s.expect("a perfect run on the Local: the Local's copy, the same badge, burst and bonus, and the bonus itself carries the Local over 100 XP into Phone Screen (86 + 20), so the rank-up and its 60 come last", async () => ({ feed: feedOf(await L.fx()), res: await result(L.page) }), {
+      feed: ["* Badge — Perfect Run", "confetti 70", "+20 XP · perfect run", "* Rank up — Phone Screen", "confetti 60"],
+      res: { cls: "qwrap result", big: "10/10", sub: "Perfect run. Day One is getting closer.", row: ["+66|XP", "10|best streak", "0|to redemption"], btns: ["Run it again", "Decks"] },
     });
     await s.expect("the header is the Local's: Phone Screen on 106 XP", async () => ({ rank: (await hdr(L.page)).rank, xp: (await hdr(L.page)).xp }), { rank: "Phone Screen", xp: "106" });
     await both(L, "result-perfect-local");
