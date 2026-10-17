@@ -287,10 +287,10 @@ having first are not the engine tests — they are the drift guards below.
 **Nothing now stops `src/data` drifting from the reference.**
 This is the real cost of dropping the suite. `data.test.ts` re-evaluated the reference's
 own `<script>` block and asserted the four ported modules still deep-equalled it, so a
-hand-edit to `src/data/*.ts` — or a bug in `scripts/extract-data.mjs` — could not pass
+hand-edit to `src/data/*.ts` — or a bug in `scripts/extract-templates.mjs` — could not pass
 unnoticed. `css-parity.test.ts` did the same for the stylesheet, catching any rule the
 split dropped. Both were cheap and both are gone. Re-running
-`node scripts/extract-data.mjs` and checking `git diff` is empty is the manual substitute
+`node scripts/extract-templates.mjs` and checking `git diff` is empty is the manual substitute
 for the first; there is no substitute for the second short of the browser harness.
 
 **The parity harness isn't wired into CI.**

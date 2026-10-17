@@ -5,7 +5,7 @@ import type { AppStateShape } from "./shape";
 
 // Ids are monotonic so <Celebrations> plays each queued effect exactly once.
 function withFx(state: AppStateShape, patch: Partial<AppStateShape>, fx: Fx[]): AppStateShape {
-  if (!fx || !fx.length) return { ...state, ...patch };
+  if (!fx.length) return { ...state, ...patch };
   let seq = state.fxSeq;
   const stamped: StampedFx[] = fx.map((f) => ({ ...f, id: ++seq }));
   return { ...state, ...patch, fx: [...state.fx, ...stamped], fxSeq: seq };
@@ -32,16 +32,10 @@ function step(state: AppStateShape, action: Action): AppStateShape {
       return withFx(state, { data }, fx);
     }
 
-    // The new line opens on its current station, like a fresh boot would.
+    // settle() opens the new line's current station, as a fresh boot would.
     case "SET_TRACK": {
       const data = engine.setTrack(state.data, action.track);
-      if (data === state.data) return state;
-      const focus = engine.focusDay(data).id;
-      return {
-        ...state,
-        data,
-        openDays: state.openDays.includes(focus) ? state.openDays : [...state.openDays, focus],
-      };
+      return data === state.data ? state : { ...state, data };
     }
 
     case "TOGGLE_RITUAL": {

@@ -1,10 +1,6 @@
-// Dojo templates — ported verbatim from reference/onsite-express.html.
-// Content is ground truth: do not rewrite, reword or reorder.
-// Regenerate with: node scripts/extract-data.mjs
-
+// Ported verbatim from reference/onsite-express.html by scripts/extract-templates.mjs: edit there, not here.
 import type { Template } from "../types";
 
-/* Templates for the dojo */
 export const TPL: Template[] = [
 { g:"This week's spine", id:"t1", n:"Root-to-leaf paths (DFS)", tag:"Day 1",
   note:"One list, mutated. The only copy happens at a leaf. Alternative: pass path + [v] and never pop — more allocations, nothing to forget.",
