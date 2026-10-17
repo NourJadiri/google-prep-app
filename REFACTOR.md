@@ -27,7 +27,7 @@ that stands.
 | # | Area | State |
 |---|------|-------|
 | 1 | Workspace: problem pane, editor, console, Python runner, the assistant, plus the first shared UI primitives | done |
-| 2 | Me tab and sync: sync panel, link sheet, scanner, `lib/sync.ts` | |
+| 2 | Me tab and sync: sync panel, link sheet, scanner, `lib/sync.ts` | done |
 | 3 | Line, Metro and Dojo tabs, the app shell, shared components (`Icon`, celebrations) | |
 | 4 | State and domain: `lib/engine.ts`, `state/AppState.tsx`, `types.ts`, data files | |
 
@@ -62,6 +62,32 @@ Left for later, on purpose:
 
 The check itself is in `scripts/regress/` (see the README). Later steps should start the same way:
 capture a baseline run of the area before changing it, then compare.
+
+## Step 2 result
+
+The Me tab and the sync engine went from 13 files to 71 (35 components), the largest from 452
+lines to 138, and comments from 15% of lines to 6%. `lib/sync.ts` is now `lib/sync/`: config,
+status store, remote calls, a timer helper, the push/pull engine, the host hooks `AppState`
+drives, and the connect verbs, behind the same import path and API. `src/components/me/` is
+split into `stats/`, `ladder/`, `badges/`, `data/`, `sync/`, `link/` and `scan/`; the outcome
+toasts, clipboard copy, "not a sync code" message and code chip each exist once. `ui/` gained
+`PillButton`, `ButtonRow`, `Section`, `Note` and `Dialog`; `src/hooks/` gained
+`useDialogBehavior` and `useCopyToast`.
+
+Checked with the Me suite (14 scenarios, 436 assertions, 55 screenshots, two simulated devices
+and a fake camera) and the workspace suite: both identical before and after.
+
+Left for later, on purpose:
+- Bugs the suite pinned rather than fixed: the held state (a cloud copy from a newer app version)
+  shows "Cloud unreachable" though the cloud was reached; sending to a held code reports success;
+  a Get-mode watch on an unreadable row still says "Linked"; equal stamps on two devices count as
+  each one's own write; focus falls to the page after a Get-mode link on a fresh device; the
+  Connect button's disabled state never shows. Also found while splitting the engine: disconnecting
+  while a pull is in flight leaves sync stuck on "working" until a reload.
+- The `.mbtn`, `.mrow`, `.sectionlabel` and `.storenote` rules still live in `styles/layout.css`;
+  the new primitives render those classes. Move the CSS when step 3 adopts them in Metro and Dojo.
+- The workspace suite's `06-stop-stopped-console` screenshot depends on where the Stop click lands
+  in a running case; a lone difference there is timing, re-run before chasing it.
 
 ## Audit (October 2026)
 

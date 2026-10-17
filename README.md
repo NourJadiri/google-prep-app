@@ -423,16 +423,23 @@ src/
                 storage.ts      localStorage with an in-memory fallback
                 drafts.ts       your code per problem, and workspace prefs — local only
                 cx.ts           class-name joiner; platform.ts: Mac or not, ⌘ or Ctrl
-                sync.ts         mirrors the blob to /api/state; offline-first
-                link.ts         the link a QR carries: #sync=<code>&do=send|recv
-                qr.ts           the QR matrix, via the qrcode package
+                sync/           mirrors the blob to /api/state, offline-first: config,
+                                status store, remote calls, the push/pull engine, and
+                                the verbs the Me tab uses (enable, join, claim…)
+                syncCode.ts     what a sync code looks like; link.ts: the link a QR
+                                carries, #sync=<code>&do=send|recv
                 dates.ts        calendar-day helpers
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
-  hooks/        useMedia, useLatest, useCopied — shared by more than one area
-  components/   layout/ line/ metro/ dojo/ me/ shared/
+  hooks/        shared by more than one area: useMedia, useLatest, useCopied,
+                useCopyToast, useDialogBehavior (focus in and out, Escape)
+  components/   layout/ line/ metro/ dojo/ shared/
                 ui/             shared primitives: Button, IconButton, LinkButton, Tabs,
-                                SegmentedControl, StatusDot, Badge, Spinner, Spacer
+                                SegmentedControl, StatusDot, Badge, Spinner, Spacer,
+                                PillButton, ButtonRow, Section, Note, Dialog
+                me/             the Me tab: stats/, ladder/, badges/, data/, and sync/
+                                (the panel), link/ (the link sheet, consent card, QR),
+                                scan/ (the camera scanner), each with hooks/ and lib/
                 workspace/      the editor modal: Workspace (the shell) and WorkspaceBody,
                                 header/, layout/, problem/, editor/, console/, plus
                                 hooks/ (draft, prefs, run session, shortcuts…) and

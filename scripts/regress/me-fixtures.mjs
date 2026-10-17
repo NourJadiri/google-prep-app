@@ -128,7 +128,7 @@ export const FUTURE = { v: 3, track: "google", tracks: {}, note: "written by a n
 
 /* The module matrix of `text`, from the same package the app draws with, at the same
    error level. Used both to check the square the app paints and to paint one for the
-   fake camera, so the two are independent of the app's own lib/qr.ts. */
+   fake camera, so the two are independent of the app's own qrMatrix.ts. */
 export function qrModules(text) {
   const { create } = require("qrcode");
   const { modules } = create(text, { errorCorrectionLevel: "M" });
