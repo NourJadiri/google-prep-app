@@ -1,6 +1,4 @@
-/* Calendar-day helpers. Everything the app stores is a local "YYYY-MM-DD"
-   string, never a timestamp — a study day is a day on the wall, not 24 hours. */
-
+// Days are stored as local "YYYY-MM-DD" strings, never timestamps: a study day is a day on the wall.
 export function todayStr(d: Date = new Date()): string {
   return (
     d.getFullYear() +
@@ -11,8 +9,7 @@ export function todayStr(d: Date = new Date()): string {
   );
 }
 
-/* Both ends parse as UTC midnight, so month and year rollovers are just
-   arithmetic: "2026-07-31" -> "2026-08-01" is 1. */
+// Both ends parse as UTC midnight, so month and year rollovers are plain arithmetic.
 export function daysBetween(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000);
 }
