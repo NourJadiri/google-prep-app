@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loadPrefs, savePrefs } from "../../../lib/drafts";
+import { loadPrefs, savePrefs } from "../../../lib/workspacePrefs";
 
 const FONT_MIN = 11;
 const FONT_MAX = 22;
