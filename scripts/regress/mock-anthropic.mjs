@@ -3,6 +3,9 @@
 //   "AUTHFAIL" in the question -> 401 authentication_error
 //   "SLOW" in the question     -> 40 deltas, 250 ms apart (to test client hang-ups)
 //   "MARKDOWN" in the question -> a markdown answer (fence, list, links, raw html, image) in small deltas
+//   a JSON output format asked -> {"mood", "answer"} JSON in 4-character deltas, so keys and escapes split
+//                                 across them: the mood after "MOOD:" in the question (as written, so
+//                                 casing can be tested) or "smug"; with "ESCAPES", an answer full of escapes
 //   anything else              -> a thinking block, then "Use a hash map." in two deltas
 import http from "node:http";
 import fs from "node:fs";
@@ -52,11 +55,19 @@ http
         "- then [the docs](https://docs.python.org/3/) and [bad](javascript:alert(1))\n\n",
         "<script>alert(1)</script> ![pic](https://example.com/x.png)\n",
       ];
-      const deltas = question.includes("MARKDOWN")
-        ? MARKDOWN
-        : question.includes("SLOW")
-          ? Array.from({ length: 40 }, (_, i) => `chunk ${i} `)
-          : ["Use a ", "hash map."];
+      const json = () => {
+        const mood = /MOOD:(\w+)/.exec(question)?.[1] ?? "smug";
+        const answer = question.includes("ESCAPES") ? 'Watch the quotes: "a\\b"\nthen 😺 nya~' : "Use a hash map.";
+        const text = JSON.stringify({ mood, answer }).replace(/[\u0080-\uffff]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+        return text.match(/[\s\S]{1,4}/g);
+      };
+      const deltas = body.output_config?.format?.type === "json_schema"
+        ? json()
+        : question.includes("MARKDOWN")
+          ? MARKDOWN
+          : question.includes("SLOW")
+            ? Array.from({ length: 40 }, (_, i) => `chunk ${i} `)
+            : ["Use a ", "hash map."];
       for (const text of deltas) {
         if (closed) { log({ at: Date.now(), event: "stopped-early" }); return; }
         sse(res, "content_block_delta", { type: "content_block_delta", index: 1, delta: { type: "text_delta", text } });

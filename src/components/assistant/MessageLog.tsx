@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import Answer from "./Answer";
 import EmptyChat from "./EmptyChat";
 import type { Msg } from "./lib/messages";
+import type { PersonaLook } from "./lib/personas";
 import type { Trouble } from "./lib/trouble";
 import ChatNote from "./ChatNote";
 import Question from "./Question";
@@ -20,16 +21,15 @@ interface Props {
   onAsk: (question: string) => void;
   onRetry: () => void;
   onNewChat: () => void;
-  intro: string;
-  avatar?: string;
+  look: PersonaLook;
 }
 
-export default function MessageLog({ logRef, onScroll, messages, waiting, busy, full, trouble, onAsk, onRetry, onNewChat, intro, avatar }: Props) {
+export default function MessageLog({ logRef, onScroll, messages, waiting, busy, full, trouble, onAsk, onRetry, onNewChat, look }: Props) {
   return (
     <div className="asst-log" ref={logRef} onScroll={onScroll}>
-      {messages.length === 0 && <EmptyChat intro={intro} avatar={avatar} onAsk={onAsk} />}
-      {messages.map((m) => (m.role === "user" ? <Question key={m.id} message={m} /> : <Answer key={m.id} message={m} avatar={avatar} />))}
-      {waiting && <TypingDots avatar={avatar} />}
+      {messages.length === 0 && <EmptyChat intro={look.intro} avatar={look.avatar} onAsk={onAsk} />}
+      {messages.map((m) => (m.role === "user" ? <Question key={m.id} message={m} /> : <Answer key={m.id} message={m} look={look} />))}
+      {waiting && <TypingDots avatar={look.avatar} />}
       {trouble && trouble.kind !== "locked" && <TroubleNotice trouble={trouble} onRetry={onRetry} onNewChat={onNewChat} />}
       {full && !busy && <ChatNote>This chat is full. Start a new one to keep going.</ChatNote>}
     </div>

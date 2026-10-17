@@ -6,7 +6,9 @@ import { useAssistantChat } from "./hooks/useAssistantChat";
 import { useFloatingBox } from "./hooks/useFloatingBox";
 import { usePassword } from "./hooks/usePassword";
 import { usePersona } from "./hooks/usePersona";
+import { lastMood } from "./lib/messages";
 import { lookOf } from "./lib/personas";
+import { usePreload } from "./hooks/usePreload";
 import { useStickToBottom } from "./hooks/useStickToBottom";
 import { useWindowFocus } from "./hooks/useWindowFocus";
 import type { AskContext } from "./lib/askContext";
@@ -38,6 +40,7 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
   const password = usePassword();
   const voice = usePersona();
   const look = lookOf(voice.persona);
+  usePreload(look.faces);
   const chat = useAssistantChat({ password: password.ref, context, onRefused: password.refuse, persona: voice.persona });
   const log = useStickToBottom([chat.messages, chat.status, chat.error, open]);
   const box = useFloatingBox(panel, wide);
@@ -80,6 +83,7 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
         drag={box.dragHandlers}
         hasChat={chat.messages.length > 0}
         persona={voice.persona}
+        mood={lastMood(chat.messages)}
         onPersona={voice.choose}
         unlocked={!!password.value}
         onNewChat={newChat}
@@ -99,8 +103,7 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
             onAsk={ask}
             onRetry={retry}
             onNewChat={newChat}
-            intro={look.intro}
-            avatar={look.avatar}
+            look={look}
           />
           <Composer draft={draft} onDraft={setDraft} onSend={ask} onStop={chat.stop} busy={chat.busy} full={chat.full} inputRef={composer} placeholder={look.placeholder} />
         </>

@@ -9,6 +9,10 @@ export type Role = "user" | "assistant";
 export const PERSONAS = ["normal", "tough", "catgirl"] as const;
 export type Persona = (typeof PERSONAS)[number];
 
+/** The faces Goth catgirl Bana can make; the Worker reads one off each of her answers. */
+export const MOODS = ["happy", "angry", "sad", "shocked", "smug", "dizzy"] as const;
+export type Mood = (typeof MOODS)[number];
+
 export interface Problem {
   title: string;
   source: string;

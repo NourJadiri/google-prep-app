@@ -1,11 +1,13 @@
 import { useMemo } from "react";
+import type { PersonaLook } from "./lib/personas";
+import { faceOf } from "./lib/personas";
 import { textOf, type Msg } from "./lib/messages";
 import { renderAnswer } from "./lib/renderAnswer";
 import Avatar from "./Avatar";
 import ChatNote from "./ChatNote";
 import "./Answer.css";
 
-export default function Answer({ message, avatar }: { message: Msg; avatar?: string }) {
+export default function Answer({ message, look }: { message: Msg; look: PersonaLook }) {
   const text = textOf(message);
   const html = useMemo(() => renderAnswer(text), [text]);
   const stop = message.metadata?.stop;
@@ -18,10 +20,12 @@ export default function Answer({ message, avatar }: { message: Msg; avatar?: str
       {stop === "refusal" && <ChatNote>Bana declined to answer that one.</ChatNote>}
     </>
   );
-  if (!avatar) return <div className="asst-a">{body}</div>;
+  const mood = message.metadata?.mood;
+  const face = look.avatar && faceOf(look, mood);
+  if (!face) return <div className="asst-a">{body}</div>;
   return (
     <div className="asst-a chat">
-      <Avatar src={avatar} />
+      <Avatar src={face} mood={mood} />
       <div className="asst-bubble">{body}</div>
     </div>
   );

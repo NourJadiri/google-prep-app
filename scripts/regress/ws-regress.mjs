@@ -1051,6 +1051,7 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     }));
     await s.expect("in Normal the window looks as it always has: the line's blue, white, no tagline", look, { persona: "normal", tagline: null, placeholder: "Ask about this problem…", send: "rgb(26, 115, 232)", bg: "rgb(255, 255, 255)", name: "none" });
     if (MOCK_LOG) await s.expect("…in Normal the model is told it is Bana, with no voice on top", lastSystem, (v) => v.includes("You are Bana") && !v.includes("Voice:"));
+    if (MOCK_LOG) await s.expect("…and is asked for plain text: effort low, no JSON format", () => mockRequests()?.at(-1)?.body?.output_config, { effort: "low" });
     await panel.getByRole("button", { name: "Tough love" }).click();
     await s.expect("choosing Tough love presses it, and this browser remembers it", async () => ({ voices: await voices(), stored: (await stored()).persona }), { voices: ["Normal:false:true", "Tough love:true:true", "Goth catgirl:false:true"], stored: "tough" });
     await q().fill("Roast my loop");
@@ -1064,12 +1065,23 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     await q().press("Enter");
     await s.expect("in Goth catgirl the next question is answered too", () => panel.locator(".asst-a").count(), 3, { timeout: 20_000 });
     await s.expect("…and the window goes goth: dark purple even in light mode, violet accent, 'nya~', Mommy's prompt", look, { persona: "catgirl", tagline: "nya~", placeholder: "Ask Mommy, kitten…", send: "rgb(199, 125, 255)", bg: "rgb(27, 20, 33)", name: "none" });
+    if (MOCK_LOG) await s.expect("…and the Worker asks her for JSON: a mood from the six faces, then the answer, both required", () => mockRequests()?.at(-1)?.body?.output_config, { effort: "low", format: { type: "json_schema", schema: { type: "object", properties: { mood: { type: "string", enum: ["happy", "angry", "sad", "shocked", "smug", "dizzy"] }, answer: { type: "string" } }, required: ["mood", "answer"], additionalProperties: false } } });
+    const moods = () => panel.evaluate((p) => ({
+      rows: [...p.querySelectorAll(".asst-a")].map((a) => a.querySelector(":scope > img.asst-avatar")?.dataset.mood ?? null),
+      header: p.querySelector(".asst-head img.asst-avatar")?.dataset.mood ?? null,
+      last: [...p.querySelectorAll(".asst-a .md")].at(-1)?.textContent.trim() ?? null,
+    }));
+    await s.expect("…her answer comes out of the JSON as plain text, with the face it asked for (smug); the answers from before she was on wear her plain face", moods, { rows: ["neutral", "neutral", "smug"], header: "smug", last: "Use a hash map." });
+    await q().fill("MOOD:Shocked ESCAPES what even is this?");
+    await q().press("Enter");
+    await s.expect("a mood sent as 'Shocked' still finds its face, and the header changes with it", async () => { const m = await moods(); return { rows: m.rows, header: m.header }; }, { rows: ["neutral", "neutral", "smug", "shocked"], header: "shocked" }, { timeout: 20_000 });
+    await s.expect("…and the answer's escapes, split across the stream, decode exactly: quotes, a backslash, a line break, an emoji", async () => (await moods()).last, 'Watch the quotes: "a\\b"\nthen 😺 nya~');
     await s.expect("…with paw prints behind the chat", () => panel.locator(".asst-log").evaluate((l) => getComputedStyle(l).backgroundImage.startsWith('url("data:image/svg+xml')), true);
     await s.expect("…and it reads like a messenger: her face in the header, every answer a bubble beside it, the picture loaded", () => panel.evaluate((p) => ({
       header: !!p.querySelector(".asst-head img.asst-avatar"),
       rows: [...p.querySelectorAll(".asst-a")].map((a) => a.matches(".chat") && !!a.querySelector(":scope > img.asst-avatar") && !!a.querySelector(":scope > .asst-bubble .md")),
       loaded: [...p.querySelectorAll("img.asst-avatar")].every((i) => i.complete && i.naturalWidth === 192),
-    })), { header: true, rows: [true, true, true], loaded: true });
+    })), { header: true, rows: [true, true, true, true], loaded: true });
     await s.shot(page, "assistant-catgirl-desktop-light");
     await panel.getByRole("button", { name: "New chat" }).click();
     await s.expect("…a new chat opens on her greeting, as her first message", () => panel.locator(".asst-empty .asst-row").evaluate((r) => ({ avatar: !!r.querySelector("img.asst-avatar"), text: r.querySelector(".asst-bubble").textContent.slice(0, 11) })), { avatar: true, text: "hii kitten " });

@@ -1,10 +1,12 @@
 import type { UIMessage } from "ai";
-import type { Snapshot, Turn } from "../../../../shared/assistantContract";
+import type { Mood, Snapshot, Turn } from "../../../../shared/assistantContract";
 import type { AskContext } from "./askContext";
 
 export interface Meta extends Snapshot {
   /** On an answer: the API's stop reason. */
   stop?: string | null;
+  /** On an answer in a mode with faces: the one she made. */
+  mood?: Mood;
 }
 
 export type Msg = UIMessage<Meta>;
@@ -38,4 +40,13 @@ export function toTurn(m: Msg): Turn {
     ...(m.metadata?.code !== undefined ? { code: m.metadata.code } : {}),
     ...(m.metadata?.run ? { run: m.metadata.run } : {}),
   };
+}
+
+/** The mood of the latest answer that has one. */
+export function lastMood(messages: Msg[]): Mood | undefined {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const mood = messages[i]?.metadata?.mood;
+    if (mood) return mood;
+  }
+  return undefined;
 }
