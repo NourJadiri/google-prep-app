@@ -626,8 +626,10 @@ export class Device {
    *  the style digest of the page (or the element) at that moment, recorded in an assertion's name.
    *  `tall`: the whole page, by growing the window to the page's height for the shot (a full-page capture would
    *  leave the fixed tab bar floating mid-page). `locator`: just that element. `bottom`: scrolled to the end of the
-   *  page first (where the Sync panel is), so the shot does not depend on where the last click left the scroll. */
-  async shot(name, { locator = null, tall = false, bottom = false } = {}) {
+   *  page first (where the Sync panel is), so the shot does not depend on where the last click left the scroll.
+   *  `hide`: the CSS that keeps the transient layers (toasts, confetti) out of the picture; a suite whose subject is
+   *  those layers passes its own. */
+  async shot(name, { locator = null, tall = false, bottom = false, hide = HIDE_CSS } = {}) {
     const page = this.page;
     const vp = page.viewportSize();
     if (tall) {
@@ -646,8 +648,14 @@ export class Device {
         if (!this.phone) await page.mouse.move(640, 3);
         const file = `${this.s.no}-${name}-${this.form}-${this.theme}.png`;
         this.s.ok(`styles at ${file}: ${await this.styles(locator ?? "body")}`, true);
-        const options = { animations: "disabled", caret: "hide", style: HIDE_CSS + (this.phone ? HIDE_SCROLLBARS : "") };
-        const target = locator ?? page;
+        const options = { animations: "disabled", caret: "hide", style: hide + (this.phone ? HIDE_SCROLLBARS : "") };
+        /* An element's own screenshot waits for the element to be stable by counting animation frames, which a held clock
+           never delivers; the page is captured instead, clipped to the element's box. */
+        const target = page;
+        const clip = locator ? await locator.boundingBox() : null;
+        if (clip) {
+          options.clip = clip;
+        }
         /* A capture of the page with everything hidden, thrown away, so that the one kept is drawn from scratch. Chromium
            repaints only what changed since the last frame, and under CPU load (WS_JOBS) the antialiased edge of an icon
            that was repainted that way came out a few levels different from one that was painted whole. */

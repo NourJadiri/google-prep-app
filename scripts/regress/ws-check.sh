@@ -13,10 +13,12 @@
 # different checkouts / ports. A pre-existing <repo>/.dev.vars and .wrangler/ are kept.
 #
 # Optional environment:
-#   REGRESS_SUITE=ws|me  which suite to run (default ws). ws: the workspace and the
+#   REGRESS_SUITE=ws|me|tabs  which suite to run (default ws). ws: the workspace and the
 #                assistant (ws-regress.mjs, against the mock Anthropic). me: the Me tab and
 #                cross-device sync (me-regress.mjs; no mock, so <port+1> stays free).
-#                me-check.sh is this script with REGRESS_SUITE=me.
+#                tabs: the Line, Metro and Dojo tabs, the shell and the celebrations
+#                (tabs-regress.mjs; no mock either).
+#                me-check.sh and tabs-check.sh are this script with REGRESS_SUITE=me / tabs.
 #   WS_JOBS=3    run the scenarios three at a time (about 1 minute instead of 2)
 #   WS_ONLY=03,06  run only the scenarios whose id starts with one of these
 #
@@ -48,7 +50,8 @@ SUITE="${REGRESS_SUITE:-ws}"
 case "$SUITE" in
   ws) SUITE_SCRIPT="$HERE/ws-regress.mjs"; NEEDS_MOCK=1; PORTS="$PORT $MOCK_PORT $INSPECT_PORT" ;;
   me) SUITE_SCRIPT="$HERE/me-regress.mjs"; NEEDS_MOCK=0; PORTS="$PORT $INSPECT_PORT" ;;
-  *) echo "ws-check: REGRESS_SUITE must be ws or me, not '$SUITE'" >&2; exit 2 ;;
+  tabs) SUITE_SCRIPT="$HERE/tabs-regress.mjs"; NEEDS_MOCK=0; PORTS="$PORT $INSPECT_PORT" ;;
+  *) echo "ws-check: REGRESS_SUITE must be ws, me or tabs, not '$SUITE'" >&2; exit 2 ;;
 esac
 
 OUT="$SCRATCH/runs/$LABEL"
