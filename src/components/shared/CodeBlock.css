@@ -1,0 +1,6 @@
+pre.code {
+  margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; background: var(--sunken);
+  font-family: var(--mono); font-size: 12px; line-height: 1.6; tab-size: 4; overflow-x: auto;
+  border: 1px solid var(--line); white-space: pre;
+}
+pre.code .blank { color: var(--med); font-weight: 700; }

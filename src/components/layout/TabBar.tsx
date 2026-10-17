@@ -1,14 +1,8 @@
 import { useApp } from "../../state/AppState";
-import type { Tab } from "../../types";
-import Icon, { type IconName } from "../shared/Icon";
+import { scrollToTop } from "../../lib/scroll";
+import TabButton from "./TabButton";
+import { TABS } from "./lib/tabs";
 import "./TabBar.css";
-
-const TABS: ReadonlyArray<{ id: Tab; ic: IconName; label: string }> = [
-  { id: "line", ic: "route", label: "Line" },
-  { id: "metro", ic: "train", label: "Metro" },
-  { id: "dojo", ic: "code", label: "Dojo" },
-  { id: "me", ic: "chart", label: "Me" },
-];
 
 export default function TabBar() {
   const { state, actions } = useApp();
@@ -16,20 +10,16 @@ export default function TabBar() {
   return (
     <nav className="tabs" aria-label="Sections">
       {TABS.map((t) => (
-        <button
+        <TabButton
           key={t.id}
-          className={"tab" + (state.tab === t.id ? " on" : "")}
-          aria-current={state.tab === t.id ? "page" : undefined}
-          onClick={() => {
+          icon={t.icon}
+          label={t.label}
+          current={state.tab === t.id}
+          onSelect={() => {
             actions.setTab(t.id);
-            window.scrollTo(0, 0);
+            scrollToTop();
           }}
-        >
-          <span className="ic">
-            <Icon name={t.ic} size={20} strokeWidth={1.8} />
-          </span>
-          {t.label}
-        </button>
+        />
       ))}
     </nav>
   );

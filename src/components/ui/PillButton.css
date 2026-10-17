@@ -1,3 +1,11 @@
-.mbtn[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, var(--surface)); }
+.mbtn {
+  padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); font-size: 13px; font-weight: 500;
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
+}
 .mbtn.ico { display: inline-flex; align-items: center; gap: 6px; }
 .mbtn.ico svg { flex: none; opacity: .75; }
+.mbtn[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, var(--surface)); }
+.mbtn:active { transform: scale(.97); background: var(--sunken); }
+.mbtn.danger { color: var(--red); border-color: var(--red); }
+.mbtn.danger:active { background: var(--bad-bg); }

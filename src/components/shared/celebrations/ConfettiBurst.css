@@ -1,0 +1,7 @@
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 55; overflow: hidden; }
+.cf { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(105vh) rotate(560deg); opacity: .9; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cf, .confetti { display: none !important; }
+}

@@ -14,24 +14,8 @@
 :root[data-track="aws"] .gdots i:nth-child(3){background:var(--aws-ink)}
 :root[data-track="aws"] .gdots i:nth-child(4){background:var(--aws-rust)}
 
-/* Shared by the dojo and Me. */
-.sectionlabel { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin: 22px 0 2px; font-weight: 700; }
-
-/* Shared by Me's data panel and the metro's run result / deck footnote. */
-.mrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.mbtn {
-  padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line);
-  background: var(--surface); font-size: 13px; font-weight: 500;
-  transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
-}
-.mbtn:active { transform: scale(.97); background: var(--sunken); }
-.mbtn.danger { color: var(--red); border-color: var(--red); }
-.mbtn.danger:active { background: var(--bad-bg); }
+/* PillButton's hover, kept below every component sheet: the link sheet's `.qrsheet .mbtn` ties it on specificity, and hover has always won. */
 @media (hover: hover) {
   .mbtn:hover { background: var(--sunken); border-color: color-mix(in srgb, var(--ink2) 35%, var(--line)); }
   .mbtn.danger:hover { background: var(--bad-bg); border-color: var(--red); }
 }
-.storenote { font-size: 11.5px; color: var(--ink2); margin-top: 14px; line-height: 1.5; }
-
-/* What shows for the instant the workspace chunk is still arriving. */
-.ws-boot { position: fixed; inset: 0; z-index: 50; background: var(--bg); }

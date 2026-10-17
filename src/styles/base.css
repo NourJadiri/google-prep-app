@@ -1,8 +1,6 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-/* Metro is the only tab shorter than the viewport, so it's the only tab where
-   iOS can rubber-band the document — and the fixed tab bar rides the bounce.
-   Killing overscroll pins it; 100dvh keeps the page covering the viewport as
-   Safari's toolbar grows and shrinks (100% is the plain-100% fallback). */
+/* Overscroll is pinned because Metro is the only tab shorter than the viewport, and the fixed tab bar rides iOS's rubber-band bounce there.
+   100dvh follows Safari's toolbar as it grows and shrinks; the 100% line is the fallback. */
 html { height: 100%; overscroll-behavior-y: none; }
 body {
   margin: 0; min-height: 100%; min-height: 100dvh; background: var(--bg); color: var(--ink);
@@ -14,12 +12,8 @@ button { font-family: inherit; font-size: inherit; color: inherit; background: n
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 a { color: var(--blue); text-decoration: none; }
 
-/* Thumb targets.
-   Several controls are drawn small on purpose — the 26px check circle is the
-   line's visual rhythm and the 34px link button sits inside it. Rather than
-   grow them and lose the look, each gets a transparent overlay that brings the
-   tappable area up to ~44px. Nothing moves; the finger just gets more room.
-   Expansions stay inside their row's padding, so no two targets overlap. */
+/* Thumb targets: several controls are drawn small on purpose (the 26px check circle, the 34px link button), so a transparent overlay
+   lifts each tappable area to ~44px without moving anything. The expansions stay inside their row's padding, so no two targets overlap. */
 .prow .pcheck, .prow .golink { position: relative; }
 .prow .pcheck::after, .prow .golink::after {
   content: ""; position: absolute; top: 50%; left: 50%;
@@ -30,3 +24,8 @@ a { color: var(--blue); text-decoration: none; }
 .timer .tbtn::after { content: ""; position: absolute; inset: -7px -2px; }
 .mbtn::after, .veil button::after, .dojo-log button::after,
 .quit::after, .next::after { content: ""; position: absolute; inset: -4px 0; }
+
+/* With animation off, a toast leaves only when its JS timer fires. */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

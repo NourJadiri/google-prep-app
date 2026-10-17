@@ -1,13 +1,12 @@
 import { Fragment } from "react";
-
-/* Monospace snippet. `____` marks the hole in a missing-line card and gets
-   the amber highlight so the eye lands on it first. */
+import "./CodeBlock.css";
 
 interface CodeBlockProps {
   code: string;
   className?: string;
 }
 
+/** Monospace snippet; `____` marks the hole in a missing-line card and gets the amber highlight. */
 export default function CodeBlock({ code, className = "code" }: CodeBlockProps) {
   const parts = String(code).split("____");
   return (

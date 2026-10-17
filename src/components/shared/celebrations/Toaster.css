@@ -1,0 +1,1 @@
+.toasts { position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 0; right: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }

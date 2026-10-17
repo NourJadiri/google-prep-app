@@ -1,12 +1,8 @@
-/* The palette, ported from the reference :root. Google's four logo colours do
-   all the work; everything else is Material greys. Dark mode swaps the same
-   token names, so no component ever asks which theme it's in.
-
-   System fonts only — the app has to work on a plane, so nothing is fetched. */
+/* Dark mode swaps the same token names, so no component asks which theme it's in.
+   System fonts only: the app has to work offline, so nothing is fetched. */
 
 :root {
-  /* Both themes are handled here, so what the browser draws itself —
-     scrollbars, form controls — follows the OS theme like the tokens do. */
+  /* So what the browser draws itself (scrollbars, form controls) follows the OS theme like the tokens. */
   color-scheme: light dark;
   --blue: #1a73e8; --red: #d93025; --yellow: #f9ab00; --green: #1e8e3e;
   --bg: #f8f9fa; --surface: #ffffff; --sunken: #f1f3f4;
@@ -20,12 +16,10 @@
   /* The Local's palette: smile orange, lagoon teal, squid ink, rust. */
   --aws-orange: #d9690b; --aws-teal: #0b7a87; --aws-ink: #232f3e; --aws-rust: #b6461f;
 
-  /* The one colour that says which line you're on: tabs, focus rings, the
-     workspace's primary button. Google blue here, orange on the Local. */
+  /* The one colour that says which line you're on: tabs, focus rings, the workspace's primary button. */
   --accent: var(--blue);
 
-  /* The editor. Syntax colours are the logo colours a shade deeper, so code
-     reads as part of the app rather than a pasted-in IDE. */
+  /* The editor; syntax colours are the logo colours a shade deeper. */
   --ed-bg: var(--surface); --ed-gutter: var(--bg);
   --ed-active: rgba(26,115,232,.05); --ed-sel: rgba(26,115,232,.2); --ed-err: rgba(217,48,37,.13);
   --hl-kw: #1967d2; --hl-str: #188038; --hl-num: #c5221f; --hl-com: #80868b;
@@ -50,5 +44,5 @@
   }
 }
 
-/* Riding the Local: the accent turns orange. Set on <html> by App. */
+/* Riding the Local turns the accent orange; useTrackTheme sets data-track on <html>. */
 :root[data-track="aws"] { --accent: var(--aws-orange); }
