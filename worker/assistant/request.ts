@@ -1,4 +1,4 @@
-import { MAX_TURNS, type AskRequest, type Problem, type Turn } from "../../shared/assistantContract";
+import { MAX_TURNS, PERSONAS, type AskRequest, type Persona, type Problem, type Turn } from "../../shared/assistantContract";
 
 export const MAX_BYTES = 256 * 1024;
 const MAX_TEXT = 32_000;
@@ -16,7 +16,8 @@ export function parseRequest(text: string): AskRequest | string {
     return "body must be JSON";
   }
   if (!body || typeof body !== "object") return "body must be an object";
-  const { problem, turns } = body as { problem?: unknown; turns?: unknown };
+  const { problem, turns, persona = "normal" } = body as { problem?: unknown; turns?: unknown; persona?: unknown };
+  if (!PERSONAS.includes(persona as Persona)) return "unknown persona";
 
   if (!problem || typeof problem !== "object") return "problem is required";
   const p = problem as Record<string, unknown>;
@@ -51,5 +52,5 @@ export function parseRequest(text: string): AskRequest | string {
     return "the conversation must start and end with a question";
   }
   if (out.some((t) => t.role === "user" && !t.text.trim())) return "a question is empty";
-  return { problem: p as unknown as Problem, turns: out };
+  return { problem: p as unknown as Problem, turns: out, persona: persona as Persona };
 }

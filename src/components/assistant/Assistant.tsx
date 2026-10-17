@@ -5,6 +5,7 @@ import Composer from "./Composer";
 import { useAssistantChat } from "./hooks/useAssistantChat";
 import { useFloatingBox } from "./hooks/useFloatingBox";
 import { usePassword } from "./hooks/usePassword";
+import { usePersona } from "./hooks/usePersona";
 import { useStickToBottom } from "./hooks/useStickToBottom";
 import { useWindowFocus } from "./hooks/useWindowFocus";
 import type { AskContext } from "./lib/askContext";
@@ -33,7 +34,8 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
   const [draft, setDraft] = useState("");
 
   const password = usePassword();
-  const chat = useAssistantChat({ password: password.ref, context, onRefused: password.refuse });
+  const voice = usePersona();
+  const chat = useAssistantChat({ password: password.ref, context, onRefused: password.refuse, persona: voice.persona });
   const log = useStickToBottom([chat.messages, chat.status, chat.error, open]);
   const box = useFloatingBox(panel, wide);
   useWindowFocus(panel, password.value ? composer : passwordField, open, summon);
@@ -67,12 +69,14 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
       style={box.style}
       hidden={!open}
       role="dialog"
-      aria-label="Assistant"
+      aria-label="Patrick"
       onKeyDown={(e) => onWindowKeyDown(e, onClose)}
     >
       <AssistantHeader
         drag={box.dragHandlers}
         hasChat={chat.messages.length > 0}
+        persona={voice.persona}
+        onPersona={voice.choose}
         unlocked={!!password.value}
         onNewChat={newChat}
         onForget={password.forget}

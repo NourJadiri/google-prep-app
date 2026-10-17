@@ -1,3 +1,5 @@
+import { PERSONAS, type Persona } from "../../../../shared/assistantContract";
+
 /* Per browser: the password never syncs and never lands in an export. */
 
 const KEY = "onsite-express-assistant-v1";
@@ -12,6 +14,7 @@ export interface Spot {
 interface Saved {
   password?: string;
   spot?: Spot;
+  persona?: string;
 }
 
 let mem: Saved = {};
@@ -58,4 +61,13 @@ export function loadSpot(): Spot | null {
 
 export function saveSpot(spot: Spot): void {
   write({ ...read(), spot });
+}
+
+export function loadPersona(): Persona {
+  const saved = read().persona;
+  return PERSONAS.find((p) => p === saved) ?? "normal";
+}
+
+export function savePersona(persona: Persona): void {
+  write({ ...read(), persona });
 }

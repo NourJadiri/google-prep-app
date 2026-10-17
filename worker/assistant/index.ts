@@ -29,7 +29,7 @@ export async function ask(request: Request, env: AssistantEnv): Promise<Response
 
   const parsed = parseRequest(text);
   if (typeof parsed === "string") return err(400, parsed);
-  const { problem, turns } = parsed;
+  const { problem, turns, persona } = parsed;
 
   const client = new Anthropic({ apiKey, ...(env.ANTHROPIC_BASE_URL ? { baseURL: env.ANTHROPIC_BASE_URL } : {}) });
   const claude = client.messages.stream({
@@ -39,7 +39,7 @@ export async function ask(request: Request, env: AssistantEnv): Promise<Response
     output_config: { effort: "low" },
     /* A no-op while the conversation is under the model's minimum cacheable prefix. */
     cache_control: { type: "ephemeral" },
-    system: systemPrompt(problem),
+    system: systemPrompt(problem, persona),
     messages: toMessages(turns),
   });
 

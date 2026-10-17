@@ -31,7 +31,7 @@ export default function LockScreen({ refused, inputRef, onUnlock }: Props) {
         type="password"
         autoComplete="current-password"
         placeholder="Password"
-        aria-label="Assistant password"
+        aria-label="Patrick's password"
         value={typed}
         onChange={(e) => setTyped(e.target.value)}
       />

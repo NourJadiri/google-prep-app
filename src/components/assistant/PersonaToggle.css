@@ -1,0 +1,7 @@
+.asst-voices { display: inline-flex; gap: 2px; padding: 2px; margin-left: 4px; border-radius: 999px; background: var(--sunken); }
+.asst-voice {
+  width: 26px; height: 22px; display: inline-grid; place-items: center; border-radius: 999px;
+  color: var(--ink2); transition: background-color .15s ease, color .15s ease;
+}
+.asst-voice.on { background: var(--surface); color: var(--accent); box-shadow: 0 1px 2px rgba(0, 0, 0, .14); }
+@media (hover: hover) { .asst-voice:not(.on):hover { color: var(--ink); } }

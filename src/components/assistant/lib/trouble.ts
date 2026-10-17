@@ -14,11 +14,11 @@ export function troubleOf(e: Error): Trouble {
       case 503:
         return {
           kind: "setup",
-          text: "The assistant isn't set up on this deployment. It needs ANTHROPIC_API_KEY and ASSISTANT_PASSWORD as secrets on the Cloudflare Worker.",
+          text: "Patrick isn't set up on this deployment. It needs ANTHROPIC_API_KEY and ASSISTANT_PASSWORD as secrets on the Cloudflare Worker.",
         };
       case 404:
       case 405:
-        return { kind: "setup", text: "No assistant endpoint here. Locally, run the app through wrangler dev (see the README)." };
+        return { kind: "setup", text: "Patrick has no endpoint here. Locally, run the app through wrangler dev (see the README)." };
       case 413:
         return { kind: "full", text: "This conversation is too long to send. Start a new one." };
     }

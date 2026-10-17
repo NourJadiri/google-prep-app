@@ -5,6 +5,10 @@ export const MAX_TURNS = 40;
 
 export type Role = "user" | "assistant";
 
+/** The voices the Worker can answer in. The browser picks one; the Worker owns what each one says. */
+export const PERSONAS = ["normal", "tough", "catgirl"] as const;
+export type Persona = (typeof PERSONAS)[number];
+
 export interface Problem {
   title: string;
   source: string;
@@ -28,4 +32,6 @@ export interface Turn extends Snapshot {
 export interface AskRequest {
   problem: Problem;
   turns: Turn[];
+  /** Absent from older clients: "normal". */
+  persona?: Persona;
 }

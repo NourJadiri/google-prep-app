@@ -1,3 +1,4 @@
+import { ASSISTANT_GLYPHS } from "./assistant";
 import { CONTENT_GLYPHS } from "./content";
 import { CONTROL_GLYPHS } from "./controls";
 import { MARK_GLYPHS } from "./marks";
@@ -12,6 +13,7 @@ export const GLYPHS = {
   ...CONTROL_GLYPHS,
   ...SYNC_GLYPHS,
   ...CONTENT_GLYPHS,
+  ...ASSISTANT_GLYPHS,
 };
 
 export type IconName = keyof typeof GLYPHS;

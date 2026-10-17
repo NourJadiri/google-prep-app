@@ -1,7 +1,7 @@
 import { useEffect, useMemo, type RefObject } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { MAX_TURNS, type AskRequest } from "../../../../shared/assistantContract";
+import { MAX_TURNS, type AskRequest, type Persona } from "../../../../shared/assistantContract";
 import { useLatest } from "../../../hooks/useLatest";
 import type { AskContext } from "../lib/askContext";
 import { snapshotMeta, textOf, toTurn, type Msg } from "../lib/messages";
@@ -13,10 +13,12 @@ interface Options {
   context: () => AskContext;
   /** Called, with the error cleared, when the Worker refuses the password. */
   onRefused: () => void;
+  persona: Persona;
 }
 
-export function useAssistantChat({ password, context, onRefused }: Options) {
+export function useAssistantChat({ password, context, onRefused, persona }: Options) {
   const ctx = useLatest(context);
+  const voice = useLatest(persona);
 
   const transport = useMemo(
     () =>
@@ -24,10 +26,10 @@ export function useAssistantChat({ password, context, onRefused }: Options) {
         api: "/api/assistant",
         headers: () => ({ authorization: `Bearer ${password.current ?? ""}` }),
         prepareSendMessagesRequest: ({ messages }) => ({
-          body: { problem: ctx.current().problem, turns: messages.map(toTurn) } satisfies AskRequest,
+          body: { problem: ctx.current().problem, turns: messages.map(toTurn), persona: voice.current } satisfies AskRequest,
         }),
       }),
-    [password, ctx]
+    [password, ctx, voice]
   );
   const { messages, sendMessage, regenerate, stop, status, error, clearError, setMessages } = useChat<Msg>({
     transport,
