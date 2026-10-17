@@ -1,5 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import type { Problem, Turn } from "./types";
+import type { Problem, Turn } from "../../shared/assistantContract";
 
 const PERSONA = `You are the assistant in a small floating window inside an interview-prep app. The user is solving a LeetCode-style problem in Python and has called you up mid-attempt with a quick question: usually syntax, their approach, or a bug.
 

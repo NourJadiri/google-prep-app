@@ -1,9 +1,10 @@
 import { useEffect, useMemo, type RefObject } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { MAX_TURNS, type AskRequest } from "../../../../shared/assistantContract";
 import { useLatest } from "../../../hooks/useLatest";
 import type { AskContext } from "../lib/askContext";
-import { MAX_TURNS, snapshotMeta, textOf, toTurn, type Msg } from "../lib/messages";
+import { snapshotMeta, textOf, toTurn, type Msg } from "../lib/messages";
 import { troubleOf } from "../lib/trouble";
 
 interface Options {
@@ -23,7 +24,7 @@ export function useAssistantChat({ password, context, onRefused }: Options) {
         api: "/api/assistant",
         headers: () => ({ authorization: `Bearer ${password.current ?? ""}` }),
         prepareSendMessagesRequest: ({ messages }) => ({
-          body: { problem: ctx.current().problem, turns: messages.map(toTurn) },
+          body: { problem: ctx.current().problem, turns: messages.map(toTurn) } satisfies AskRequest,
         }),
       }),
     [password, ctx]

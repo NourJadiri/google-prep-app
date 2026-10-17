@@ -1,24 +1,18 @@
 import type { UIMessage } from "ai";
+import type { Snapshot, Turn } from "../../../../shared/assistantContract";
 import type { AskContext } from "./askContext";
 
-export interface Meta {
-  /** On a question: the code it was asked about, when it changed since the last one. */
-  code?: string;
-  /** On a question: the run report, when it is new since the last one. */
-  run?: string;
+export interface Meta extends Snapshot {
   /** On an answer: the API's stop reason. */
   stop?: string | null;
 }
 
 export type Msg = UIMessage<Meta>;
 
-/* The Worker refuses a conversation longer than this. */
-export const MAX_TURNS = 40;
-
 export const textOf = (m: Msg): string => m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
 
 /* The newest snapshot of this kind that went out with a question. */
-function lastSent(messages: Msg[], key: "code" | "run"): string | undefined {
+function lastSent(messages: Msg[], key: keyof Snapshot): string | undefined {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
     const v = m?.role === "user" ? m.metadata?.[key] : undefined;
@@ -35,11 +29,11 @@ export function snapshotMeta(messages: Msg[], now: AskContext): Meta {
 }
 
 /* The wire shape the Worker checks, field by field. */
-export function toTurn(m: Msg) {
+export function toTurn(m: Msg): Turn {
   const text = textOf(m);
-  if (m.role !== "user") return { role: "assistant" as const, text };
+  if (m.role !== "user") return { role: "assistant", text };
   return {
-    role: "user" as const,
+    role: "user",
     text,
     ...(m.metadata?.code !== undefined ? { code: m.metadata.code } : {}),
     ...(m.metadata?.run ? { run: m.metadata.run } : {}),

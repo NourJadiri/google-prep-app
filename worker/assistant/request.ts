@@ -1,7 +1,6 @@
-import type { Problem, Turn } from "./types";
+import { MAX_TURNS, type AskRequest, type Problem, type Turn } from "../../shared/assistantContract";
 
 export const MAX_BYTES = 256 * 1024;
-const MAX_TURNS = 40;
 const MAX_TEXT = 32_000;
 const MAX_STATEMENT = 20_000;
 const MAX_LABEL = 200;
@@ -9,7 +8,7 @@ const MAX_LABEL = 200;
 const str = (v: unknown, max: number): v is string => typeof v === "string" && v.length <= max;
 
 /* The request body, or the reason it is a 400. */
-export function parseRequest(text: string): { problem: Problem; turns: Turn[] } | string {
+export function parseRequest(text: string): AskRequest | string {
   let body: unknown;
   try {
     body = JSON.parse(text);
