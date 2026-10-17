@@ -17,6 +17,10 @@
 .qrsheet .synccode:active { background: #f1f3f4; }
 .qrsheet .mbtn { border-color: #dadce0; background: #ffffff; color: #202124; }
 .qrsheet .mbtn:active { background: #f1f3f4; }
+/* The sheet keeps the light palette in dark mode too, so its hover can't take the page's dark tokens. */
+@media (hover: hover) {
+  .qrsheet button.mbtn:not(:disabled):hover { background: #f1f3f4; border-color: color-mix(in srgb, #5f6368 35%, #dadce0); }
+}
 .qrsheet .syncinput { width: 100%; flex: none; border-color: #dadce0; background: #ffffff; color: #202124; min-height: 44px; }
 
 @media (prefers-reduced-motion: no-preference) {

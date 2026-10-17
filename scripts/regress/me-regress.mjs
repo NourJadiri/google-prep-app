@@ -1869,6 +1869,19 @@ scenario("15-disconnect-midflight", "turning sync off while a sync is in flight 
   finish(s);
 });
 
+/* 16 ------------------------------------------------------------------ */
+scenario("16-sheet-hover", "the link sheet keeps its light palette in dark mode, hover included", async (s) => {
+  const A = await s.device({});
+  await A.openMe();
+  await A.setDark(true);
+  await ui(A.page).link.click();
+  const close = sheet(A.page).getByRole("button", { name: "Close", exact: true });
+  await close.hover();
+  await s.expect("hovering Close in dark mode: a light grey ground under the dark label, so the label stays readable", () => close.evaluate((b) => ({ bg: getComputedStyle(b).backgroundColor, color: getComputedStyle(b).color })), { bg: "rgb(241, 243, 244)", color: "rgb(32, 33, 36)" });
+  await A.page.mouse.move(640, 3);
+  finish(s);
+});
+
 /* ------------------------------ driver ------------------------------ */
 
 let browser;
