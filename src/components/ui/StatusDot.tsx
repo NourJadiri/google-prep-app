@@ -7,5 +7,5 @@ interface StatusDotProps extends ComponentProps<"i"> {
 }
 
 export default function StatusDot({ tone, className, ...rest }: StatusDotProps) {
-  return <i className={cx("ws-dot", tone, className)} {...rest} />;
+  return <i className={cx("dot", tone, className)} {...rest} />;
 }

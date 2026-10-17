@@ -1,4 +1,4 @@
-import Hint from "./Hint";
+import ConsoleHint from "./ConsoleHint";
 import "./CaseFields.css";
 
 interface CaseFieldsProps {
@@ -23,7 +23,7 @@ export default function CaseFields({ names, fields, onEdit }: CaseFieldsProps) {
           />
         </label>
       ))}
-      <Hint>JSON or Python literals. Edited and added cases are answered by the reference solution.</Hint>
+      <ConsoleHint>JSON or Python literals. Edited and added cases are answered by the reference solution.</ConsoleHint>
     </div>
   );
 }

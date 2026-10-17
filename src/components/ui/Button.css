@@ -1,23 +1,23 @@
-.ws-btn {
+.btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line);
   background: var(--surface); font-size: 13px; font-weight: 600; white-space: nowrap;
   transition: background-color .15s ease, border-color .15s ease, transform .12s ease, opacity .15s ease;
 }
-.ws-btn:active { transform: scale(.97); }
-.ws-btn:disabled { opacity: .5; cursor: default; }
-.ws-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
-.ws-btn.ghost { border-color: transparent; background: transparent; color: var(--ink2); }
-.ws-btn.ok { color: var(--ok-ink); }
-.ws-btn.ghost[aria-pressed="true"] { color: var(--accent); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--ink2); }
+.btn.ok { color: var(--ok-ink); }
+.btn.ghost[aria-pressed="true"] { color: var(--accent); }
 @media (hover: hover) {
-  .ws-btn:not(:disabled):hover { background: var(--sunken); border-color: color-mix(in srgb, var(--ink2) 35%, var(--line)); }
-  .ws-btn.primary:not(:disabled):hover { background: color-mix(in srgb, var(--accent) 88%, var(--ink)); border-color: transparent; }
-  .ws-btn.ghost:hover { color: var(--ink); }
+  .btn:not(:disabled):hover { background: var(--sunken); border-color: color-mix(in srgb, var(--ink2) 35%, var(--line)); }
+  .btn.primary:not(:disabled):hover { background: color-mix(in srgb, var(--accent) 88%, var(--ink)); border-color: transparent; }
+  .btn.ghost:hover { color: var(--ink); }
 }
 @media (max-width: 899px) {
-  .ws-btn { padding: 0 10px; height: 32px; }
+  .btn { padding: 0 10px; height: 32px; }
 }
 @media (max-width: 420px) {
-  .ws-btn.ghost { padding: 0 8px; }
+  .btn.ghost { padding: 0 8px; }
 }

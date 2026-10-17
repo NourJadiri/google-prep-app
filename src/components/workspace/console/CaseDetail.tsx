@@ -5,8 +5,8 @@ import Badge from "../../ui/Badge";
 import Tag from "../../ui/Tag";
 import Block from "./Block";
 import ErrorBox from "./ErrorBox";
-import Note from "./Note";
-import Pre from "./Pre";
+import ResultNote from "./ResultNote";
+import ValueBox from "./ValueBox";
 import "./CaseDetail.css";
 
 interface CaseDetailProps {
@@ -27,36 +27,36 @@ export default function CaseDetail({ spec, result: r, title, abortMsg }: CaseDet
         {r.perf && <Tag>large input</Tag>}
         {r.ms > 0 && <span className="ws-ms">{r.ms < 1 ? "<1" : Math.round(r.ms)} ms</span>}
       </div>
-      {abortMsg && r.status !== "tle" && <Note>{abortMsg}</Note>}
+      {abortMsg && r.status !== "tle" && <ResultNote>{abortMsg}</ResultNote>}
       {r.status === "tle" && (
-        <Note>
+        <ResultNote>
           This case ran past its time limit. Pyodide is a few times slower than native Python, but the limit leaves
           room for the intended complexity — look for a nested loop or repeated work.
-        </Note>
+        </ResultNote>
       )}
       <Block title="Input">
-        {r.input.length ? r.input.map((line, k) => <Pre key={k}>{line}</Pre>) : <Pre tone="dim">—</Pre>}
+        {r.input.length ? r.input.map((line, k) => <ValueBox key={k}>{line}</ValueBox>) : <ValueBox tone="dim">—</ValueBox>}
       </Block>
       {r.got !== undefined && (
         <Block title="Output">
-          <Pre tone={mismatch ? "bad" : undefined}>{r.got}</Pre>
+          <ValueBox tone={mismatch ? "bad" : undefined}>{r.got}</ValueBox>
         </Block>
       )}
       {r.expected !== undefined && (
         <Block title="Expected">
-          <Pre tone={mismatch ? "good" : undefined}>{r.expected}</Pre>
+          <ValueBox tone={mismatch ? "good" : undefined}>{r.expected}</ValueBox>
         </Block>
       )}
-      {r.refError && <Note>{r.refError}</Note>}
-      {r.message && <Note>{r.message}</Note>}
+      {r.refError && <ResultNote>{r.refError}</ResultNote>}
+      {r.message && <ResultNote>{r.message}</ResultNote>}
       {r.error && <ErrorBox err={r.error} />}
       {r.stdout && (
         <Block title="Stdout">
-          <Pre>{r.stdout}</Pre>
+          <ValueBox>{r.stdout}</ValueBox>
         </Block>
       )}
       {spec.kind === "design" && r.status === "fail" && !r.message && (
-        <Note>Outputs line up one per operation: null for the constructor and for methods that return nothing.</Note>
+        <ResultNote>Outputs line up one per operation: null for the constructor and for methods that return nothing.</ResultNote>
       )}
     </div>
   );

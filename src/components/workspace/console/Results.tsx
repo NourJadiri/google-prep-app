@@ -5,11 +5,11 @@ import { orderLikeCases, type CaseDraft, type RunView } from "../lib/runPlan";
 import Block from "./Block";
 import CaseDetail from "./CaseDetail";
 import ErrorBox from "./ErrorBox";
-import Note from "./Note";
-import Pre from "./Pre";
 import ResultChips from "./ResultChips";
+import ResultNote from "./ResultNote";
 import ResultsEmpty from "./ResultsEmpty";
 import ResultsRunning from "./ResultsRunning";
+import ValueBox from "./ValueBox";
 import VerdictBanner from "./VerdictBanner";
 
 interface ResultsProps {
@@ -33,10 +33,10 @@ export default function Results({ spec, cases, run }: ResultsProps) {
       {run.verdict && <VerdictBanner verdict={run.verdict} />}
 
       {o.compileError && <ErrorBox err={o.compileError} />}
-      {o.entryError && !run.verdict && <Note>{o.entryError}</Note>}
+      {o.entryError && !run.verdict && <ResultNote>{o.entryError}</ResultNote>}
       {o.stdout && (
         <Block title="Printed while loading">
-          <Pre>{o.stdout}</Pre>
+          <ValueBox>{o.stdout}</ValueBox>
         </Block>
       )}
 

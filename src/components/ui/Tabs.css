@@ -1,11 +1,11 @@
-.ws-tabs {
+.tablist {
   flex: none; display: flex; align-items: stretch; gap: 2px; height: 38px; padding: 0 8px;
   border-bottom: 1px solid var(--line); background: var(--surface);
 }
-.ws-tabs button {
+.tablist button {
   display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 12.5px; font-weight: 600;
   color: var(--ink2); border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: color .15s ease, border-color .15s ease;
 }
-.ws-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
-@media (hover: hover) { .ws-tabs button:not(.on):hover { color: var(--ink); } }
+.tablist button.on { color: var(--ink); border-bottom-color: var(--accent); }
+@media (hover: hover) { .tablist button:not(.on):hover { color: var(--ink); } }

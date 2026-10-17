@@ -14,4 +14,4 @@
   background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
 }
 .asst-lock input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
-.asst-lock .ws-btn { align-self: flex-start; }
+.asst-lock .btn { align-self: flex-start; }

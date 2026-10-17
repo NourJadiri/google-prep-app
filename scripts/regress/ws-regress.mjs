@@ -328,12 +328,12 @@ const chipsOf = (page) =>
 
 const detailOf = (page) =>
   page.locator(".ws-detail").evaluate((el) => ({
-    badge: el.querySelector(".ws-badge")?.textContent ?? null,
+    badge: el.querySelector(".statusbadge")?.textContent ?? null,
     title: el.querySelector(".ws-detail-title")?.textContent ?? null,
     blocks: Object.fromEntries(
       [...el.querySelectorAll(".ws-block")].map((b) => [b.querySelector(".ws-block-title").textContent, [...b.querySelectorAll("pre")].map((p) => p.textContent)])
     ),
-    notes: [...el.querySelectorAll(".ws-note")].map((n) => n.textContent),
+    notes: [...el.querySelectorAll(".ws-result-note")].map((n) => n.textContent),
     errors: [...el.querySelectorAll(".ws-error-msg")].map((n) => n.textContent),
   }));
 
@@ -406,10 +406,10 @@ scenario("01-open", "open the workspace from the Line tab", async (s) => {
 
     // problem pane
     await s.expect("problem pane tabs: Description (selected), Solution", () =>
-      page.locator(`${sel.problem} .ws-tabs [role=tab]`).evaluateAll((els) => els.map((e) => e.textContent.trim() + ":" + e.getAttribute("aria-selected"))),
+      page.locator(`${sel.problem} .tablist [role=tab]`).evaluateAll((els) => els.map((e) => e.textContent.trim() + ":" + e.getAttribute("aria-selected"))),
       ["Description:true", "Solution:false"]);
     await s.expect("topic chips", () => page.locator(".ws-topic").allTextContents(), ["graph", "dfs", "backtracking"]);
-    await s.expect("statement sections", () => page.locator(".ws-sec .ws-h").allTextContents(), ["The task", "Examples", "Constraints"]);
+    await s.expect("statement sections", () => page.locator(".ws-sec .ws-problem-heading").allTextContents(), ["The task", "Examples", "Constraints"]);
     await s.expect("two disclosures, both closed", () => page.locator("details.ws-hintbox").evaluateAll((els) => els.map((e) => e.querySelector("summary").textContent.trim() + ":" + e.open)),
       ["Hint — what to aim for:false", "Follow-ups an interviewer might ask:false"]);
 
@@ -422,7 +422,7 @@ scenario("01-open", "open the workspace from the Line tab", async (s) => {
 
     // console
     await s.expect("console is the 'Tests' section with Testcase (selected) and Result tabs", () =>
-      page.locator(`${sel.tests} .ws-tabs [role=tab]`).evaluateAll((els) => els.map((e) => e.textContent.trim() + ":" + e.getAttribute("aria-selected"))),
+      page.locator(`${sel.tests} .tablist [role=tab]`).evaluateAll((els) => els.map((e) => e.textContent.trim() + ":" + e.getAttribute("aria-selected"))),
       ["Testcase:true", "Result:false"]);
     await s.expect("three example cases, Case 1 active", async () => (await caseChips(page)).map((c) => c.text + (c.on ? "*" : "")), ["Case 1*", "Case 2", "Case 3"]);
     await s.expect("Case 1 field: graph = the first example", () => page.locator(".ws-field").evaluateAll((els) => els.map((e) => e.querySelector("span").textContent + e.querySelector("textarea").value)), ["graph =" + CASE1]);
@@ -483,16 +483,16 @@ scenario("02-problem-pane", "hint disclosures and the veiled reference solution"
     }, { dfs: true, ro: "false", wrap: 1 });
     await s.expect("two editors on the page now (yours and the reference)", () => page.locator(".cm-editor").count(), 2);
     await s.expect("your own editor is untouched", () => codeOf(page, sel.code), STARTER);
-    await s.expect("the Solution tab icon is unlocked", () => page.locator(`${sel.problem} .ws-tabs [role=tab]`).nth(1).locator("svg").count(), 1);
-    await page.locator(".ws-sol-head .ws-linkbtn").click();
-    await s.expect("Copy on the reference solution reads 'Copied'", () => page.locator(".ws-sol-head .ws-linkbtn").innerText(), "Copied");
+    await s.expect("the Solution tab icon is unlocked", () => page.locator(`${sel.problem} .tablist [role=tab]`).nth(1).locator("svg").count(), 1);
+    await page.locator(".ws-sol-head .linkbtn").click();
+    await s.expect("Copy on the reference solution reads 'Copied'", () => page.locator(".ws-sol-head .linkbtn").innerText(), "Copied");
     await s.expect("the clipboard holds the reference solution", () => page.evaluate(() => navigator.clipboard.readText()), /^class Solution:\n {4}def allPathsSourceTarget/, { timeout: 3000 });
-    await s.expect("…and it goes back to 'Copy'", () => page.locator(".ws-sol-head .ws-linkbtn").innerText(), "Copy", { timeout: 4000 });
+    await s.expect("…and it goes back to 'Copy'", () => page.locator(".ws-sol-head .linkbtn").innerText(), "Copy", { timeout: 4000 });
     await page.locator(".ws-problem-body").evaluate((el) => (el.scrollTop = 0));
     await s.shot(page, "solution-revealed-desktop-light");
 
     await page.getByRole("tab", { name: "Description" }).click();
-    await s.expect("back on Description: statement sections again", () => page.locator(".ws-sec .ws-h").allTextContents(), ["The task", "Examples", "Constraints"]);
+    await s.expect("back on Description: statement sections again", () => page.locator(".ws-sec .ws-problem-heading").allTextContents(), ["The task", "Examples", "Constraints"]);
     finish(s);
   } finally {
     await ctx.close();
@@ -517,7 +517,7 @@ scenario("03-run-correct", "run a correct solution from the button and the keybo
     await s.expect("no 'not run' note", () => page.locator(".ws-notrun").count(), 0);
     const d = await detailOf(page);
     await s.expect("case detail: Passed, Case 1, input / output / expected", () => d, (v) => v.badge === "Passed" && v.title === "Case 1" && isEqual(v.blocks.Input, ["graph = " + CASE1]) && isEqual(v.blocks.Output, [EXPECTED1]) && isEqual(v.blocks.Expected, [EXPECTED1]) && v.notes.length === 0 && v.errors.length === 0);
-    await s.expect("Result tab carries a green dot", () => page.locator(`${sel.tests} .ws-tabs .ws-dot`).getAttribute("class"), "ws-dot ok");
+    await s.expect("Result tab carries a green dot", () => page.locator(`${sel.tests} .tablist .dot`).getAttribute("class"), "dot ok");
     await s.expect("no error band in the editor", () => page.locator(".cm-errline").count(), 0);
     await s.expect("Run is back and Submit enabled", async () => ({ run: await page.locator(sel.run).count(), stop: await page.locator(sel.stop).count(), submit: await page.locator(sel.submit).isEnabled() }), { run: 1, stop: 0, submit: true });
     await s.shot(page, "run-pass-desktop-light");
@@ -616,8 +616,8 @@ scenario("05-run-wrong", "a wrong answer: verdict, failing chips, expected vs go
     await s.expect("chips: Case 1 and 2 red, Case 3 green; Case 1 selected", async () => (await chipsOf(page)).map((c) => `${c.text}:${c.tone}:${c.on}:${c.title}`),
       ["Case 1:bad:true:Case 1 — Wrong answer", "Case 2:bad:false:Case 2 — Wrong answer", "Case 3:ok:false:Case 3 — Passed"]);
     await s.expect("detail: Wrong answer on Case 1, Output [] vs Expected the four paths", () => detailOf(page), (d) => d.badge === "Wrong answer" && d.title === "Case 1" && isEqual(d.blocks.Input, ["graph = " + CASE1]) && isEqual(d.blocks.Output, ["[]"]) && isEqual(d.blocks.Expected, [EXPECTED1]) && isEqual(d.notes, ["Found 0 of the 4 paths. Missing, for one: [0,1,4]."]));
-    await s.expect("the output block is marked bad and the expected one good", () => page.locator(".ws-detail .ws-pre").evaluateAll((els) => els.map((e) => e.className)), ["ws-pre", "ws-pre bad", "ws-pre good"]);
-    await s.expect("Result tab carries a red dot", () => page.locator(`${sel.tests} .ws-tabs .ws-dot`).getAttribute("class"), "ws-dot bad");
+    await s.expect("the output block is marked bad and the expected one good", () => page.locator(".ws-detail .ws-value-box").evaluateAll((els) => els.map((e) => e.className)), ["ws-value-box", "ws-value-box bad", "ws-value-box good"]);
+    await s.expect("Result tab carries a red dot", () => page.locator(`${sel.tests} .tablist .dot`).getAttribute("class"), "dot bad");
     await s.shot(page, "run-wrong-desktop-light");
     await dark(page);
     await s.shot(page, "run-wrong-desktop-dark");
@@ -663,7 +663,7 @@ scenario("06-stop", "Stop and the time limit end an endless loop; the next run s
     await s.expect("while running: Stop replaces Run, Submit is disabled, runner says Running", async () => ({
       stop: await page.locator(sel.stop).count(), run: await page.locator(sel.run).count(), submitDisabled: await page.locator(sel.submit).isDisabled(), runner: await page.locator(".ws-runner").textContent(),
     }), { stop: 1, run: 0, submitDisabled: true, runner: "Running" });
-    await s.expect("while running: the Result tab pulses", () => page.locator(`${sel.tests} .ws-tabs .ws-dot`).getAttribute("class"), "ws-dot pulse");
+    await s.expect("while running: the Result tab pulses", () => page.locator(`${sel.tests} .tablist .dot`).getAttribute("class"), "dot pulse");
     await sleep(300);
     await s.shot(page, "stop-running-desktop-light", { runner: false });
     await page.locator(sel.stop).click();
@@ -763,7 +763,7 @@ scenario("07-test-cases", "the Testcase tab: add, edit, remove, reset, run typed
     await s.expect("down to one case: its remove button is gone", () => caseChips(page), [{ text: "Case 1", on: true, edited: false, hasRemove: false }]);
 
     // reset
-    await page.locator(".ws-cases .ws-linkbtn").click();
+    await page.locator(".ws-cases .linkbtn").click();
     await s.expect("Reset (back to the examples): three chips, Case 1 active", () => caseChips(page), [
       { text: "Case 1", on: true, edited: false, hasRemove: true },
       { text: "Case 2", on: false, edited: false, hasRemove: false },
@@ -778,7 +778,7 @@ scenario("07-test-cases", "the Testcase tab: add, edit, remove, reset, run typed
     await s.expect("Reset leaves the editor alone", () => codeOf(page), CORRECT);
     await page.getByRole("button", { name: "Add a case" }).click();
     await s.expect("(setup) a fourth case is added and active", async () => (await caseChips(page)).map((c) => c.text + (c.on ? "*" : "")), ["Case 1", "Case 2", "Case 3", "Case 4*"]);
-    await page.locator(".ws-cases .ws-linkbtn").click();
+    await page.locator(".ws-cases .linkbtn").click();
     await s.expect("Reset from Case 4 drops it and goes back to Case 1", async () => (await caseChips(page)).map((c) => c.text + (c.on ? "*" : "")), ["Case 1*", "Case 2", "Case 3"]);
 
     // a typed case that does not parse
@@ -823,7 +823,7 @@ scenario("08-editor-chrome", "font size, Reset, Esc to close, drafts", async (s)
     await s.expect("back to 14px", font, { label: "14px", px: "14px" });
 
     // Reset
-    const reset = page.locator(`${sel.code} .ws-toolbar .ws-linkbtn[title="Back to the starter code"]`);
+    const reset = page.locator(`${sel.code} .ws-toolbar .linkbtn[title="Back to the starter code"]`);
     await reset.click();
     await s.expect("Reset on untouched starter code: no confirm dialog", () => s.dialogs.length, 0);
     await setCode(page, CORRECT);
@@ -876,13 +876,13 @@ scenario("09-copy-for-claude", "Copy for Claude: feedback and clipboard text", a
     await openWorkspace(s, page);
     const btn = page.locator(sel.copy);
     await s.expect("the button reads 'Copy for Claude'", () => btn.innerText(), "Copy for Claude");
-    await s.expect("…and is not in its 'ok' state", () => btn.getAttribute("class"), "ws-btn ghost");
+    await s.expect("…and is not in its 'ok' state", () => btn.getAttribute("class"), "btn ghost");
 
     await setCode(page, WRONG);
     await startRun(s, page, "button");
     await btn.click();
     await s.expect("clicking shows 'Copied'", () => btn.innerText(), "Copied");
-    await s.expect("…in its green 'ok' state", () => btn.getAttribute("class"), "ws-btn ghost ok");
+    await s.expect("…in its green 'ok' state", () => btn.getAttribute("class"), "btn ghost ok");
     // the shot has to land inside the 2.2 s 'Copied' window; if a slow machine misses it, click again
     for (let i = 0; i < 4; i++) {
       if ((await btn.innerText()) !== "Copied") await btn.click();
@@ -1054,11 +1054,11 @@ scenario("11-phone", "390x844 touch: segmented panes, run jumps to Tests, bottom
   const { ctx, page } = await newPage(s, { phone: true });
   try {
     await openWorkspace(s, page);
-    const seg = () => page.locator(".ws-seg [role=tab]").evaluateAll((els) => els.map((e) => e.textContent.trim() + ":" + e.getAttribute("aria-selected")));
-    const tab = (name) => page.locator(".ws-seg").getByRole("tab", { name });
+    const seg = () => page.locator(".seg [role=tab]").evaluateAll((els) => els.map((e) => e.textContent.trim() + ":" + e.getAttribute("aria-selected")));
+    const tab = (name) => page.locator(".seg").getByRole("tab", { name });
 
     await s.expect("the segmented control: Problem (selected), Code, Tests", seg, ["Problem:true", "Code:false", "Tests:false"]);
-    await s.expect("it is a tablist labelled 'Workspace panes'", () => page.locator(".ws-seg").getAttribute("aria-label"), "Workspace panes");
+    await s.expect("it is a tablist labelled 'Workspace panes'", () => page.locator(".seg").getAttribute("aria-label"), "Workspace panes");
     await s.expect("only the Problem pane is showing", async () => ({ problem: await page.locator(sel.problem).isVisible(), code: await page.locator(sel.code).isVisible(), tests: await page.locator(sel.tests).isVisible() }), { problem: true, code: false, tests: false });
     await s.expect("phone header: no stopwatch, and the buttons are icons only", async () => ({ clock: await page.locator(".wclock").count(), labels: await page.locator(".ws-actions button").evaluateAll((els) => els.map((e) => e.textContent.trim())) }), { clock: 0, labels: ["", "", "Run", "Submit"] });
     await s.expect("no horizontal page scroll", () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
@@ -1086,7 +1086,7 @@ scenario("11-phone", "390x844 touch: segmented panes, run jumps to Tests, bottom
     await page.locator(".ws-verdict").waitFor({ state: "attached", timeout: 60_000 });
     await s.expect("running from the Code tab switches to Tests", seg, (v) => v[2] === "Tests:true" && v[1] === "Code:false");
     await s.expect("…on the Result tab, with the verdict", async () => ({ tab: await consoleTab(page), v: await verdictOf(page) }), { tab: "Result", v: { tone: "ok", title: "Passed", detail: "3 / 3 cases passed · Submit runs the full suite" } });
-    await s.expect("…and the Tests segment carries a green dot", () => page.locator('.ws-seg [role=tab]').nth(2).locator(".ws-dot").getAttribute("class"), "ws-dot ok");
+    await s.expect("…and the Tests segment carries a green dot", () => page.locator('.seg [role=tab]').nth(2).locator(".dot").getAttribute("class"), "dot ok");
     await s.shot(page, "phone-result-light");
     await dark(page);
     await s.shot(page, "phone-result-dark");
@@ -1256,20 +1256,20 @@ scenario("13-layout", "split panes (keyboard and drag, remembered) and the stopw
     const held = (await text()).trim();
     await s.expect("(setup) the stopwatch is paused away from zero", async () => [await label(), held !== "00:00"], ["Resume the clock", true]);
     await page.setViewportSize({ width: 800, height: 860 });
-    await s.expect("below 900px: the segmented control replaces the splits", async () => ({ seg: await page.locator(".ws-seg").count(), split: await page.locator(".split").count(), clock: await page.locator(".wclock").count() }), { seg: 1, split: 0, clock: 0 });
-    await s.expect("…opening on the Problem pane", () => page.locator(".ws-seg [role=tab]").evaluateAll((els) => els.map((e) => e.getAttribute("aria-selected"))), ["true", "false", "false"]);
+    await s.expect("below 900px: the segmented control replaces the splits", async () => ({ seg: await page.locator(".seg").count(), split: await page.locator(".split").count(), clock: await page.locator(".wclock").count() }), { seg: 1, split: 0, clock: 0 });
+    await s.expect("…opening on the Problem pane", () => page.locator(".seg [role=tab]").evaluateAll((els) => els.map((e) => e.getAttribute("aria-selected"))), ["true", "false", "false"]);
     await s.expect("…the revealed solution stays revealed", async () => ({ veil: await page.locator(".ws-veil").count(), ref: await page.locator(".ws-sol-code").count() }), { veil: 0, ref: 1 });
-    await page.locator(".ws-seg").getByRole("tab", { name: "Code" }).click();
+    await page.locator(".seg").getByRole("tab", { name: "Code" }).click();
     await s.expect("…the code survived the switch", () => codeOf(page), CORRECT);
     await page.locator(sel.editorContent).first().click();
     await page.keyboard.press("Control+z");
     await s.expect("…and so did its undo history (Ctrl+Z goes back to the starter)", () => codeOf(page), STARTER);
     await page.keyboard.press("Control+Shift+z");
     await s.expect("…and Ctrl+Shift+Z redoes it", () => codeOf(page), CORRECT);
-    await page.locator(".ws-seg").getByRole("tab", { name: "Tests" }).click();
+    await page.locator(".seg").getByRole("tab", { name: "Tests" }).click();
     await s.expect("…and so did the last run (Tests pane, Result tab, Passed)", async () => ({ tab: await consoleTab(page), v: (await verdictOf(page)).title }), { tab: "Result", v: "Passed" });
     await page.setViewportSize({ width: 1280, height: 860 });
-    await s.expect("back above 900px: splits are back at their saved ratios, no segmented control", async () => ({ seg: await page.locator(".ws-seg").count(), x: await val(sepX), y: await val(sepY), clock: await page.locator(".wclock").count() }), { seg: 0, x: "55", y: "70", clock: 1 });
+    await s.expect("back above 900px: splits are back at their saved ratios, no segmented control", async () => ({ seg: await page.locator(".seg").count(), x: await val(sepX), y: await val(sepY), clock: await page.locator(".wclock").count() }), { seg: 0, x: "55", y: "70", clock: 1 });
     await s.expect("…and the editor still holds the code", () => codeOf(page), CORRECT);
     await s.expect("…and the stopwatch is where it was left: paused, same time", async () => [await label(), (await text()).trim()], ["Resume the clock", held]);
     finish(s);
@@ -1525,20 +1525,20 @@ scenario("18-runner-failure", "Python fails to load: badge, Retry, 'Nothing to r
     await page.locator(sel.dialog).waitFor();
     await page.locator(".ws-runner.failed").waitFor({ timeout: 60_000 });
     await s.expect("the badge says 'Python failed to load'", () => page.locator(".ws-runner").textContent(), "Python failed to load");
-    await s.expect("…and a Retry link appears beside it", () => page.locator(`${sel.code} .ws-toolbar .ws-linkbtn`).allTextContents().then((a) => a.map((x) => x.trim())), ["Retry", "Reset"]);
+    await s.expect("…and a Retry link appears beside it", () => page.locator(`${sel.code} .ws-toolbar .linkbtn`).allTextContents().then((a) => a.map((x) => x.trim())), ["Retry", "Reset"]);
     await s.shot(page, "failed-toolbar-desktop-light", { locator: page.locator(`${sel.code} .ws-toolbar`), runner: false });
 
     await page.locator(sel.run).click();
     await page.locator(".ws-verdict").waitFor({ timeout: 60_000 });
     await s.expect("Run with no interpreter: 'Nothing to run' (bad) with the reason", () => verdictOf(page), (v) => v.tone === "bad" && v.title === "Nothing to run" && /^Python couldn't load: .+\. Check the connection and try again\.$/.test(v.detail));
-    await s.expect("…said once: no note under the banner repeats it", () => page.locator(".ws-results .ws-note").count(), 0);
+    await s.expect("…said once: no note under the banner repeats it", () => page.locator(".ws-results .ws-result-note").count(), 0);
     await s.expect("…the Run button comes back (nothing is stuck busy)", async () => ({ run: await page.locator(sel.run).count(), stop: await page.locator(sel.stop).count() }), { run: 1, stop: 0 });
     await s.expect("…and the badge still says failed", () => page.locator(".ws-runner").textContent(), "Python failed to load");
 
     block = false;
     await page.getByRole("button", { name: "Retry" }).click();
     await s.expect("Retry loads Python: the badge goes through to Ready", () => page.locator(".ws-runner").textContent(), "Ready", { timeout: 60_000 });
-    await s.expect("…and Retry is gone", () => page.locator(`${sel.code} .ws-toolbar .ws-linkbtn`).allTextContents().then((a) => a.map((x) => x.trim())), ["Reset"]);
+    await s.expect("…and Retry is gone", () => page.locator(`${sel.code} .ws-toolbar .linkbtn`).allTextContents().then((a) => a.map((x) => x.trim())), ["Reset"]);
     await setCode(page, CORRECT);
     await startRun(s, page, "button");
     await s.expect("a run after the retry passes", () => verdictOf(page).then((v) => v.title), "Passed");

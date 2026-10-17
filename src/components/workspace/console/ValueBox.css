@@ -1,8 +1,8 @@
-.ws-pre {
+.ws-value-box {
   margin: 0 0 6px; padding: 7px 10px; border-radius: 8px; background: var(--sunken);
   font-family: var(--mono); font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
   max-height: 260px; overflow: auto;
 }
-.ws-pre.bad { background: var(--bad-bg); color: var(--bad-ink); }
-.ws-pre.good { background: var(--ok-bg); color: var(--ok-ink); }
-.ws-pre.dim { color: var(--ink2); }
+.ws-value-box.bad { background: var(--bad-bg); color: var(--bad-ink); }
+.ws-value-box.good { background: var(--ok-bg); color: var(--ok-ink); }
+.ws-value-box.dim { color: var(--ink2); }

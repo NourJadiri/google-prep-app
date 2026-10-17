@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { sections } from "../lib/markdown";
 import Markdown from "../Markdown";
 import HintBox from "./HintBox";
-import SectionHeading from "./SectionHeading";
+import ProblemHeading from "./ProblemHeading";
 import TopicList from "./TopicList";
 import "./Statement.css";
 
@@ -25,7 +25,7 @@ export default function Statement({ statement, topics }: StatementProps) {
       {topics.length > 0 && <TopicList topics={topics} />}
       {main.map((s) => (
         <div key={s.title} className="ws-sec">
-          <SectionHeading>{s.title}</SectionHeading>
+          <ProblemHeading>{s.title}</ProblemHeading>
           <Markdown text={s.body} />
         </div>
       ))}

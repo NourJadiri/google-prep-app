@@ -3,7 +3,7 @@ import Icon from "../../shared/Icon";
 import LinkButton from "../../ui/LinkButton";
 import Editor from "../editor/Editor";
 import Markdown from "../Markdown";
-import SectionHeading from "./SectionHeading";
+import ProblemHeading from "./ProblemHeading";
 import "./ReferenceSolution.css";
 
 interface ReferenceSolutionProps {
@@ -18,7 +18,7 @@ export default function ReferenceSolution({ content, fontSize, copied, onCopy }:
     <>
       <Markdown text={content.notes} />
       <div className="ws-sol-head">
-        <SectionHeading>Reference solution</SectionHeading>
+        <ProblemHeading>Reference solution</ProblemHeading>
         <LinkButton onClick={onCopy}>
           <Icon name={copied ? "check" : "copy"} size={13} />
           {copied ? "Copied" : "Copy"}

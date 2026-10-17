@@ -3,5 +3,5 @@ import { cx } from "../../lib/cx";
 import "./Spacer.css";
 
 export default function Spacer({ className, ...rest }: ComponentProps<"span">) {
-  return <span className={cx("ws-spacer", className)} {...rest} />;
+  return <span className={cx("spacer", className)} {...rest} />;
 }

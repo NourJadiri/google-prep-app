@@ -1,7 +1,7 @@
 import type { CaseError } from "../../../runner/types";
 import Icon from "../../shared/Icon";
-import Hint from "./Hint";
-import Pre from "./Pre";
+import ConsoleHint from "./ConsoleHint";
+import ValueBox from "./ValueBox";
 import "./ErrorBox.css";
 
 export default function ErrorBox({ err }: { err: CaseError }) {
@@ -12,8 +12,8 @@ export default function ErrorBox({ err }: { err: CaseError }) {
         {err.message}
         {err.line && <span className="ws-line">line {err.line}</span>}
       </div>
-      {err.traceback && err.traceback !== err.message && <Pre>{err.traceback}</Pre>}
-      {err.hint && <Hint>{err.hint}</Hint>}
+      {err.traceback && err.traceback !== err.message && <ValueBox>{err.traceback}</ValueBox>}
+      {err.hint && <ConsoleHint>{err.hint}</ConsoleHint>}
     </div>
   );
 }

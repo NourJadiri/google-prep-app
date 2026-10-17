@@ -12,7 +12,7 @@ interface IconButtonProps extends Omit<ComponentProps<"button">, "children" | "a
 
 export default function IconButton({ icon, label, size, iconSize = size === "sm" ? 13 : 18, className, ...rest }: IconButtonProps) {
   return (
-    <button className={cx("ws-iconbtn", size, className)} aria-label={label} {...rest}>
+    <button className={cx("iconbtn", size, className)} aria-label={label} {...rest}>
       <Icon name={icon} size={iconSize} />
     </button>
   );

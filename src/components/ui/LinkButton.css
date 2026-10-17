@@ -1,5 +1,5 @@
-.ws-linkbtn {
+.linkbtn {
   display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600;
   color: var(--ink2); padding: 4px 6px; border-radius: 6px;
 }
-@media (hover: hover) { .ws-linkbtn:hover { color: var(--ink); background: var(--sunken); } }
+@media (hover: hover) { .linkbtn:hover { color: var(--ink); background: var(--sunken); } }

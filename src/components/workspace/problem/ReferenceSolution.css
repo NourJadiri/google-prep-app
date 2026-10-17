@@ -1,5 +1,5 @@
 .ws-sol-head { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
-.ws-sol-head .ws-h { margin: 10px 0 8px; }
+.ws-sol-head .ws-problem-heading { margin: 10px 0 8px; }
 .ws-sol-code { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .ws-sol-code .cm-host { height: auto; }
 .ws-sol-code .cm-editor { max-height: none; }

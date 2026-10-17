@@ -4,4 +4,4 @@
 }
 .asst-trouble svg { flex: none; margin-top: 2px; }
 .asst-trouble span { flex: 1; min-width: 12ch; }
-.asst-trouble .ws-linkbtn { color: var(--bad-ink); padding: 0 4px; }
+.asst-trouble .linkbtn { color: var(--bad-ink); padding: 0 4px; }
