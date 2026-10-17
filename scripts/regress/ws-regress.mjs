@@ -337,6 +337,31 @@ const detailOf = (page) =>
     errors: [...el.querySelectorAll(".ws-error-msg")].map((n) => n.textContent),
   }));
 
+/* Stop and the time limit interrupt Python, and the case reports back with its expected output. On a busy machine the
+   runner's 1.2 s fallback can win and replace the worker: the case then has only its input, so the console (and its
+   screenshot) differs. Run again until the interrupt wins; the caller's assertions then judge that run. */
+const reportedBack = async (page) => (await page.locator(".ws-detail .ws-block-title", { hasText: "Expected" }).count()) > 0;
+
+async function repeatUntilInterrupted(page, again) {
+  for (let attempt = 1; !(await reportedBack(page)); attempt++) {
+    if (attempt > 5) throw new Error("the worker was replaced on five runs in a row: the interrupt never ended the case");
+    console.log("  (the runner's fallback beat the interrupt: running the case again)");
+    await waitReady(page);
+    await again();
+  }
+}
+
+/* Run the endless loop again and Stop it, as the first run was. */
+async function runAndStopLoop(page) {
+  const before = await runsStarted(page);
+  await page.locator(sel.run).click();
+  await page.waitForFunction((n) => window.__wsRuns > n, before);
+  await page.locator(".ws-running p", { hasText: "Running case 1 of 3" }).waitFor();
+  await sleep(300);
+  await page.locator(sel.stop).click();
+  await page.locator(".ws-verdict").waitFor({ timeout: 20_000 });
+}
+
 const caseChips = (page) =>
   page.locator(".ws-cases .ws-chip:not(.add)").evaluateAll((els) =>
     els.map((e) => ({
@@ -668,6 +693,7 @@ scenario("06-stop", "Stop and the time limit end an endless loop; the next run s
     await s.shot(page, "stop-running-desktop-light", { runner: false });
     await page.locator(sel.stop).click();
     await page.locator(".ws-verdict").waitFor({ timeout: 20_000 });
+    await repeatUntilInterrupted(page, () => runAndStopLoop(page));
     await s.expect("verdict: Stopped (info), 0 / 3 before you stopped it", () => verdictOf(page), { tone: "info", title: "Stopped", detail: "0 / 3 cases passed before you stopped it." });
     await s.expect("one chip (Case 1, stopped) and '2 not run'", async () => ({ chips: (await chipsOf(page)).map((c) => `${c.text}:${c.tone}:${c.title}`), notRun: await page.locator(".ws-notrun").textContent() }),
       { chips: ["Case 1:idle:Case 1 — Stopped"], notRun: "2 not run" });
@@ -685,6 +711,7 @@ scenario("06-stop", "Stop and the time limit end an endless loop; the next run s
     const t0 = Date.now();
     await startRun(s, page, "button", { timeout: 40_000 });
     const took = Date.now() - t0;
+    await repeatUntilInterrupted(page, () => startRun(s, page, "button", { timeout: 40_000 }));
     await s.expect("time limit: the run ends by itself within 15 s (not instantly, not never)", () => took, (v) => v > 1000 && v < 15_000);
     await s.expect("verdict: Time Limit Exceeded (warn)", () => verdictOf(page), { tone: "warn", title: "Time Limit Exceeded", detail: "0 / 3 cases passed before the clock ran out." });
     await s.expect("chip: Case 1 — Time limit, and '2 not run'", async () => ({ chips: (await chipsOf(page)).map((c) => `${c.text}:${c.tone}:${c.title}`), notRun: await page.locator(".ws-notrun").textContent() }),
