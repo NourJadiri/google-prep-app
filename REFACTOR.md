@@ -48,7 +48,7 @@ Checked with 18 scripted scenarios (388 assertions) and 44 screenshots, desktop 
 and dark, including the assistant against a fake Anthropic server: identical before and after,
 pixel for pixel.
 
-Left for later, on purpose:
+Left for later, on purpose (all since cleared, see "Leftovers cleared"):
 - Class names were kept (`ws-btn`, `asst-*`…) so the screenshots stayed comparable. The `ui/`
   components still render `ws-*` classes; rename them when another area adopts them.
 - `Note`, `Pre`, `Hint` (console) and `SectionHeading` (problem) are local primitives that belong
@@ -76,7 +76,7 @@ toasts, clipboard copy, "not a sync code" message and code chip each exist once.
 Checked with the Me suite (14 scenarios, 436 assertions, 55 screenshots, two simulated devices
 and a fake camera) and the workspace suite: both identical before and after.
 
-Left for later, on purpose:
+Left for later, on purpose (all since cleared, see "Leftovers cleared"):
 - Bugs the suite found. Fixed right after the step: a cloud copy from a newer app version now
   reads "Update needed" (it said "Cloud unreachable"), sending to one says nothing was sent (it
   celebrated), the link sheet no longer says "Linked" when it couldn't read what arrived, and
@@ -111,7 +111,7 @@ Checked with a new suite for the study tabs and the shell (16 scenarios, 745 ass
 lines, phone and desktop, light and dark, toasts and confetti) plus the Me and workspace suites:
 all three identical before and after.
 
-Left for later, on purpose:
+Left for later, on purpose (all since cleared, see "Leftovers cleared"):
 - The `.mbtn:hover` pair stays in `layout.css`: moving it above `.qrsheet .mbtn` would flip
   which of two equal-specificity rules wins.
 - `ui/` candidates seen twice or more but not extracted yet: a hero block, the run card, a
@@ -147,7 +147,7 @@ at the base commit and on the new one and compares every result, celebration, se
 object identity: no mismatch. Before trusting it, it was run against 45 planted mutations of
 the engine and caught all but two that changed nothing.
 
-Left for later, on purpose:
+Left for later, on purpose (all since cleared, see "Leftovers cleared"):
 - Fixed right after: `normalize` now vets the values inside the maps (only `true` ticks, real
   ritual days, positive badge stamps, whole card-stat counts, a valid streak day with best at least
   the current run), and a streak day in the future, from a clock or time zone ahead, is left
@@ -155,6 +155,32 @@ Left for later, on purpose:
 - `src/data/templates.ts` keeps its generated header: `scripts/extract-data.mjs` still writes
   it byte for byte from the reference.
 - `drafts.ts` holds both the per-problem drafts and the workspace prefs.
+
+## Leftovers cleared
+
+Every "left for later" item above was dealt with after step 4, checked with the three suites
+(identical, except where a fix meant to change something):
+- The `ui/` primitives render area-neutral classes: `btn`, `iconbtn`, `linkbtn`, `tablist`, `seg`,
+  `dot`, `statusbadge`, `spinner`, `spacer` (`tabs` and `badge` were taken by the tab bar and the
+  Me tab's badge tiles).
+- The console's and problem pane's helpers stay local, because nothing else renders them, under
+  names that say what they are: `ResultNote`, `ValueBox`, `ConsoleHint`, `ProblemHeading`; the
+  assistant's note is `ChatNote`, so no two components share a name. The runner badge draws its
+  dot with `StatusDot` instead of a copy of it.
+- One Python highlight table, `src/lib/highlightRules.ts`, feeds both the editor and the answer
+  renderer. One contract, `shared/assistantContract.ts`, declares the assistant's request
+  (turns, roles, the 40-turn cap, the modes) for the app and the Worker.
+- PillButton's hover lives in `PillButton.css`; the link sheet pins its own hover to the light
+  palette (in dark mode it used to blank the label). The heading block every tab opens with is
+  `ui/Hero`. The run card is already one component used only by Metro, and no status pill
+  repeats, so neither became a `ui/` primitive; the tinted icon disc (`.ic`) is the best next
+  candidate.
+- `scripts/extract-templates.mjs` (was `extract-data.mjs`) writes only the templates, with a
+  one-line header. Workspace prefs moved out of `drafts.ts` into `workspacePrefs.ts`.
+- The workspace suite's Stop and time-limit screenshots are deterministic: when the runner's
+  fallback replaces the worker before the interrupt lands, the scenario runs the case again.
+- Still worth a look some day: the mono eyebrow style is written three times
+  (`.sectionlabel`, `.md h2/h3`, `ProblemHeading`) with different margins.
 
 ## Audit (October 2026)
 

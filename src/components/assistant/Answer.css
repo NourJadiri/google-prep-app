@@ -5,7 +5,7 @@
 .asst-a .md a { text-decoration: underline; text-underline-offset: 2px; }
 .asst-a .md h1, .asst-a .md h2, .asst-a .md h3, .asst-a .md h4 { font-size: 13.5px; margin: 12px 0 6px; }
 
-/* The editor's palette, by class (highlightPython.ts). */
+/* The editor's palette, by class (src/lib/highlightRules.ts). */
 .asst .hl-kw { color: var(--hl-kw); }
 .asst .hl-str { color: var(--hl-str); }
 .asst .hl-num { color: var(--hl-num); }
