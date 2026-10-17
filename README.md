@@ -606,9 +606,9 @@ node scripts/parity/behaviour.mjs    # timers, toasts, shuffling, import guards
 node scripts/parity/screenshots.mjs  # side-by-side PNGs to flip between
 ```
 
-### Regression checks: the workspace, and the Me tab with sync
+### Regression checks: the workspace, the Me tab with sync, and the study tabs
 
-`scripts/regress/` holds two suites of scripted browser sessions, desktop and phone, light
+`scripts/regress/` holds three suites of scripted browser sessions, desktop and phone, light
 and dark, run by one runner. Each builds the app, serves it with `wrangler dev` (against a
 fresh local D1), and writes its run to `$REGRESS_OUT/runs/<label>/` (default
 `/tmp/yalc-regress`): assertions in `results.json`, screenshots as PNGs. Comparing two runs
@@ -619,7 +619,7 @@ identical.
 - **Workspace** (`ws-regress.mjs`): 18 sessions, 392 assertions, 44 screenshots. Runs,
   submits, Stop and time limits, test cases, drafts, the layout, and the assistant against
   a fake Anthropic server.
-- **Me tab and sync** (`me-regress.mjs`): 14 sessions, 436 assertions, 55 screenshots. The
+- **Me tab and sync** (`me-regress.mjs`): 15 sessions, 441 assertions, 55 screenshots. The
   stats, ladder and badges (the `#meArea` markup is hashed), Export, Import and Reset,
   turning sync on and the status card through its phases, joining by code, the link sheet in
   both modes, the consent card, the scanner against a fake camera showing a real QR,
@@ -630,20 +630,29 @@ identical.
   and the clock are controlled, toasts and phone scrollbars are left out of the pictures, and
   each picture comes with a digest of the page's computed styles, which sees the changes too
   small for the pixel diff; `me-lib.mjs` explains each.
+- **Study tabs and shell** (`tabs-regress.mjs` and the `tabs-*.mjs` scenario files): 16
+  sessions, 745 assertions, 105 screenshots. The header and tab bar, the Line on both lines
+  (rail, day cards, ticking and unticking, milestones, the line picker, the mock clock), the
+  Metro board and quiz runs to every ending, the Dojo, celebration timing and ids, the 44 px
+  touch targets, hover and pressed states, phone layouts. `Math.random` is seeded so decks,
+  shuffles and confetti repeat; the right answers are read from `src/data`, never the page.
 
 ```bash
 npm install --no-save playwright                           # Chromium too, if you don't have one:
 npx playwright install chromium                            # or point CHROMIUM_PATH at yours
 scripts/regress/ws-check.sh . 8810 ws-before               # workspace: ports 8810-8812; WS_JOBS=3 runs 3 at once
 scripts/regress/me-check.sh . 8910 me-before               # Me tab and sync: ports 8910 and 8912, ~1 minute (~30 s with WS_JOBS=3)
+scripts/regress/tabs-check.sh . 8970 tabs-before           # study tabs: ports 8970 and 8972, ~2 minutes (~50 s with WS_JOBS=3)
 # ...change the code...
 scripts/regress/ws-check.sh . 8810 ws-after
 scripts/regress/me-check.sh . 8910 me-after
+scripts/regress/tabs-check.sh . 8970 tabs-after
 python3 -I scripts/regress/ws-diff.py ws-before ws-after   # needs Pillow; exit 0 = identical
 python3 -I scripts/regress/ws-diff.py me-before me-after
+python3 -I scripts/regress/ws-diff.py tabs-before tabs-after
 ```
 
-`me-check.sh` is `REGRESS_SUITE=me ws-check.sh`; `WS_ONLY=03,06` runs only the scenarios whose
+`me-check.sh` and `tabs-check.sh` are `REGRESS_SUITE=me` / `=tabs ws-check.sh`; `WS_ONLY=03,06` runs only the scenarios whose
 id starts with those numbers.
 
 Compare runs made on the same machine: Chromium's text antialiasing can differ between
