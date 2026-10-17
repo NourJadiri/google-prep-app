@@ -14,11 +14,13 @@ interface Options {
   /** Called, with the error cleared, when the Worker refuses the password. */
   onRefused: () => void;
   persona: Persona;
+  oneShot: boolean;
 }
 
-export function useAssistantChat({ password, context, onRefused, persona }: Options) {
+export function useAssistantChat({ password, context, onRefused, persona, oneShot }: Options) {
   const ctx = useLatest(context);
   const voice = useLatest(persona);
+  const won = useLatest(oneShot);
 
   const transport = useMemo(
     () =>
@@ -26,10 +28,15 @@ export function useAssistantChat({ password, context, onRefused, persona }: Opti
         api: "/api/assistant",
         headers: () => ({ authorization: `Bearer ${password.current ?? ""}` }),
         prepareSendMessagesRequest: ({ messages }) => ({
-          body: { problem: ctx.current().problem, turns: messages.map(toTurn), persona: voice.current } satisfies AskRequest,
+          body: {
+            problem: ctx.current().problem,
+            turns: messages.map(toTurn),
+            persona: voice.current,
+            ...(won.current ? { oneShot: true } : {}),
+          } satisfies AskRequest,
         }),
       }),
-    [password, ctx, voice]
+    [password, ctx, voice, won]
   );
   const { messages, sendMessage, regenerate, stop, status, error, clearError, setMessages } = useChat<Msg>({
     transport,

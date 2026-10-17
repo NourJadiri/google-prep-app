@@ -1,26 +1,27 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { MOODS, type Mood, type Persona } from "../../shared/assistantContract";
+import { MOODS, ONE_SHOT_MOOD, type Mood, type Persona } from "../../shared/assistantContract";
 
 export const hasMoods = (persona: Persona): boolean => persona === "catgirl";
 
+/** The faces on offer: the one-shot face only when the problem was one-shot, so it can't turn up any other time. */
+export const moodsFor = (oneShot: boolean): readonly Mood[] => (oneShot ? [...MOODS, ONE_SHOT_MOOD] : MOODS);
+
 /* Both required, mood first: required properties stream in schema order, so the face is known before the first word. */
-export const MOOD_FORMAT: Anthropic.JSONOutputFormat = {
+export const moodFormat = (moods: readonly Mood[]): Anthropic.JSONOutputFormat => ({
   type: "json_schema",
   schema: {
     type: "object",
     properties: {
-      mood: { type: "string", enum: [...MOODS] },
+      mood: { type: "string", enum: [...moods] },
       answer: { type: "string" },
     },
     required: ["mood", "answer"],
     additionalProperties: false,
   },
-};
+});
 
 const ESCAPES: Record<string, string> = { '"': '"', "\\": "\\", "/": "/", b: "\b", f: "\f", n: "\n", r: "\r", t: "\t" };
 
-/** Enum casing isn't guaranteed, and anything else is no mood at all. */
-const moodOf = (raw: string): Mood | undefined => MOODS.find((m) => m === raw.trim().toLowerCase());
 
 /**
  * Reads `{"mood": "...", "answer": "..."}` as it streams in: the answer's characters come out as soon as
@@ -34,6 +35,13 @@ export class MoodedAnswer {
   private hex = "";
   private inKey = false;
   private high = "";
+
+  constructor(private readonly moods: readonly Mood[]) {}
+
+  /** Enum casing isn't guaranteed, and anything off the list is no mood at all. */
+  private moodOf(raw: string): Mood | undefined {
+    return this.moods.find((m) => m === raw.trim().toLowerCase());
+  }
 
   /** Feed one text delta; get back the answer text it completed, and the mood if it just closed. */
   push(chunk: string): { text: string; mood?: Mood } {
@@ -96,7 +104,7 @@ export class MoodedAnswer {
         case "string":
           if (ch === "\\") this.state = "escape";
           else if (ch === '"') {
-            if (this.key === "mood") mood = moodOf(this.value) ?? mood;
+            if (this.key === "mood") mood = this.moodOf(this.value) ?? mood;
             this.state = "between";
           } else unit(ch);
           break;

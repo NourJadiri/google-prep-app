@@ -15,6 +15,7 @@ import { useClaudeHandoff } from "./hooks/useClaudeHandoff";
 import { useDraft } from "./hooks/useDraft";
 import { useRunSession } from "./hooks/useRunSession";
 import { useClock } from "./hooks/useStopwatch";
+import { useOneShot } from "./hooks/useOneShot";
 import { useWorkspacePrefs } from "./hooks/useWorkspacePrefs";
 import { useWorkspaceShortcuts } from "./hooks/useWorkspaceShortcuts";
 import DesktopLayout from "./layout/DesktopLayout";
@@ -58,6 +59,7 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
       if (!wide) setMobileTab("tests");
     },
   });
+  const oneShot = useOneShot(pid, session.run, accepted);
   const assistantWindow = useAssistantWindow();
   const claude = useClaudeHandoff({ content, code: draft.code, run: session.run });
   useWorkspaceShortcuts({
@@ -115,6 +117,7 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
       summon={assistantWindow.summon}
       onClose={assistantWindow.hide}
       context={claude.readContext}
+      oneShot={oneShot}
       wide={wide}
     />
   );

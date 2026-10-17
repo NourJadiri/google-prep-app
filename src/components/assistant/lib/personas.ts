@@ -2,6 +2,7 @@ import type { Mood, Persona } from "../../../../shared/assistantContract";
 import type { IconName } from "../../shared/Icon";
 import angry from "../assets/bana/angry.webp";
 import dizzy from "../assets/bana/dizzy.webp";
+import elated from "../assets/bana/elated.webp";
 import happy from "../assets/bana/happy.webp";
 import neutral from "../assets/bana/neutral.webp";
 import sad from "../assets/bana/sad.webp";
@@ -17,6 +18,8 @@ export interface PersonaLook {
   tagline?: string;
   placeholder: string;
   intro: string;
+  /** The greeting after a one-shot, in a mode with a face for it. */
+  oneShotIntro?: string;
   /** A face for Bana: the window then reads like a messenger, her lines in bubbles beside it. */
   avatar?: string;
   /** The face each answer's mood shows; the avatar stands in until one is known. */
@@ -47,10 +50,11 @@ export const PERSONA_LOOKS: PersonaLook[] = [
     icon: "cat",
     mark: "cat",
     tagline: "nya~",
-    placeholder: "Ask Mommy, kitten…",
-    intro: "hii kitten :3 show Mommy your code and she'll tell you what you did wrong, then how to make it right. your last run comes along too. nya~",
+    placeholder: "Ask Mommy, kitten… 🐾",
+    intro: "hii kitten :3 🐾 show Mommy your code and she'll tell you what you did wrong 😼 then how to make it right ✨ your last run comes along too. nya~ 🖤",
+    oneShotIntro: "you ONE-SHOT it?? 🙀💦 first try, every test green ✅✅✅ Mommy is so proud of you, kitten 💜✨ ask me anything~ 🐾",
     avatar: neutral,
-    faces: { happy, angry, sad, shocked, smug, dizzy },
+    faces: { happy, angry, sad, shocked, smug, dizzy, elated },
   },
 ];
 

@@ -11,7 +11,9 @@ export type Persona = (typeof PERSONAS)[number];
 
 /** The faces Goth catgirl Bana can make; the Worker reads one off each of her answers. */
 export const MOODS = ["happy", "angry", "sad", "shocked", "smug", "dizzy"] as const;
-export type Mood = (typeof MOODS)[number];
+/** Kept for one thing: a problem solved by its first submission, with nothing failed before it. */
+export const ONE_SHOT_MOOD = "elated";
+export type Mood = (typeof MOODS)[number] | typeof ONE_SHOT_MOOD;
 
 export interface Problem {
   title: string;
@@ -38,4 +40,6 @@ export interface AskRequest {
   turns: Turn[];
   /** Absent from older clients: "normal". */
   persona?: Persona;
+  /** The problem was one-shot: its first submission passed with nothing failed before it. */
+  oneShot?: boolean;
 }

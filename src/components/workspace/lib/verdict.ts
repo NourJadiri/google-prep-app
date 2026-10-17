@@ -63,6 +63,10 @@ export function verdictOf(o: RunOutcome, mode: "run" | "submit"): Verdict {
   return { tone: "info", title: "Finished", detail: plural(rs.length, "case ran", "cases ran"), focus: 0 };
 }
 
+/* What counts against a one-shot: the solution failing. Not a stop, a runner that never loaded, or a typo in a typed case. */
+const MISSES = new Set(["Syntax Error", "Runtime Error", "Wrong Answer", "Time Limit Exceeded"]);
+export const isMiss = (v: Verdict): boolean => MISSES.has(v.title);
+
 export function caseMark(status: CaseResult["status"] | "pending"): { tone: Tone | "idle"; word: string } {
   switch (status) {
     case "pass":

@@ -1,4 +1,5 @@
-import { memo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
+import { ONE_SHOT_MOOD } from "../../../shared/assistantContract";
 import { cx } from "../../lib/cx";
 import AssistantHeader from "./AssistantHeader";
 import Composer from "./Composer";
@@ -25,13 +26,15 @@ interface Props {
   onClose: () => void;
   /** Read when a question is sent, so it is the editor as it is then. */
   context: () => AskContext;
+  /** The problem was just one-shot. */
+  oneShot: boolean;
   wide: boolean;
 }
 
 /* Memoised: every prop is stable while you type in the editor, so typing never re-renders the chat. */
 export default memo(Assistant);
 
-function Assistant({ open, summon, onClose, context, wide }: Props) {
+function Assistant({ open, summon, onClose, context, oneShot, wide }: Props) {
   const panel = useRef<HTMLElement>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
   const passwordField = useRef<HTMLInputElement>(null);
@@ -41,7 +44,8 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
   const voice = usePersona();
   const look = lookOf(voice.persona);
   usePreload(look.faces);
-  const chat = useAssistantChat({ password: password.ref, context, onRefused: password.refuse, persona: voice.persona });
+  const chat = useAssistantChat({ password: password.ref, context, onRefused: password.refuse, persona: voice.persona, oneShot });
+  const cheering = useCheer(oneShot, chat.messages.filter((m) => m.role === "assistant").length) && !!look.faces;
   const log = useStickToBottom([chat.messages, chat.status, chat.error, open]);
   const box = useFloatingBox(panel, wide);
   useWindowFocus(panel, password.value ? composer : passwordField, open, summon);
@@ -83,7 +87,7 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
         drag={box.dragHandlers}
         hasChat={chat.messages.length > 0}
         persona={voice.persona}
-        mood={lastMood(chat.messages)}
+        mood={cheering ? ONE_SHOT_MOOD : lastMood(chat.messages)}
         onPersona={voice.choose}
         unlocked={!!password.value}
         onNewChat={newChat}
@@ -104,6 +108,7 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
             onRetry={retry}
             onNewChat={newChat}
             look={look}
+            cheer={cheering}
           />
           <Composer draft={draft} onDraft={setDraft} onSend={ask} onStop={chat.stop} busy={chat.busy} full={chat.full} inputRef={composer} placeholder={look.placeholder} />
         </>
@@ -112,4 +117,13 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
       )}
     </section>
   );
+}
+
+/* From a one-shot until her next answer, she's still celebrating it. */
+function useCheer(oneShot: boolean, answers: number): boolean {
+  const [mark, setMark] = useState<number | null>(null);
+  useEffect(() => {
+    if (oneShot) setMark((m) => m ?? answers);
+  }, [oneShot, answers]);
+  return oneShot && mark === answers;
 }

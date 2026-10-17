@@ -11,6 +11,8 @@ interface LazyAssistantProps {
   summon: number;
   onClose: () => void;
   context: () => AskContext;
+  /** The problem was just one-shot: Bana's catgirl mode has a face for that. */
+  oneShot: boolean;
   wide: boolean;
 }
 

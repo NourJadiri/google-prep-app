@@ -1064,7 +1064,7 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     await q().fill("Is this right?");
     await q().press("Enter");
     await s.expect("in Goth catgirl the next question is answered too", () => panel.locator(".asst-a").count(), 3, { timeout: 20_000 });
-    await s.expect("…and the window goes goth: dark purple even in light mode, violet accent, 'nya~', Mommy's prompt", look, { persona: "catgirl", tagline: "nya~", placeholder: "Ask Mommy, kitten…", send: "rgb(199, 125, 255)", bg: "rgb(27, 20, 33)", name: "none" });
+    await s.expect("…and the window goes goth: dark purple even in light mode, violet accent, 'nya~', Mommy's prompt", look, { persona: "catgirl", tagline: "nya~", placeholder: "Ask Mommy, kitten… 🐾", send: "rgb(199, 125, 255)", bg: "rgb(27, 20, 33)", name: "none" });
     if (MOCK_LOG) await s.expect("…and the Worker asks her for JSON: a mood from the six faces, then the answer, both required", () => mockRequests()?.at(-1)?.body?.output_config, { effort: "low", format: { type: "json_schema", schema: { type: "object", properties: { mood: { type: "string", enum: ["happy", "angry", "sad", "shocked", "smug", "dizzy"] }, answer: { type: "string" } }, required: ["mood", "answer"], additionalProperties: false } } });
     const moods = () => panel.evaluate((p) => ({
       rows: [...p.querySelectorAll(".asst-a")].map((a) => a.querySelector(":scope > img.asst-avatar")?.dataset.mood ?? null),
@@ -1609,6 +1609,76 @@ scenario("18-runner-failure", "Python fails to load: badge, Retry, 'Nothing to r
     await ctx.close();
   }
 });
+
+/* 19 ----------------------------------------------------------------- */
+scenario("19-one-shot", "Bana's one-shot face: only for a first submission that passes with no failed run before it", async (s) => {
+  const store = { "onsite-express-assistant-v1": JSON.stringify({ password: "pw-test", persona: "catgirl" }) };
+  const lastReq = () => mockRequests()?.at(-1)?.body;
+  const told = () => JSON.stringify(lastReq()?.system ?? "").includes("They one-shot this problem");
+  const offered = () => lastReq()?.output_config?.format?.schema?.properties?.mood?.enum ?? null;
+  const faces = (panel) => panel.evaluate((p) => ({
+    header: p.querySelector(".asst-head img.asst-avatar")?.dataset.mood ?? null,
+    greeting: p.querySelector(".asst-empty .asst-row img.asst-avatar")?.dataset.mood ?? null,
+    cheering: (p.querySelector(".asst-empty .asst-bubble")?.textContent ?? "").startsWith("you ONE-SHOT it??"),
+  }));
+  const answerFaces = (panel) => panel.locator(".asst-a img.asst-avatar").evaluateAll((els) => els.map((e) => e.dataset.mood));
+  const openBana = async (page) => {
+    const panel = page.locator(sel.panel);
+    await page.locator(sel.ask).click();
+    await panel.waitFor({ state: "visible" });
+    return panel;
+  };
+
+  // a one-shot: the code is right before anything runs, and the first submission passes
+  {
+    const { ctx, page } = await newPage(s, { storage: store });
+    try {
+      await openWorkspace(s, page);
+      await setCode(page, CORRECT);
+      await startRun(s, page, "submit-button");
+      await s.expect("(setup) the first submission is accepted", () => verdictOf(page).then((v) => v.title), "Accepted");
+      const panel = await openBana(page);
+      await s.expect("Bana opens cheering: the one-shot face in her header and on her greeting", () => faces(panel), { header: "elated", greeting: "elated", cheering: true });
+      await s.expect("…and the face is loaded", () => panel.locator(".asst-empty img.asst-avatar").evaluate((i) => i.complete && i.naturalWidth === 192), true);
+      await s.shot(page, "one-shot-greeting-desktop-light");
+      const q = panel.getByLabel("Your question");
+      await q.fill("MOOD:elated did I really?");
+      await q.press("Enter");
+      await s.expect("asked about it, she can answer with the one-shot face", () => answerFaces(panel), ["elated"], { timeout: 20_000 });
+      if (MOCK_LOG) await s.expect("…because the Worker told her it was a one-shot and offered that face", () => ({ told: told(), offered: offered() }), { told: true, offered: ["happy", "angry", "sad", "shocked", "smug", "dizzy", "elated"] });
+      await panel.getByRole("button", { name: "Send" }).waitFor(); // her face shows before her words finish; a question sent mid-answer isn't sent
+      await q.fill("MOOD:smug and now?");
+      await q.press("Enter");
+      await s.expect("her next answer's own mood takes the header back", async () => ({ rows: await answerFaces(panel), header: (await faces(panel)).header }), { rows: ["elated", "smug"], header: "smug" }, { timeout: 20_000 });
+    } finally {
+      await ctx.close();
+    }
+  }
+
+  // not a one-shot: a failed run comes first
+  {
+    const { ctx, page } = await newPage(s, { storage: store });
+    try {
+      await openWorkspace(s, page, { check: false });
+      await startRun(s, page, "button");
+      await s.expect("(setup) the starter code runs to a Wrong Answer", () => verdictOf(page).then((v) => v.title), "Wrong Answer");
+      await s.expect("…and this device remembers the miss", () => page.evaluate(() => JSON.parse(localStorage.getItem("onsite-express-misses-v1") ?? "null")), [PID]);
+      await setCode(page, CORRECT);
+      await startRun(s, page, "submit-button");
+      await s.expect("(setup) then a submission passes", () => verdictOf(page).then((v) => v.title), "Accepted");
+      const panel = await openBana(page);
+      await s.expect("no cheering: her plain face and her usual greeting", () => faces(panel), { header: "neutral", greeting: "neutral", cheering: false });
+      const q = panel.getByLabel("Your question");
+      await q.fill("MOOD:elated did I one-shot it?");
+      await q.press("Enter");
+      await s.expect("even an answer that claims the one-shot face shows her plain one: the Worker never offered it", () => answerFaces(panel), ["neutral"], { timeout: 20_000 });
+      if (MOCK_LOG) await s.expect("…no one-shot in her brief, and the six everyday faces only", () => ({ told: told(), offered: offered() }), { told: false, offered: ["happy", "angry", "sad", "shocked", "smug", "dizzy"] });
+    } finally {
+      await ctx.close();
+    }
+  }
+  finish(s);
+}, { serial: true }); // reads the mock Anthropic log
 
 /* ------------------------------ driver ------------------------------ */
 

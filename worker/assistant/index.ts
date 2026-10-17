@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { err } from "../http";
 import { isAuthorized } from "./auth";
-import { hasMoods, MOOD_FORMAT } from "./mood";
+import { hasMoods, moodFormat, moodsFor } from "./mood";
 import { systemPrompt, toMessages } from "./prompt";
 import { MAX_BYTES, parseRequest } from "./request";
 import { streamAnswer } from "./stream";
@@ -30,18 +30,18 @@ export async function ask(request: Request, env: AssistantEnv): Promise<Response
 
   const parsed = parseRequest(text);
   if (typeof parsed === "string") return err(400, parsed);
-  const { problem, turns, persona = "normal" } = parsed;
-  const moods = hasMoods(persona);
+  const { problem, turns, persona = "normal", oneShot = false } = parsed;
+  const moods = hasMoods(persona) ? moodsFor(oneShot) : null;
 
   const client = new Anthropic({ apiKey, ...(env.ANTHROPIC_BASE_URL ? { baseURL: env.ANTHROPIC_BASE_URL } : {}) });
   const claude = client.messages.stream({
     model: MODEL,
     max_tokens: MAX_TOKENS,
     thinking: { type: "adaptive" },
-    output_config: { effort: "low", ...(moods ? { format: MOOD_FORMAT } : {}) },
+    output_config: { effort: "low", ...(moods ? { format: moodFormat(moods) } : {}) },
     /* A no-op while the conversation is under the model's minimum cacheable prefix. */
     cache_control: { type: "ephemeral" },
-    system: systemPrompt(problem, persona),
+    system: systemPrompt(problem, persona, oneShot),
     messages: toMessages(turns),
   });
 

@@ -16,8 +16,9 @@ export function parseRequest(text: string): AskRequest | string {
     return "body must be JSON";
   }
   if (!body || typeof body !== "object") return "body must be an object";
-  const { problem, turns, persona = "normal" } = body as { problem?: unknown; turns?: unknown; persona?: unknown };
+  const { problem, turns, persona = "normal", oneShot = false } = body as { problem?: unknown; turns?: unknown; persona?: unknown; oneShot?: unknown };
   if (!PERSONAS.includes(persona as Persona)) return "unknown persona";
+  if (typeof oneShot !== "boolean") return "oneShot is true or false";
 
   if (!problem || typeof problem !== "object") return "problem is required";
   const p = problem as Record<string, unknown>;
@@ -52,5 +53,5 @@ export function parseRequest(text: string): AskRequest | string {
     return "the conversation must start and end with a question";
   }
   if (out.some((t) => t.role === "user" && !t.text.trim())) return "a question is empty";
-  return { problem: p as unknown as Problem, turns: out, persona: persona as Persona };
+  return { problem: p as unknown as Problem, turns: out, persona: persona as Persona, oneShot };
 }
