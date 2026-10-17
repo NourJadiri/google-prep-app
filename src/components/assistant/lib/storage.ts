@@ -1,9 +1,4 @@
-/* The assistant's two things to remember, in this browser only.
- *
- * The password is what the Worker's /api/assistant checks before it spends
- * anything; it never syncs and never lands in an export, like a draft. The
- * spot is where the floating window was left, so it comes back there. Same
- * never-throw contract as drafts.ts: no storage just means asking again. */
+/* Per browser: the password never syncs and never lands in an export. */
 
 const KEY = "onsite-express-assistant-v1";
 

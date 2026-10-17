@@ -1,0 +1,9 @@
+.asst-head {
+  flex: none; display: flex; align-items: center; gap: 6px;
+  padding: 7px 8px 7px 12px; border-bottom: 1px solid var(--line);
+  user-select: none; -webkit-user-select: none;
+}
+.asst.float .asst-head { cursor: grab; touch-action: none; }
+.asst.float .asst-head:active { cursor: grabbing; }
+.asst-head h3 { margin: 0; font-size: 13.5px; font-weight: 650; letter-spacing: -.1px; }
+.asst-mark { color: var(--accent); flex: none; }

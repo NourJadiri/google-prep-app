@@ -1,6 +1,4 @@
-/* What every endpoint answers with: JSON, and never from a cache. Progress
- * must not come back stale from the edge, and neither may an error. */
-
+/* JSON, never cached: neither progress nor an error may come back stale from the edge. */
 export const json = (status: number, body: unknown): Response =>
   new Response(JSON.stringify(body), {
     status,

@@ -1,0 +1,17 @@
+.asst-lock {
+  flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 20px 18px;
+  font-size: 13px; line-height: 1.55; color: var(--ink2);
+}
+.asst-lock p { margin: 0; }
+.asst-lock b { color: var(--ink); }
+.asst-lock code { font-family: var(--mono); font-size: 12px; background: var(--sunken); border-radius: 5px; padding: 1px 5px; }
+.asst-lockmark {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent);
+}
+.asst-lock input {
+  width: 100%; padding: 9px 12px; font-size: 14px; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+}
+.asst-lock input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.asst-lock .ws-btn { align-self: flex-start; }

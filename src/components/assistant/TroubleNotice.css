@@ -1,0 +1,7 @@
+.asst-trouble {
+  display: flex; align-items: flex-start; flex-wrap: wrap; gap: 4px 8px; padding: 8px 10px; border-radius: 10px;
+  background: var(--bad-bg); color: var(--bad-ink); font-size: 12.5px; line-height: 1.45;
+}
+.asst-trouble svg { flex: none; margin-top: 2px; }
+.asst-trouble span { flex: 1; min-width: 12ch; }
+.asst-trouble .ws-linkbtn { color: var(--bad-ink); padding: 0 4px; }

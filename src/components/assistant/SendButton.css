@@ -1,0 +1,7 @@
+.asst-send {
+  flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); color: var(--surface); transition: opacity .15s ease, transform .12s ease;
+}
+.asst-send:disabled { opacity: .35; cursor: default; }
+.asst-send:not(:disabled):active { transform: scale(.94); }
+.asst-send.stop { background: var(--sunken); color: var(--ink); border: 1px solid var(--line); }

@@ -1,0 +1,10 @@
+.asst-compose {
+  flex: none; display: flex; align-items: flex-end; gap: 8px; padding: 8px 8px 8px 10px;
+  border-top: 1px solid var(--line);
+}
+.asst-compose textarea {
+  flex: 1; min-width: 0; resize: none; max-height: 140px; padding: 6px 10px;
+  font-family: var(--sans); font-size: 13.5px; line-height: 1.45; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+}
+.asst-compose textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
