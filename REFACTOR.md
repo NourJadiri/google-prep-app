@@ -78,12 +78,12 @@ Checked with the Me suite (14 scenarios, 436 assertions, 55 screenshots, two sim
 and a fake camera) and the workspace suite: both identical before and after.
 
 Left for later, on purpose:
-- Bugs the suite pinned rather than fixed: the held state (a cloud copy from a newer app version)
-  shows "Cloud unreachable" though the cloud was reached; sending to a held code reports success;
-  a Get-mode watch on an unreadable row still says "Linked"; equal stamps on two devices count as
-  each one's own write; focus falls to the page after a Get-mode link on a fresh device; the
-  Connect button's disabled state never shows. Also found while splitting the engine: disconnecting
-  while a pull is in flight leaves sync stuck on "working" until a reload.
+- Bugs the suite found. Fixed right after the step: a cloud copy from a newer app version now
+  reads "Update needed" (it said "Cloud unreachable"), sending to one says nothing was sent (it
+  celebrated), the link sheet no longer says "Linked" when it couldn't read what arrived, and
+  disconnecting mid-sync no longer leaves sync stuck on "working". Still pinned: equal stamps on
+  two devices count as each one's own write; focus falls to the page after a Get-mode link on a
+  fresh device; the Connect button's disabled state never shows.
 - The `.mbtn`, `.mrow`, `.sectionlabel` and `.storenote` rules still live in `styles/layout.css`;
   the new primitives render those classes. Move the CSS when step 3 adopts them in Metro and Dojo.
 - The workspace suite's `06-stop-stopped-console` screenshot depends on where the Stop click lands

@@ -20,6 +20,7 @@ function build(): SyncStatus {
     phase: phase(),
     syncedAt: cfg ? cfg.okAt : 0,
     serverAt: cfg ? cfg.serverAt : 0,
+    held: state.held,
   };
 }
 

@@ -11,6 +11,14 @@ interface Look {
 }
 
 export function look(s: SyncStatus): Look {
+  if (s.held && s.phase === "error") {
+    return {
+      glyph: "alert-triangle",
+      tone: "var(--med)",
+      title: "Update needed",
+      note: "The cloud copy is from a newer version of the app. Reload to update; until then this device leaves it alone.",
+    };
+  }
   switch (s.phase) {
     case "working":
       return { glyph: "cloud-upload", tone: "var(--blue)", title: "Syncing…", note: "" };

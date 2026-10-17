@@ -13,7 +13,7 @@ interface SyncStatusCardProps {
 
 export default function SyncStatusCard({ status, pop, now }: SyncStatusCardProps) {
   const l = look(status);
-  const when = ago(status.syncedAt, now);
+  const when = status.held ? "" : ago(status.syncedAt, now);
   return (
     <div className={"synccard" + (pop ? " pop" : "")} style={{ color: l.tone }}>
       <span className="ic">

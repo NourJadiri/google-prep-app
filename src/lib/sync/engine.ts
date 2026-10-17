@@ -62,14 +62,14 @@ function applyPushReply(c: SyncConfig, sent: number, reply: PushReply): SyncOutc
     delete c.joining;
     return "pushed";
   }
-  /* Another device wrote a newer copy while we were away: take it. */
-  adopt(reply.data, reply.updatedAt ?? sent);
-  return "adopted";
+  /* Another device wrote a newer copy while we were away (or a newer app did): take it if we can read it. */
+  return adopt(reply.data, reply.updatedAt ?? sent) ? "adopted" : "held";
 }
 
 export async function push(keepalive = false): Promise<SyncOutcome> {
   const c = state.cfg;
-  if (!c || !state.latest || state.inflight || state.held) return "failed";
+  if (!c || !state.latest || state.inflight) return "failed";
+  if (state.held) return "held";
   if (!isDirty(c)) return "clean";
   const sent = c.editedAt;
   const body = JSON.stringify({ updatedAt: sent, data: state.latest });
@@ -94,7 +94,7 @@ export async function push(keepalive = false): Promise<SyncOutcome> {
 
 function reconcile(c: SyncConfig, row: RemoteRow, remoteWins: boolean): SyncOutcome {
   if (remoteWins || row.updatedAt > c.editedAt) {
-    return adopt(row.data, row.updatedAt) ? "adopted" : "failed";
+    return adopt(row.data, row.updatedAt) ? "adopted" : "held";
   }
   /* The row is our own last write, acknowledged or replayed. */
   if (row.updatedAt >= c.serverAt) c.serverAt = row.updatedAt;
@@ -103,28 +103,28 @@ function reconcile(c: SyncConfig, row: RemoteRow, remoteWins: boolean): SyncOutc
 
 async function pull(c: SyncConfig, remoteWins: boolean): Promise<SyncOutcome> {
   setWorking(true);
-  let outcome: SyncOutcome = "clean";
   try {
     const row = await getRow(c.code);
+    if (state.cfg !== c) return "failed"; // disconnected mid-flight: drop the result
+    let outcome: SyncOutcome = "clean";
     if (row === null) {
       /* Nothing in the cloud yet: this device's copy seeds it. */
       if (c.editedAt === 0) c.editedAt = stamp(c.editedAt);
       delete c.joining;
       state.held = false;
     } else {
-      if (state.cfg !== c) return "failed"; // disconnected mid-flight: drop the result
       outcome = reconcile(c, row, remoteWins);
     }
     state.failed = false;
     c.okAt = Date.now();
     persist();
+    return outcome;
   } catch {
     noteFailure(c);
-    setWorking(false);
     return "failed";
+  } finally {
+    setWorking(false);
   }
-  setWorking(false);
-  return outcome;
 }
 
 /** Pull, reconcile, and push whatever survives. Every trigger funnels through here: boot, retry, regained network, tab focus. */
@@ -132,7 +132,7 @@ export async function syncNow(preferRemote = false): Promise<SyncOutcome> {
   const c = state.cfg;
   if (!c || state.inflight) return "failed";
   const outcome = await pull(c, preferRemote || c.joining === true);
-  if (outcome === "failed" || !isDirty(c) || state.held) return outcome;
+  if (outcome === "failed" || outcome === "held" || !isDirty(c)) return outcome;
   const pushed = await push();
   return outcome === "adopted" ? outcome : pushed;
 }

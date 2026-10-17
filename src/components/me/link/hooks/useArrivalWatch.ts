@@ -52,6 +52,11 @@ export function useArrivalWatch({ watching, code, enabled, serverAt, onDone }: A
       /* The reader chose to receive, so the cloud copy wins either way. */
       const out = enabled ? await sync.syncNow(true) : await sync.join(code);
       fx.arrived(out, enabled);
+      /* Nothing was linked if this build can't read what arrived; the toast says why and the panel shows it. */
+      if (out === "held") {
+        onDone();
+        return;
+      }
       setLinked(true);
       winTimer.current = setTimeout(onDone, WIN_MS);
     };

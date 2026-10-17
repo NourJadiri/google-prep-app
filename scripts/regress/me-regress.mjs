@@ -64,8 +64,13 @@ const headerRank = (page) => page.locator("header.hdr").evaluate((h) => ({ rank:
 const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 /* The status card: its words, what it draws and the colour it is tinted with. The glyph is told apart by
-   the stroke that sets it apart (a tick, an up arrow, a slash), since icons carry no names. */
-const GLYPH = { "m8.5 17 2.5 2.5 4.5-4.5": "cloud-check", "M12 21v-8": "cloud-upload", "m2 2 20 20": "cloud-off" };
+   the stroke that sets it apart (a tick, an up arrow, a slash, a triangle), since icons carry no names. */
+const GLYPH = {
+  "m8.5 17 2.5 2.5 4.5-4.5": "cloud-check",
+  "M12 21v-8": "cloud-upload",
+  "m2 2 20 20": "cloud-off",
+  "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3": "alert-triangle",
+};
 const card = (page) =>
   page.locator("main .synccard").evaluate((c, glyphs) => ({
     title: c.querySelector(".synctext b").textContent,
@@ -1300,9 +1305,9 @@ scenario("10-held", "a cloud copy this build cannot read: sync parks instead of 
   await u.codeInput.fill(H);
   await B.clearToasts();
   await B.answering(true, () => u.connect.click());
-  await s.expect("Connect to the unreadable copy: no adoption; the toast (the same one an unreachable cloud gets) is not gold", () => B.toasts(), ["Connected — cloud unreachable right now, will keep trying"]);
-  await s.expect("…the card parks in the error look: red, the slashed cloud, 'Cloud unreachable'", () => card(B.page), (c) => c.title === "Cloud unreachable" && c.tone === "var(--red)" && c.glyph === "cloud-off");
-  await s.expect("…its note says progress is safe here", () => syncNote(B.page), "Progress is safe on this device and will sync when it can.");
+  await s.expect("Connect to the unreadable copy: no adoption; the toast says the cloud copy is from a newer app (not gold)", () => B.toasts(), ["The cloud copy is from a newer version of the app — reload to update"]);
+  await s.expect("…the card parks in its own look: amber, a warning sign, 'Update needed', no 'last synced' line", () => card(B.page), { title: "Update needed", when: null, tone: "var(--med)", glyph: "alert-triangle" });
+  await s.expect("…its note says to reload, and that this device leaves the copy alone", () => syncNote(B.page), "The cloud copy is from a newer version of the app. Reload to update; until then this device leaves it alone.");
   await s.expect("…B's own progress was not touched", async () => ({ stats: await stats(B.page), blob: await B.blob() }), { stats: ["8/115 problems", "2/24 stations", "2/24 rituals", "40 cards", "70% accuracy", "3 best streak"], blob: SEED_B });
   await s.expect("…and the cloud's was not touched either: no PUT, same row", async () => ({ put: B.net.count("PUT"), row: (await d1.get(H)).body }), { put: 0, row: held.body });
   await s.expect("…still marked as joining (cloud wins whenever it can be read), nothing acknowledged", async () => { const c = await B.cfg(); return { code: c.code, joining: c.joining, edited: c.editedAt, served: c.serverAt }; }, { code: H, joining: true, edited: 0, served: 0 });
@@ -1319,13 +1324,13 @@ scenario("10-held", "a cloud copy this build cannot read: sync parks instead of 
   await edit(B, SEED_C);
   await B.advance(8_000);
   await B.settle();
-  await s.expect("an edit while parked stays on this device: no PUT, the cloud row unchanged, the card still in error", async () => ({ put: B.net.count("PUT"), row: (await d1.get(H)).body.v, title: (await card(B.page)).title, saved: canonOf(await saved(B)).tracks.google.xp }), { put: 0, row: 3, title: "Cloud unreachable", saved: 710 });
+  await s.expect("an edit while parked stays on this device: no PUT, the cloud row unchanged, the card still in error", async () => ({ put: B.net.count("PUT"), row: (await d1.get(H)).body.v, title: (await card(B.page)).title, saved: canonOf(await saved(B)).tracks.google.xp }), { put: 0, row: 3, title: "Update needed", saved: 710 });
   await B.clearToasts();
   await u.syncNow.click();
-  await s.expect("Sync now tries the exchange, gets the same answer, and says so in the offline words", async () => ({ toasts: await B.toasts(), get: B.net.count("GET") - gets, put: B.net.count("PUT") }), { toasts: ["Can't reach the cloud — progress is safe here"], get: 1, put: 0 });
+  await s.expect("Sync now tries the exchange, gets the same answer, and says the copy is from a newer app", async () => ({ toasts: await B.toasts(), get: B.net.count("GET") - gets, put: B.net.count("PUT") }), { toasts: ["The cloud copy is from a newer version of the app — reload to update"], get: 1, put: 0 });
   await B.reload();
   await B.tab("Me");
-  await s.expect("after a reload it parks again and B still has its own progress, not the unreadable copy", async () => ({ title: (await card(B.page)).title, stats: (await stats(B.page))[0], xp: canonOf(await B.blob()).tracks.google.xp, put: B.net.count("PUT") }), { title: "Cloud unreachable", stats: "10/115 problems", xp: 710, put: 0 });
+  await s.expect("after a reload it parks again and B still has its own progress, not the unreadable copy", async () => ({ title: (await card(B.page)).title, stats: (await stats(B.page))[0], xp: canonOf(await B.blob()).tracks.google.xp, put: B.net.count("PUT") }), { title: "Update needed", stats: "10/115 problems", xp: 710, put: 0 });
 
   // ---- Turn off clears it
   await B.clearToasts();
@@ -1343,10 +1348,10 @@ scenario("10-held", "a cloud copy this build cannot read: sync parks instead of 
   await C.clearToasts();
   await C.page.getByRole("button", { name: "Send & link" }).click();
   await s.expect("a device that sends to it is refused (an older schema never replaces a newer one, however fresh): one PUT, the row unchanged", async () => ({ put: C.net.count("PUT", H), row: (await d1.get(H)).body }), { put: 1, row: held.body });
-  await s.expect("…and the card closes with no toast at all, though what it linked to cannot be read", async () => ({ cards: await C.page.locator(".linkcard").count(), toasts: await C.toasts() }), { cards: 0, toasts: [] });
-  await s.expect("…the panel shows the parked state, C's own progress intact", async () => ({ title: (await card(C.page)).title, stats: (await stats(C.page))[0], chip: await ui(C.page).chip.textContent() }), { title: "Cloud unreachable", stats: "8/115 problems", chip: H });
+  await s.expect("…and the card closes saying nothing was sent, and why", async () => ({ cards: await C.page.locator(".linkcard").count(), toasts: await C.toasts() }), { cards: 0, toasts: ["Not sent: the cloud copy is from a newer version of the app — reload to update"] });
+  await s.expect("…the panel shows the parked state, C's own progress intact", async () => ({ title: (await card(C.page)).title, stats: (await stats(C.page))[0], chip: await ui(C.page).chip.textContent() }), { title: "Update needed", stats: "8/115 problems", chip: H });
 
-  // ---- Get mode's watch meets a row it cannot read (pinned as it behaves: the sheet still says Linked)
+  // ---- Get mode's watch meets a row it cannot read: nothing was linked, so no Linked card
   const G = await s.device({ name: "g" });
   await G.openMe();
   await G.pause();
@@ -1354,11 +1359,10 @@ scenario("10-held", "a cloud copy this build cannot read: sync parks instead of 
   const gcode = (await sheetState(G.page)).code;
   await d1.put(gcode, T0 + 5_000, FUTURE);
   await G.clearToasts();
-  await G.pump(async () => (await sheetState(G.page).catch(() => ({}))).linked === "Linked");
-  await s.expect("another device's row that this build cannot read arrives at an open Get sheet: the sheet still shows Linked (pinned as it behaves)", async () => (await sheetState(G.page)).linked, "Linked");
-  await s.expect("…while the toast says it parked, in the offline words and not gold", () => G.toasts(), ["Connected — cloud unreachable right now, will keep trying"]);
-  await G.advance(1_300);
-  await s.expect("…and when the sheet has gone the panel behind it is in the error look", async () => (await card(G.page)).title, "Cloud unreachable");
+  await G.pump(async () => (await G.page.locator(".qrscrim").count()) === 0);
+  await s.expect("another device's row that this build cannot read arrives at an open Get sheet: the sheet closes without a Linked card", async () => G.page.locator(".qrscrim").count(), 0);
+  await s.expect("…and the toast says the copy is from a newer app (not gold)", () => G.toasts(), ["The cloud copy is from a newer version of the app — reload to update"]);
+  await s.expect("…the panel behind it shows the parked state", async () => (await card(G.page)).title, "Update needed");
 
   // ---- an older cloud copy (the original app's v1) is read and upgraded
   await d1.put(L, T0 + 1_000, LEGACY_V1);
@@ -1666,7 +1670,7 @@ scenario("13-motion", "with motion allowed: confetti only where two devices actu
   await K.open(`#sync=${heldCode}&do=send`);
   await K.page.getByRole("button", { name: "Send & link" }).click();
   await K.settle();
-  await s.expect("(pinned as it behaves) a send link to a copy this build cannot read is refused by the Worker, yet the card celebrates with one burst of 12 and says nothing", async () => ({ confetti: await K.confettiLog(), toasts: await K.toasts(), row: (await d1.get(heldCode)).body.v }), { confetti: burst, toasts: [], row: 3 });
+  await s.expect("a send link to a copy this build cannot read is refused by the Worker: no confetti, and the toast says nothing was sent", async () => ({ confetti: await K.confettiLog(), toasts: await K.toasts(), row: (await d1.get(heldCode)).body.v }), { confetti: [], toasts: ["Not sent: the cloud copy is from a newer version of the app — reload to update"], row: 3 });
 
   // ---- the sheet's arrival
   const F = await s.device({ motion: true });
@@ -1799,6 +1803,26 @@ scenario("14-boot", "sync across a reload: pending edits pushed at boot, a newer
   await I.hidden(false);
   await I.settle();
   await s.expect("out of a run, coming back to the tab does pull: H's newer edit is adopted", async () => ({ get: I.net.count("GET") - gets2, stats: (await I.page.evaluate(() => document.querySelector("header.hdr .hdr-stats span:last-child b").textContent)) }), { get: 1, stats: "480" });
+  finish(s);
+});
+
+scenario("15-disconnect-midflight", "turning sync off while a sync is in flight leaves nothing stuck", async (s) => {
+  const A = await s.device({ seed: SEED_B });
+  await A.openMe();
+  const u = ui(A.page);
+  await u.turnOn.click();
+  await A.settle();
+  await s.expect("(setup) sync is on and settled", async () => (await card(A.page)).title, "All changes synced");
+  const release = A.net.hold();
+  await u.syncNow.click();
+  await s.expect("(setup) Sync now's pull is in flight", () => A.net.inflight, 1);
+  await A.answering(true, () => u.turnOff.click());
+  await s.expect("Turn off while it is in flight: sync is off at once", async () => ({ card: await u.card.count(), cfg: await A.cfg() }), { card: 0, cfg: null });
+  release();
+  await A.settle();
+  await u.turnOn.click();
+  await A.settle();
+  await s.expect("turning sync on again pushes under the new code and settles, instead of hanging on Syncing…", async () => ({ title: (await card(A.page)).title, put: A.net.count("PUT", codeOf(15, "a", 2)), row: (await d1.get(codeOf(15, "a", 2))).status }), { title: "All changes synced", put: 1, row: 200 });
   finish(s);
 });
 
