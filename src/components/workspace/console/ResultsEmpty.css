@@ -1,0 +1,8 @@
+.ws-empty { color: var(--ink2); font-size: 13px; line-height: 1.6; max-width: 46ch; }
+.ws-empty p { margin: 4px 0 10px; }
+.ws-empty b { color: var(--ink); }
+.ws-keys { font-size: 12px; }
+kbd {
+  font-family: var(--mono); font-size: 11px; padding: 1px 5px; border-radius: 4px;
+  border: 1px solid var(--line); border-bottom-width: 2px; background: var(--surface); color: var(--ink);
+}

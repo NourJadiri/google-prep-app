@@ -1,0 +1,20 @@
+.split { display: flex; width: 100%; height: 100%; min-width: 0; min-height: 0; }
+.split-row { flex-direction: row; }
+.split-col { flex-direction: column; }
+.split-a, .split-b { display: flex; min-width: 0; min-height: 0; overflow: hidden; }
+.split-a { flex: none; }
+.split-b { flex: 1; }
+.split-a > *, .split-b > * { flex: 1; min-width: 0; min-height: 0; }
+.split-handle { flex: none; position: relative; background: transparent; touch-action: none; }
+.split-row > .split-handle { width: 8px; cursor: col-resize; }
+.split-col > .split-handle { height: 8px; cursor: row-resize; }
+.split-handle::after {
+  content: ""; position: absolute; border-radius: 99px; background: var(--line);
+  transition: background .15s ease;
+}
+.split-row > .split-handle::after { top: 50%; left: 3px; width: 2px; height: 32px; transform: translateY(-50%); }
+.split-col > .split-handle::after { left: 50%; top: 3px; height: 2px; width: 32px; transform: translateX(-50%); }
+.split-handle:hover::after, .split-handle:focus-visible::after, .split.dragging > .split-handle::after { background: var(--accent); }
+.split-handle:focus-visible { outline: none; }
+.split.dragging { user-select: none; }
+.split.dragging .split-a, .split.dragging .split-b { pointer-events: none; }

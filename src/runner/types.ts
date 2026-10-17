@@ -1,21 +1,16 @@
-/* The wire between the workspace, the runner and the Python harness.
- *
- * Everything numeric about a test's data stays on the Python side: the spec
- * crosses as its raw JSON text and results come back as display strings, so
- * a 10**18 in a test never has to survive a JS double. */
+/* Test data stays on the Python side: the spec crosses as its raw JSON text and results come back as display
+ * strings, so a 10**18 in a test never has to survive a JS double. */
 
-/** What the UI asks for. `select` picks spec tests by index; `custom` are
- *  cases typed into the Testcase tab, one literal per parameter name (or
- *  `ops`/`args` for a design problem). */
+/** `select` picks spec tests by index; `custom` are cases typed into the Testcase tab, one literal per parameter
+ *  name (or `ops`/`args` for a design problem). */
 export interface RunRequest {
   /** The problem's spec.json, verbatim. */
   spec: string;
   code: string;
   select: number[];
   custom: Array<Record<string, string>>;
-  /** judge.py, when the problem has one. */
   judge?: string;
-  /** solution.py — only needed to answer custom cases. */
+  /** Only needed to answer custom cases. */
   reference?: string;
 }
 
@@ -23,15 +18,14 @@ export type CaseStatus =
   | "pass"
   | "fail"
   | "error"
-  /** The case the clock ran out on. Filled in by the runner, not Python. */
+  /** Set by the runner, not Python. */
   | "tle"
-  /** Stopped by hand, or never reached after a stop or a TLE. */
   | "stopped"
-  /** The interpreter itself died on this case — the JS stack, nearly always. */
+  /** The interpreter itself died on this case. */
   | "crash"
   /** A typed-in input that didn't parse. */
   | "invalid"
-  /** A typed-in case the reference couldn't answer, so there's no verdict. */
+  /** A typed-in case the reference couldn't answer: output only, no verdict. */
   | "ran"
   /** Interrupted mid-call; the runner turns this into tle or stopped. */
   | "interrupted";
@@ -63,7 +57,6 @@ export interface CaseResult {
   refError?: string;
 }
 
-/** Python's final word on a run. */
 export interface RunSummary {
   results: CaseResult[];
   ms: number;
@@ -73,10 +66,9 @@ export interface RunSummary {
   interrupted?: boolean;
 }
 
-/** What the runner hands the UI: the summary, plus anything that only the
- *  main thread could see — a clock that ran out, a crash, a stop. */
+/** The summary plus what only the main thread could see: a clock that ran out, a crash, a stop. */
 export interface RunOutcome extends RunSummary {
-  /** How many cases were asked for, so "4 of 30 ran" can be said. */
+  /** Cases asked for, so "4 of 30 ran" can be said. */
   total: number;
   aborted?: {
     reason: "tle" | "stopped" | "crash" | "setup-timeout";
@@ -86,15 +78,12 @@ export interface RunOutcome extends RunSummary {
   };
 }
 
-/** A run in flight, as the runner reports it to the UI. */
 export interface RunProgress {
   /** Index of the case running now, or null between cases. */
   current: number | null;
   /** Results so far, in run order. */
   results: CaseResult[];
 }
-
-/* ---------------------------- worker messages ---------------------------- */
 
 export type ToWorker =
   | { type: "init"; interrupt: SharedArrayBuffer | null }
@@ -109,7 +98,6 @@ export type FromWorker =
   /** The interpreter can no longer be used; the runner replaces the worker. */
   | { type: "fatal"; id: number; message: string };
 
-/** A harness event, parsed. */
 export type HarnessEvent =
   | { t: "start"; i: number; limit: number; input: string[] }
   | { t: "case"; r: CaseResult };

@@ -1,11 +1,6 @@
-/* "Copy for Claude": the problem, your code, and what the last run said, as
-   one paste — with the instruction that makes Claude an interviewer rather
-   than an answer key. The drills used to carry that instruction as their
-   footer; it lives here now, so every problem gets it. */
-
-import type { CaseResult } from "../../runner/types";
+import type { CaseResult } from "../../../runner/types";
 import type { Verdict } from "./verdict";
-import { withoutLead } from "./Markdown";
+import { withoutLead } from "./markdown";
 
 export interface ClaudeInput {
   title: string;
@@ -18,8 +13,7 @@ export interface ClaudeInput {
 
 const indent = (lines: string[]) => lines.map((l) => "    " + l).join("\n");
 
-/** What the last run said, failing case and all. The paste ends with it, and
- *  the assistant gets it with a question whenever there is a new one. */
+/** What the last run said, failing case and all: the paste ends with it, and the assistant's questions carry it. */
 export function runReport(last: NonNullable<ClaudeInput["last"]>): string {
   const parts = [`## Last run: ${last.verdict.title}`, "", last.verdict.detail];
   const r = last.focus;

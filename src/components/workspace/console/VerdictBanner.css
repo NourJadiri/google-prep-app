@@ -1,0 +1,6 @@
+.ws-verdict { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 12px; }
+.ws-verdict strong { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+.ws-verdict span { font-size: 12.5px; color: var(--ink2); }
+.ws-verdict.ok strong { color: var(--ok-ink); }
+.ws-verdict.bad strong { color: var(--bad-ink); }
+.ws-verdict.warn strong { color: var(--med); }

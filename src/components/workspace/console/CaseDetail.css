@@ -1,0 +1,3 @@
+.ws-detail-head { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; flex-wrap: wrap; }
+.ws-detail-title { font-size: 12.5px; font-weight: 600; }
+.ws-ms { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink2); font-variant-numeric: tabular-nums; }

@@ -1,0 +1,4 @@
+.ws-problem-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 14px 18px 32px; }
+@media (max-width: 899px) {
+  .ws-problem-body { padding: 12px 14px 28px; }
+}

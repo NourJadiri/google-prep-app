@@ -1,7 +1,4 @@
-/* A run, in one line: what the banner says, how it's coloured, and which
-   case the details pane should open on. Pure, so the copy is easy to tune. */
-
-import type { CaseResult, RunOutcome } from "../../runner/types";
+import type { CaseResult, RunOutcome } from "../../../runner/types";
 
 export type Tone = "ok" | "bad" | "warn" | "info";
 
@@ -66,7 +63,6 @@ export function verdictOf(o: RunOutcome, mode: "run" | "submit"): Verdict {
   return { tone: "info", title: "Finished", detail: plural(rs.length, "case ran", "cases ran"), focus: 0 };
 }
 
-/** The glyph and word for one case's chip. */
 export function caseMark(status: CaseResult["status"] | "pending"): { tone: Tone | "idle"; word: string } {
   switch (status) {
     case "pass":

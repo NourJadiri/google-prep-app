@@ -1,21 +1,11 @@
-/* The main thread's side of the interpreter: one worker, one run at a time,
- * and every clock.
- *
- * A case gets its time limit the moment Python says it is calling the user's
- * code. When a limit runs out, the gentle way down is the interrupt buffer: a
- * SharedArrayBuffer Python polls between bytecodes, so the case ends with a
- * KeyboardInterrupt and the interpreter stays warm. That needs a
- * cross-origin-isolated page (the COOP/COEP headers in public/_headers and
- * vite.config.ts). Without it — or when the code is stuck somewhere Python
- * never polls — the worker is put down and a fresh one loads behind it. The
- * cases that finished are already here either way: the harness streams each
- * result the moment it has one.
- *
- * Like storage and sync, nothing here throws its way up into React.
- */
+/* Time limits are enforced here, on the main thread. The gentle way to end a case is the interrupt buffer, a
+ * SharedArrayBuffer Python polls between bytecodes (it needs the COOP/COEP headers in public/_headers and
+ * vite.config.ts). Without isolation, or when the code is stuck where Python never polls, the worker is replaced
+ * instead. */
 
 import type {
   CaseResult,
+  CaseStatus,
   FromWorker,
   HarnessEvent,
   RunOutcome,
@@ -28,19 +18,13 @@ export type RunnerPhase = "cold" | "loading" | "ready" | "busy" | "failed";
 
 export interface RunnerStatus {
   phase: RunnerPhase;
-  /** How long the last interpreter took to load, for the status line. */
   loadMs: number;
-  /** Why loading failed, when it did. */
   error: string | null;
-  /** True when Stop and the time limits can interrupt without a reload. */
   interruptible: boolean;
 }
 
-/** Compiling the user's module, building inputs, answering a typed-in case
- *  with the reference: everything that isn't a timed case. */
+/** Everything that isn't a timed case: compiling the module, building inputs, answering typed-in cases. */
 const SETUP_LIMIT_MS = 12_000;
-/** After an interrupt, how long Python gets to come back before the worker
- *  is replaced. */
 const KILL_GRACE_MS = 1_200;
 
 const isolated =
@@ -77,8 +61,7 @@ export function getStatus(): RunnerStatus {
 
 /* ------------------------------ lifecycle ------------------------------ */
 
-/** Start loading the interpreter if nothing has yet. Safe to call often:
- *  the workspace calls it on open so the first Run doesn't wait. */
+/** Start loading the interpreter if nothing has yet. Safe to call often. */
 export function warm(): Promise<void> {
   if (ready) return ready;
   set({ phase: "loading", error: null });
@@ -111,7 +94,7 @@ export function warm(): Promise<void> {
     w.postMessage({ type: "init", interrupt: sab });
   });
   ready = p;
-  /* A failed load is reported through status; nobody has to catch this one. */
+  /* A failed load is reported through status. */
   p.catch(() => {});
   return p;
 }
@@ -131,8 +114,7 @@ interface Active {
   total: number;
   results: CaseResult[];
   current: number | null;
-  /** The input of the case in flight, so a case that never reports back can
-   *  still say what it was chewing on. */
+  /** So a case that never reports back can still say what it was running on. */
   currentInput: string[];
   timer: number;
   killTimer: number;
@@ -154,7 +136,9 @@ function progress(a: Active): void {
   a.onProgress?.({ current: a.current, results: a.results.slice() });
 }
 
-const ABORT_COPY: Record<NonNullable<RunOutcome["aborted"]>["reason"], string> = {
+type AbortReason = NonNullable<RunOutcome["aborted"]>["reason"];
+
+const ABORT_COPY: Record<AbortReason, string> = {
   tle: "Time Limit Exceeded",
   stopped: "Stopped",
   crash:
@@ -163,8 +147,11 @@ const ABORT_COPY: Record<NonNullable<RunOutcome["aborted"]>["reason"], string> =
     "Your code didn't finish loading — a loop at the top level of the file that never ends, perhaps.",
 };
 
-/** Ask the case in flight to stop. Gentle if we can, final if we must. */
-function abort(reason: NonNullable<RunOutcome["aborted"]>["reason"]): void {
+/* A setup timeout isn't the case's own limit, so the case it lands on reads as stopped. */
+const landedStatus = (reason: AbortReason): CaseStatus => (reason === "setup-timeout" ? "stopped" : reason);
+
+/** Ask the case in flight to stop: by interrupt if possible, by replacing the worker if not. */
+function abort(reason: AbortReason): void {
   const a = active;
   if (!a || a.aborted) return;
   a.aborted = { reason, at: a.current, message: ABORT_COPY[reason] };
@@ -185,7 +172,7 @@ function hardStop(a: Active): void {
   if (a.current !== null) {
     a.results.push({
       i: a.current,
-      status: reason === "setup-timeout" ? "stopped" : reason,
+      status: landedStatus(reason),
       ms: 0,
       input: a.currentInput,
     });
@@ -210,11 +197,7 @@ function settle(a: Active, summary: RunSummary): void {
     const stopAt = ab.at;
     results = results
       .filter((r) => stopAt === null || r.i <= stopAt)
-      .map((r) =>
-        r.i === stopAt || r.status === "interrupted"
-          ? { ...r, status: ab.reason === "setup-timeout" ? "stopped" : ab.reason }
-          : r
-      );
+      .map((r) => (r.i === stopAt || r.status === "interrupted" ? { ...r, status: landedStatus(ab.reason) } : r));
   } else {
     results = results.map((r) => (r.status === "interrupted" ? { ...r, status: "stopped" } : r));
   }
@@ -226,8 +209,7 @@ function settle(a: Active, summary: RunSummary): void {
   });
 }
 
-/** Run one request. Resolves with whatever happened — never rejects, so the
- *  UI has exactly one path for "the run is over". */
+/** Resolves with whatever happened, never rejects. */
 export async function run(
   request: RunRequest,
   onProgress?: (p: RunProgress) => void
@@ -314,7 +296,6 @@ export async function run(
   });
 }
 
-/** The Stop button. */
 export function stop(): void {
   abort("stopped");
 }

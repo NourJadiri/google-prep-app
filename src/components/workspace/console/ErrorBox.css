@@ -1,0 +1,8 @@
+.ws-error { margin: 0 0 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line)); overflow: hidden; }
+.ws-error-msg {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-family: var(--mono); font-size: 12.5px;
+  background: var(--bad-bg); color: var(--bad-ink); font-weight: 600;
+}
+.ws-error .ws-pre { border-radius: 0; margin: 0; background: transparent; }
+.ws-error .ws-hint { padding: 0 10px 8px; }
+.ws-line { margin-left: auto; font-weight: 500; opacity: .8; }

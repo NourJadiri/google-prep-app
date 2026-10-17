@@ -1,0 +1,29 @@
+.ws-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.ws-chip { display: inline-flex; align-items: center; border-radius: 7px; background: var(--sunken); }
+.ws-chip > button:first-child, button.ws-chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 7px;
+  font-size: 12px; font-weight: 600; color: var(--ink2); white-space: nowrap;
+}
+.ws-chip.on, button.ws-chip.on { background: color-mix(in srgb, var(--accent) 15%, var(--surface)); }
+.ws-chip.on > button:first-child, button.ws-chip.on { color: var(--ink); }
+.ws-chip.add { padding: 5px 7px; }
+.ws-chip-x { display: grid; place-items: center; width: 20px; height: 20px; margin-right: 3px; border-radius: 5px; color: var(--ink2); }
+.ws-edited { width: 6px; height: 6px; border-radius: 50%; background: var(--med); display: inline-block; }
+@media (hover: hover) {
+  .ws-chip:not(.on):hover, button.ws-chip:not(.on):hover { background: color-mix(in srgb, var(--ink2) 14%, var(--surface)); }
+  .ws-chip-x:hover { color: var(--ink); background: var(--surface); }
+}
+button.ws-chip.mark { position: relative; padding-left: 20px; }
+button.ws-chip.mark::before {
+  content: ""; position: absolute; left: 8px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px;
+  border-radius: 50%; background: var(--ink2); opacity: .5;
+}
+button.ws-chip.mark.ok::before { background: var(--green); opacity: 1; }
+button.ws-chip.mark.bad::before { background: var(--red); opacity: 1; }
+button.ws-chip.mark.warn::before { background: var(--med); opacity: 1; }
+button.ws-chip.mark.info::before { background: var(--blue); opacity: 1; }
+.ws-chips.grid button.ws-chip.mark {
+  min-width: 38px; justify-content: center; padding: 4px 8px 4px 18px; font-family: var(--mono);
+  font-variant-numeric: tabular-nums; font-size: 11.5px;
+}
+.ws-notrun { font-size: 11.5px; color: var(--ink2); margin-left: 4px; }

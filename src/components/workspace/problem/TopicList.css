@@ -1,0 +1,5 @@
+.ws-topics { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+.ws-topic {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: var(--ink2);
+  padding: 2px 8px; border-radius: 999px; background: var(--sunken);
+}
