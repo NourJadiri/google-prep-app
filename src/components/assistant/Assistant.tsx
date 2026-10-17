@@ -100,6 +100,7 @@ function Assistant({ open, summon, onClose, context, wide }: Props) {
             onRetry={retry}
             onNewChat={newChat}
             intro={look.intro}
+            avatar={look.avatar}
           />
           <Composer draft={draft} onDraft={setDraft} onSend={ask} onStop={chat.stop} busy={chat.busy} full={chat.full} inputRef={composer} placeholder={look.placeholder} />
         </>

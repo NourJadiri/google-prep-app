@@ -1065,11 +1065,19 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     await s.expect("in Goth catgirl the next question is answered too", () => panel.locator(".asst-a").count(), 3, { timeout: 20_000 });
     await s.expect("…and the window goes goth: dark purple even in light mode, violet accent, 'nya~', Mommy's prompt", look, { persona: "catgirl", tagline: "nya~", placeholder: "Ask Mommy, kitten…", send: "rgb(199, 125, 255)", bg: "rgb(27, 20, 33)", name: "none" });
     await s.expect("…with paw prints behind the chat", () => panel.locator(".asst-log").evaluate((l) => getComputedStyle(l).backgroundImage.startsWith('url("data:image/svg+xml')), true);
+    await s.expect("…and it reads like a messenger: her face in the header, every answer a bubble beside it, the picture loaded", () => panel.evaluate((p) => ({
+      header: !!p.querySelector(".asst-head img.asst-avatar"),
+      rows: [...p.querySelectorAll(".asst-a")].map((a) => a.matches(".chat") && !!a.querySelector(":scope > img.asst-avatar") && !!a.querySelector(":scope > .asst-bubble .md")),
+      loaded: [...p.querySelectorAll("img.asst-avatar")].every((i) => i.complete && i.naturalWidth === 192),
+    })), { header: true, rows: [true, true, true], loaded: true });
     await s.shot(page, "assistant-catgirl-desktop-light");
+    await panel.getByRole("button", { name: "New chat" }).click();
+    await s.expect("…a new chat opens on her greeting, as her first message", () => panel.locator(".asst-empty .asst-row").evaluate((r) => ({ avatar: !!r.querySelector("img.asst-avatar"), text: r.querySelector(".asst-bubble").textContent.slice(0, 11) })), { avatar: true, text: "hii kitten " });
+    await s.shot(page, "assistant-catgirl-greeting-desktop-light");
     if (MOCK_LOG) await s.expect("…in the catgirl voice, kept non-sexual", lastSystem, (v) => v.includes("goth anime catgirl") && v.includes("never sexual or explicit"));
     await panel.getByRole("button", { name: "Normal" }).click();
     await s.expect("back to Normal, remembered", async () => (await stored()).persona, "normal");
-    await s.expect("…and the window is plain again", async () => (await look()).persona + ":" + (await look()).send, "normal:rgb(26, 115, 232)");
+    await s.expect("…and the window is plain again: no face, the usual intro", async () => ({ look: (await look()).persona + ":" + (await look()).send, faces: await panel.locator("img.asst-avatar").count(), intro: await panel.locator(".asst-empty > p").count() }), { look: "normal:rgb(26, 115, 232)", faces: 0, intro: 1 });
     const before = mockRequests()?.length ?? 0;
     const odd = await page.request.post(BASE + "/api/assistant", {
       headers: { authorization: "Bearer pw-test", "content-type": "application/json" },

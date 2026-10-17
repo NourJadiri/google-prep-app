@@ -1,5 +1,6 @@
 import type { Persona } from "../../../../shared/assistantContract";
 import type { IconName } from "../../shared/Icon";
+import catgirlAvatar from "../assets/bana-catgirl.webp";
 
 export interface PersonaLook {
   id: Persona;
@@ -10,6 +11,8 @@ export interface PersonaLook {
   tagline?: string;
   placeholder: string;
   intro: string;
+  /** A face for Bana: the window then reads like a messenger, her lines in bubbles beside it. */
+  avatar?: string;
 }
 
 export const PERSONA_LOOKS: PersonaLook[] = [
@@ -37,7 +40,8 @@ export const PERSONA_LOOKS: PersonaLook[] = [
     mark: "cat",
     tagline: "nya~",
     placeholder: "Ask Mommy, kitten…",
-    intro: "Come here, kitten. Show Mommy your code and she'll tell you what you did wrong, then how to make it right. Your last run comes along too. Nya.",
+    intro: "hii kitten :3 show Mommy your code and she'll tell you what you did wrong, then how to make it right. your last run comes along too. nya~",
+    avatar: catgirlAvatar,
   },
 ];
 

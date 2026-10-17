@@ -1,10 +1,25 @@
+import Avatar from "./Avatar";
 import StarterQuestions from "./StarterQuestions";
 import "./EmptyChat.css";
 
-export default function EmptyChat({ intro, onAsk }: { intro: string; onAsk: (question: string) => void }) {
+interface Props {
+  intro: string;
+  /** With a face, the intro is her first message. */
+  avatar?: string;
+  onAsk: (question: string) => void;
+}
+
+export default function EmptyChat({ intro, avatar, onAsk }: Props) {
   return (
     <div className="asst-empty">
-      <p>{intro}</p>
+      {avatar ? (
+        <div className="asst-row">
+          <Avatar src={avatar} />
+          <p className="asst-bubble">{intro}</p>
+        </div>
+      ) : (
+        <p>{intro}</p>
+      )}
       <StarterQuestions onAsk={onAsk} />
     </div>
   );

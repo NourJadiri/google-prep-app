@@ -4,6 +4,7 @@ import IconButton from "../ui/IconButton";
 import Spacer from "../ui/Spacer";
 import type { DragHandlers } from "./hooks/useFloatingBox";
 import { lookOf } from "./lib/personas";
+import Avatar from "./Avatar";
 import PersonaToggle from "./PersonaToggle";
 import "./AssistantHeader.css";
 
@@ -22,7 +23,7 @@ export default function AssistantHeader({ drag, hasChat, persona, onPersona, unl
   const look = lookOf(persona);
   return (
     <header className="asst-head" {...drag}>
-      <Icon name={look.mark} size={15} className="asst-mark" />
+      {look.avatar ? <Avatar src={look.avatar} small /> : <Icon name={look.mark} size={15} className="asst-mark" />}
       <h3>Bana</h3>
       {look.tagline && <span className="asst-tagline">{look.tagline}</span>}
       <PersonaToggle value={persona} onChange={onPersona} />

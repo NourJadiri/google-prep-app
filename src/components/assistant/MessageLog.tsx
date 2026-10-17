@@ -21,14 +21,15 @@ interface Props {
   onRetry: () => void;
   onNewChat: () => void;
   intro: string;
+  avatar?: string;
 }
 
-export default function MessageLog({ logRef, onScroll, messages, waiting, busy, full, trouble, onAsk, onRetry, onNewChat, intro }: Props) {
+export default function MessageLog({ logRef, onScroll, messages, waiting, busy, full, trouble, onAsk, onRetry, onNewChat, intro, avatar }: Props) {
   return (
     <div className="asst-log" ref={logRef} onScroll={onScroll}>
-      {messages.length === 0 && <EmptyChat intro={intro} onAsk={onAsk} />}
-      {messages.map((m) => (m.role === "user" ? <Question key={m.id} message={m} /> : <Answer key={m.id} message={m} />))}
-      {waiting && <TypingDots />}
+      {messages.length === 0 && <EmptyChat intro={intro} avatar={avatar} onAsk={onAsk} />}
+      {messages.map((m) => (m.role === "user" ? <Question key={m.id} message={m} /> : <Answer key={m.id} message={m} avatar={avatar} />))}
+      {waiting && <TypingDots avatar={avatar} />}
       {trouble && trouble.kind !== "locked" && <TroubleNotice trouble={trouble} onRetry={onRetry} onNewChat={onNewChat} />}
       {full && !busy && <ChatNote>This chat is full. Start a new one to keep going.</ChatNote>}
     </div>
