@@ -14,7 +14,7 @@ export default function Answer({ message }: { message: Msg }) {
     <div className="asst-a">
       {text && <div className="md" dangerouslySetInnerHTML={{ __html: html }} />}
       {stop === "max_tokens" && <ChatNote>Cut off at the length limit. Ask it to go on.</ChatNote>}
-      {stop === "refusal" && <ChatNote>Patrick declined to answer that one.</ChatNote>}
+      {stop === "refusal" && <ChatNote>Bana declined to answer that one.</ChatNote>}
     </div>
   );
 }

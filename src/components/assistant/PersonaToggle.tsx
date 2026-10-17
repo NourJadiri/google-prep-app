@@ -11,7 +11,7 @@ interface Props {
 
 export default function PersonaToggle({ value, onChange }: Props) {
   return (
-    <div className="asst-voices" role="group" aria-label="Patrick's mode">
+    <div className="asst-voices" role="group" aria-label="Bana's mode">
       {PERSONA_LOOKS.map((p) => (
         <button
           key={p.id}

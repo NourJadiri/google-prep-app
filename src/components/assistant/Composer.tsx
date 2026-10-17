@@ -11,9 +11,10 @@ interface Props {
   busy: boolean;
   full: boolean;
   inputRef: RefObject<HTMLTextAreaElement | null>;
+  placeholder: string;
 }
 
-export default function Composer({ draft, onDraft, onSend, onStop, busy, full, inputRef }: Props) {
+export default function Composer({ draft, onDraft, onSend, onStop, busy, full, inputRef, placeholder }: Props) {
   useAutoGrow(inputRef, draft);
 
   return (
@@ -28,7 +29,7 @@ export default function Composer({ draft, onDraft, onSend, onStop, busy, full, i
         ref={inputRef}
         rows={1}
         value={draft}
-        placeholder="Ask about this problem…"
+        placeholder={placeholder}
         aria-label="Your question"
         onChange={(e) => onDraft(e.target.value)}
         onKeyDown={(e) => {

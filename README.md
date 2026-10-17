@@ -19,10 +19,10 @@ that run in the browser on real CPython (Pyodide). No LeetCode account needed.
 - **Me**: stats, the rank ladder, badges, export/import and cloud sync.
 - **Workspace**: Run the examples, Submit the full hidden suite; passing it ticks the
   problem. Drafts are saved per problem.
-- **Patrick** (optional): `⌘K` / `Ctrl+K` in the workspace opens a small chat with
+- **Bana** (optional): `⌘K` / `Ctrl+K` in the workspace opens a small chat with
   Claude that already knows the problem, your code and your last run. Three modes, picked
   in its header: Normal, Tough love (roasts your code, then shows you exactly where it's
-  wrong) and Goth catgirl.
+  wrong) and Goth catgirl, each with its own look.
 
 Progress is stored in `localStorage`. Cloud sync and the assistant are optional; without
 them the app is fully local. It loads nothing from other origins: no web fonts, no

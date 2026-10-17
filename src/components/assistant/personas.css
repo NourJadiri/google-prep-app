@@ -1,0 +1,43 @@
+/* Each mode re-scopes the window's own tokens, so every part inside follows without knowing about modes. */
+.asst { transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
+.asst-head { transition: background-color .25s ease; }
+.asst-tagline { font-family: var(--mono); font-size: 10.5px; color: var(--accent); white-space: nowrap; }
+
+/* Tough love: the drill sergeant's red. */
+.asst[data-persona="tough"] {
+  --accent: #d93025;
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+}
+@media (prefers-color-scheme: dark) {
+  .asst[data-persona="tough"] { --accent: #ff7a59; }
+}
+.asst[data-persona="tough"] .asst-head {
+  background: linear-gradient(100deg, color-mix(in srgb, #f9ab00 18%, var(--surface)), color-mix(in srgb, var(--accent) 18%, var(--surface)));
+  border-bottom: 2px solid var(--accent);
+}
+.asst[data-persona="tough"] .asst-head h3 { text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+.asst[data-persona="tough"] .asst-wait i { background: var(--accent); }
+
+/* Goth catgirl: dark whatever the system theme, so the light-mode code and notice colours are re-scoped too. */
+.asst[data-persona="catgirl"] {
+  color-scheme: dark;
+  --bg: #130e18; --surface: #1b1421; --sunken: #130e18;
+  --ink: #f2e7fb; --ink2: #b39bc8; --line: #3e2c4e;
+  --accent: #c77dff;
+  --blue: #c9a7ff; --red: #ff8fab; --green: #9be3b0; --yellow: #f7d774;
+  --ok-bg: #1f3328; --ok-ink: #9be3b0; --bad-bg: #3a1f2b; --bad-ink: #ff8fab;
+  --hl-kw: #c77dff; --hl-str: #9be3b0; --hl-num: #ff8fab; --hl-com: #8f7aa3;
+  --hl-fn: #f0a6ff; --hl-cls: #f7d774; --hl-op: #cbb8dc; --hl-meta: #f7d774;
+  border-color: #5a3d73;
+  box-shadow: 0 18px 48px rgba(40, 10, 60, .45), 0 0 0 1px rgba(199, 125, 255, .15);
+}
+.asst[data-persona="catgirl"] .asst-head { background: linear-gradient(180deg, #2b1c38, #1b1421); }
+.asst[data-persona="catgirl"] .asst-head h3 {
+  font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 700; font-size: 15px; letter-spacing: .02em;
+}
+.asst[data-persona="catgirl"] .asst-log {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='%23c77dff' fill-opacity='.07'%3E%3Cellipse cx='17' cy='22' rx='5.5' ry='4.6'/%3E%3Ccircle cx='10.5' cy='15' r='2.2'/%3E%3Ccircle cx='14.6' cy='11' r='2.2'/%3E%3Ccircle cx='19.4' cy='11' r='2.2'/%3E%3Ccircle cx='23.5' cy='15' r='2.2'/%3E%3Cg transform='rotate(-24 46 50)'%3E%3Cellipse cx='46' cy='53' rx='5.5' ry='4.6'/%3E%3Ccircle cx='39.5' cy='46' r='2.2'/%3E%3Ccircle cx='43.6' cy='42' r='2.2'/%3E%3Ccircle cx='48.4' cy='42' r='2.2'/%3E%3Ccircle cx='52.5' cy='46' r='2.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 64px 64px;
+  background-attachment: local;
+}
+.asst[data-persona="catgirl"] .asst-wait i { background: var(--accent); }

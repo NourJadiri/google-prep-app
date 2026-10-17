@@ -221,14 +221,14 @@ const sel = {
   run: 'button[title^="Run the cases"]',
   submit: 'button[title^="Run every test"]',
   stop: '.ws-actions button[title="Stop"]',
-  ask: 'button[title^="Ask Patrick"]',
+  ask: 'button[title^="Ask Bana"]',
   copy: 'button[title^="Problem, code and last result"]',
   back: 'button[aria-label="Back to the line"]',
   code: 'section[aria-label="Code"]',
   editorContent: 'section[aria-label="Code"] .cm-content',
   tests: 'section[aria-label="Tests"]',
   problem: 'section[aria-label="Problem"]',
-  panel: '[aria-label="Patrick"]',
+  panel: '[aria-label="Bana"]',
   dialog: `[role=dialog][aria-label="${TITLE}"]`,
 };
 
@@ -424,7 +424,7 @@ scenario("01-open", "open the workspace from the Line tab", async (s) => {
         done: !!el.querySelector(".ws-done"),
       })),
       { diff: "MED", bullet: "G", tag: "Day 1 · Pathfinding", lc: "LC 797", href: "https://leetcode.com/problems/all-paths-from-source-to-target/", done: false });
-    await s.expect("header actions: Patrick, Copy for Claude, Run, Submit (+ stopwatch)", () => page.locator(".ws-actions button").evaluateAll((els) => els.map((e) => e.textContent.trim()).filter((t) => t && !/^\d\d:\d\d$/.test(t))), ["Patrick", "Copy for Claude", "Run", "Submit"]);
+    await s.expect("header actions: Bana, Copy for Claude, Run, Submit (+ stopwatch)", () => page.locator(".ws-actions button").evaluateAll((els) => els.map((e) => e.textContent.trim()).filter((t) => t && !/^\d\d:\d\d$/.test(t))), ["Bana", "Copy for Claude", "Run", "Submit"]);
     await s.expect("the stopwatch is running", () => page.locator(".wclock-time").getAttribute("aria-label"), "Pause the clock");
     await s.expect("page behind the workspace does not scroll (body overflow hidden)", () => page.evaluate(() => document.body.style.overflow), "hidden");
     await s.expect("focus moved into the dialog", () => page.evaluate(() => document.activeElement?.getAttribute("role")), "dialog");
@@ -949,7 +949,7 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     const panel = page.locator(sel.panel);
     const lock = (t) => panel.locator(".asst-lock");
     const q = () => panel.getByLabel("Your question");
-    const pw = () => panel.getByLabel("Patrick's password");
+    const pw = () => panel.getByLabel("Bana's password");
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem("onsite-express-assistant-v1") || "{}"));
 
     await s.expect("no assistant until asked for (not even mounted)", () => panel.count(), 0);
@@ -961,7 +961,7 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     await panel.waitFor({ state: "visible" });
     await s.expect("Ctrl+K opens the assistant", () => panel.isVisible(), true);
     await s.expect("the Ask button shows pressed", () => page.locator(sel.ask).getAttribute("aria-pressed"), "true");
-    await s.expect("it opens on the lock screen, focus in the password field", async () => ({ lock: await lock().count(), focus: await page.evaluate(() => document.activeElement?.getAttribute("aria-label")) }), { lock: 1, focus: "Patrick's password" }, { timeout: 2000 });
+    await s.expect("it opens on the lock screen, focus in the password field", async () => ({ lock: await lock().count(), focus: await page.evaluate(() => document.activeElement?.getAttribute("aria-label")) }), { lock: 1, focus: "Bana's password" }, { timeout: 2000 });
     await s.expect("lock copy: 'Locked to you.'", () => lock().locator("b").textContent(), "Locked to you.");
     await s.expect("Unlock is disabled until something is typed", () => lock().getByRole("button", { name: "Unlock" }).isDisabled(), true);
     await s.expect("the floating window sits bottom right, 400 px wide", () => panel.evaluate((e) => { const r = e.getBoundingClientRect(); return { cls: e.className, w: Math.round(r.width), right: Math.round(window.innerWidth - r.right), bottom: Math.round(window.innerHeight - r.bottom) }; }), { cls: "asst float", w: 400, right: 24, bottom: 24 });
@@ -986,7 +986,7 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     await s.expect("…the question is shown with '+ code' and '+ last run' tags", () => panel.locator(".asst-q").evaluate((e) => ({ text: e.querySelector("p").textContent, tags: [...e.querySelectorAll(".asst-tags span")].map((t) => t.textContent) })), { text: "Why does my code fail?", tags: ["+ code", "+ last run"] });
     await s.expect("…the password is stored", async () => (await stored()).password, "pw-test");
     await s.expect("…no thinking dots are left, and Send (not Stop) is showing", async () => ({ wait: await panel.locator(".asst-wait").count(), send: await panel.getByRole("button", { name: "Send" }).count(), stop: await panel.getByRole("button", { name: "Stop" }).count() }), { wait: 0, send: 1, stop: 0 }, { timeout: 5000 });
-    await s.expect("…the header offers the three modes, New chat, Forget the password, Close", () => panel.locator(".asst-head button").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label"))), ["Normal", "Tough love", "Goth catgirl", "New chat", "Forget the password", "Close Patrick"]);
+    await s.expect("…the header offers the three modes, New chat, Forget the password, Close", () => panel.locator(".asst-head button").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label"))), ["Normal", "Tough love", "Goth catgirl", "New chat", "Forget the password", "Close Bana"]);
     const reqs = mockRequests();
     if (reqs) {
       const last = reqs[reqs.length - 1];
@@ -1037,24 +1037,39 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     await panel.locator(".asst-starters button").nth(2).click();
     await s.expect("a starter sends its question and gets an answer", () => panel.locator(".asst-q p").allTextContents().then(async (t) => [t, await panel.locator(".asst-a").innerText()]), [["What's the complexity of my code?"], "Use a hash map."], { timeout: 20_000 });
 
-    // Patrick's modes: the browser picks one, the Worker owns what it says
+    // Bana's modes: the browser picks one, the Worker owns what it says
     const voices = () => panel.locator(".asst-voices button").evaluateAll((els) => els.map((e) => [e.getAttribute("aria-label"), e.getAttribute("aria-pressed"), !!e.querySelector("svg")].join(":")));
     const lastSystem = () => JSON.stringify(mockRequests()?.at(-1)?.body?.system ?? "");
     await s.expect("the mode toggle offers Normal, Tough love and Goth catgirl, each an icon; Normal is on", voices, ["Normal:true:true", "Tough love:false:true", "Goth catgirl:false:true"]);
-    if (MOCK_LOG) await s.expect("…in Normal the model is told it is Patrick, with no voice on top", lastSystem, (v) => v.includes("You are Patrick") && !v.includes("Voice:"));
+    const look = () => panel.evaluate((p) => ({
+      persona: p.dataset.persona,
+      tagline: p.querySelector(".asst-tagline")?.textContent ?? null,
+      placeholder: p.querySelector("textarea")?.placeholder,
+      send: getComputedStyle(p.querySelector(".asst-send")).backgroundColor,
+      bg: getComputedStyle(p).backgroundColor,
+      name: getComputedStyle(p.querySelector(".asst-head h3")).textTransform,
+    }));
+    await s.expect("in Normal the window looks as it always has: the line's blue, white, no tagline", look, { persona: "normal", tagline: null, placeholder: "Ask about this problem…", send: "rgb(26, 115, 232)", bg: "rgb(255, 255, 255)", name: "none" });
+    if (MOCK_LOG) await s.expect("…in Normal the model is told it is Bana, with no voice on top", lastSystem, (v) => v.includes("You are Bana") && !v.includes("Voice:"));
     await panel.getByRole("button", { name: "Tough love" }).click();
     await s.expect("choosing Tough love presses it, and this browser remembers it", async () => ({ voices: await voices(), stored: (await stored()).persona }), { voices: ["Normal:false:true", "Tough love:true:true", "Goth catgirl:false:true"], stored: "tough" });
     await q().fill("Roast my loop");
     await q().press("Enter");
     await s.expect("…the next question is answered", () => panel.locator(".asst-a").count(), 2, { timeout: 20_000 });
+    await s.expect("…and the window turns drill-sergeant red: red accent, the name in capitals, 'no excuses', a blunter prompt", look, { persona: "tough", tagline: "no excuses", placeholder: "Spit it out. What did you break?", send: "rgb(217, 48, 37)", bg: "rgb(255, 255, 255)", name: "uppercase" });
+    await s.shot(page, "assistant-tough-desktop-light");
     if (MOCK_LOG) await s.expect("…and the Worker asked for the tough-love voice", lastSystem, (v) => v.includes("Voice: tough love") && v.includes("Never at who they are"));
     await panel.getByRole("button", { name: "Goth catgirl" }).click();
     await q().fill("Is this right?");
     await q().press("Enter");
     await s.expect("in Goth catgirl the next question is answered too", () => panel.locator(".asst-a").count(), 3, { timeout: 20_000 });
+    await s.expect("…and the window goes goth: dark purple even in light mode, violet accent, 'nya~', Mommy's prompt", look, { persona: "catgirl", tagline: "nya~", placeholder: "Ask Mommy, kitten…", send: "rgb(199, 125, 255)", bg: "rgb(27, 20, 33)", name: "none" });
+    await s.expect("…with paw prints behind the chat", () => panel.locator(".asst-log").evaluate((l) => getComputedStyle(l).backgroundImage.startsWith('url("data:image/svg+xml')), true);
+    await s.shot(page, "assistant-catgirl-desktop-light");
     if (MOCK_LOG) await s.expect("…in the catgirl voice, kept non-sexual", lastSystem, (v) => v.includes("goth anime catgirl") && v.includes("never sexual or explicit"));
     await panel.getByRole("button", { name: "Normal" }).click();
     await s.expect("back to Normal, remembered", async () => (await stored()).persona, "normal");
+    await s.expect("…and the window is plain again", async () => (await look()).persona + ":" + (await look()).send, "normal:rgb(26, 115, 232)");
     const before = mockRequests()?.length ?? 0;
     const odd = await page.request.post(BASE + "/api/assistant", {
       headers: { authorization: "Bearer pw-test", "content-type": "application/json" },
@@ -1068,7 +1083,7 @@ scenario("10-assistant", "the assistant: lock, wrong and right password, stream,
     await s.expect("…and the password is gone from storage", async () => "password" in (await stored()), false);
     await s.expect("…the Forget button is gone", () => panel.getByRole("button", { name: "Forget the password" }).count(), 0);
     // the X button
-    await panel.getByRole("button", { name: "Close Patrick" }).click();
+    await panel.getByRole("button", { name: "Close Bana" }).click();
     await s.expect("the X button closes the window", () => panel.isHidden(), true, { timeout: 2000 });
     finish(s);
   } finally {
@@ -1126,8 +1141,8 @@ scenario("11-phone", "390x844 touch: segmented panes, run jumps to Tests, bottom
     await s.expect("…full width, pinned to the bottom edge", () => panel.evaluate((e) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), w: Math.round(r.width), bottom: Math.round(window.innerHeight - r.bottom), tall: r.height > 300 }; }), { x: 0, w: 390, bottom: 0, tall: true });
     await s.expect("…on the lock screen", () => panel.locator(".asst-lock").count(), 1);
     await s.shot(page, "phone-sheet-locked-light");
-    await panel.getByLabel("Patrick's password").fill("pw-test");
-    await panel.getByLabel("Patrick's password").press("Enter");
+    await panel.getByLabel("Bana's password").fill("pw-test");
+    await panel.getByLabel("Bana's password").press("Enter");
     await panel.getByLabel("Your question").fill("Why does my code fail?");
     await panel.getByLabel("Your question").press("Enter");
     await s.expect("a question in the sheet streams the answer", () => panel.locator(".asst-a").innerText(), "Use a hash map.", { timeout: 20_000 });
@@ -1137,7 +1152,7 @@ scenario("11-phone", "390x844 touch: segmented panes, run jumps to Tests, bottom
     await dark(page);
     await s.shot(page, "phone-sheet-chat-dark");
     await page.emulateMedia({ colorScheme: "light" });
-    await panel.getByRole("button", { name: "Close Patrick" }).tap();
+    await panel.getByRole("button", { name: "Close Bana" }).tap();
     await s.expect("the X closes the sheet", () => panel.isHidden(), true, { timeout: 2000 });
     await page.locator(sel.ask).tap();
     await s.expect("reopening keeps the conversation", () => panel.locator(".asst-q").count(), 1, { timeout: 2000 });
@@ -1451,7 +1466,7 @@ scenario("16-assistant-window", "the floating assistant: drag by its header, res
     await s.expect("…and the new place is remembered", spot, { x: 556, y: 126, w: 400, h: 560 });
 
     // dragging from a button must not move it
-    const x = await page.locator('.asst-head button[aria-label="Close Patrick"]').boundingBox();
+    const x = await page.locator('.asst-head button[aria-label="Close Bana"]').boundingBox();
     await page.mouse.move(x.x + 5, x.y + 5);
     await page.mouse.down();
     await page.mouse.move(x.x - 100, x.y + 100, { steps: 3 });
