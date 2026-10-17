@@ -387,7 +387,8 @@ writing one.
 reference/onsite-express.html   the original single-file app — ground truth for all content
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
-scripts/regress/                regression checks (workspace; Me tab + sync): scripted sessions + screenshots
+scripts/regress/                regression checks (workspace; Me tab + sync; study tabs + shell):
+                                scripted sessions + screenshots
 
 scripts/problems/               validate.mjs (the bank's validator), specfmt.py (spec writer)
 
@@ -402,11 +403,16 @@ public/_headers                 cross-origin isolation + immutable /pyodide/* ca
 
 src/
   main.tsx
-  App.tsx                       tab switch + layout; tints the app for the line
+  App.tsx                       the page: header, the current tab's view, tab bar,
+                                the workspace when a problem is open, celebrations
+  app/          views.ts        which view each tab shows
+                hooks/          useTrackTheme: tints the app for the line
+                WorkspaceHost   lazy-loads the workspace modal
   types.ts                      the whole vocabulary: content, state, effects
   styles/       tokens.css      the custom properties, light and dark, per line
                 base.css        reset, and the 44px touch-target overlays
-                layout.css      page frame + classes more than one tab uses
+                layout.css      page frame and the hero type every tab uses; each
+                                component imports its own CSS file next to it
   data/         plan.ts         the Google line: LC, XPD, RITUAL_XP, PLAN (24 days)
                 aws.ts          the Local: AWS_PLAN (13 stops, 55 problems)
                 tracks.ts       TRACKS — each line's plan, ranks, badges, copy — and the
@@ -428,15 +434,29 @@ src/
                                 the verbs the Me tab uses (enable, join, claim…)
                 syncCode.ts     what a sync code looks like; link.ts: the link a QR
                                 carries, #sync=<code>&do=send|recv
-                dates.ts        calendar-day helpers
+                dates.ts        calendar-day helpers; motion.ts: reduced motion;
+                                scroll.ts: back to the top on tab and line changes
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
   hooks/        shared by more than one area: useMedia, useLatest, useCopied,
-                useCopyToast, useDialogBehavior (focus in and out, Escape)
-  components/   layout/ line/ metro/ dojo/ shared/
-                ui/             shared primitives: Button, IconButton, LinkButton, Tabs,
+                useCopyToast, useDialogBehavior (focus in and out, Escape), useTrack
+                (the current line, its progress and today's day)
+  components/   ui/             shared primitives: Button, IconButton, LinkButton, Tabs,
                                 SegmentedControl, StatusDot, Badge, Spinner, Spacer,
-                                PillButton, ButtonRow, Section, Note, Dialog
+                                PillButton, ButtonRow, Section, Note, Dialog, Tag,
+                                DifficultyTag, XpValue
+                layout/         Header (RankBadge, HeaderStats, XpBar, XpCaption) and
+                                TabBar (TabButton; lib/tabs.ts lists the tabs)
+                line/           the Line tab: LinePicker, LineHero, TransitLine of
+                                Stations, each a DayCard (head, progress, problem and
+                                ritual rows), MockTimer, Terminus
+                metro/          the quiz tab: picker/ (departure board of decks),
+                                quiz/ (card, options, stops track), result/; each
+                                keeps its pure logic in lib/ (deck looks, option states)
+                dojo/           the templates tab: groups of TemplateCards, ritual log
+                shared/         Icon/ (the SVG set, glyph data in glyphs/ by family),
+                                celebrations/ (toasts and confetti, queue and timing
+                                in hooks/ and lib/), CodeBlock
                 me/             the Me tab: stats/, ladder/, badges/, data/, and sync/
                                 (the panel), link/ (the link sheet, consent card, QR),
                                 scan/ (the camera scanner), each with hooks/ and lib/
@@ -714,7 +734,7 @@ change a pixel:
 - **The visual-polish pass.** A deliberate break from pixel parity, made after the port:
   every emoji and text glyph doing UI work (tab icons, badges, checkmarks, chevrons,
   arrows, toast prefixes) was replaced with a shared inline-SVG icon set
-  (`src/components/shared/Icon.tsx`), and controls gained hover/press states, tabular
+  (`src/components/shared/Icon/`), and controls gained hover/press states, tabular
   numerals and small state refinements. Content, layout structure, tokens and behaviour
   are unchanged, but `computed.mjs` and `screenshots.mjs` now report real differences on
   the restyled surfaces — the reference is still ground truth for *content*, no longer

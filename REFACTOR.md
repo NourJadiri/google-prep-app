@@ -28,7 +28,7 @@ that stands.
 |---|------|-------|
 | 1 | Workspace: problem pane, editor, console, Python runner, the assistant, plus the first shared UI primitives | done |
 | 2 | Me tab and sync: sync panel, link sheet, scanner, `lib/sync.ts` | done |
-| 3 | Line, Metro and Dojo tabs, the app shell, shared components (`Icon`, celebrations) | |
+| 3 | Line, Metro and Dojo tabs, the app shell, shared components (`Icon`, celebrations) | done |
 | 4 | State and domain: `lib/engine.ts`, `state/AppState.tsx`, `types.ts`, data files | |
 
 The domain layer (step 4) is the safest mechanical split, but the components are what reads worst,
@@ -88,6 +88,45 @@ Left for later, on purpose:
   the new primitives render those classes. Move the CSS when step 3 adopts them in Metro and Dojo.
 - The workspace suite's `06-stop-stopped-console` screenshot depends on where the Stop click lands
   in a running case; a lone difference there is timing, re-run before chasing it.
+
+## Step 3 result
+
+The study tabs, the shell and the shared components went from 25 files to 85 (71 components),
+1365 lines to 1810, and the largest file from 347 lines (`Icon.tsx`) to 67 (a block of glyph
+data). The Line tab reads as `LinePicker`, `LineHero` and a `TransitLine` of `Station`s, each a
+`DayCard` of named rows; Metro is split into `picker/`, `quiz/` and `result/`, with deck looks
+and option states in their `lib/` folders; Dojo groups `TemplateCard`s. `App` is 26 lines over
+`src/app/` (the view table, the line tint, the lazy workspace host); the header and tab bar are
+named parts; `Icon` keeps its glyph data in `glyphs/` by family, with each name declared once
+and the four unused glyphs gone; celebrations moved to `shared/celebrations/` with the queue and
+timing in hooks. `ui/` gained `Tag`, `DifficultyTag` and `XpValue`, and the workspace uses them.
+Every component imports its own CSS: `line.css` and `shared.css` are gone, `layout.css` is down
+to the page frame, and `.mbtn`, `.mrow`, `.sectionlabel` and `.storenote` moved next to the
+primitives that render them. `useTrack` and `scrollToTop` replaced the selectors and scroll
+calls the tabs each wrote by hand.
+
+Checked with a new suite for the study tabs and the shell (16 scenarios, 745 assertions, both
+lines, phone and desktop, light and dark, toasts and confetti) plus the Me and workspace suites:
+all three identical before and after.
+
+Left for later, on purpose:
+- The `.mbtn:hover` pair stays in `layout.css`: moving it above `.qrsheet .mbtn` would flip
+  which of two equal-specificity rules wins.
+- `ui/` candidates seen twice or more but not extracted yet: a hero block, the run card, a
+  status pill.
+- Quirks the new suite pinned rather than fixed. It asserts today's behavior, so fixing one means
+  updating its expectation:
+  - Unticking a problem silently takes a rank back; re-ticking replays the rank-up and
+    station-clear celebrations (only badges are once-only), and re-completing the line fires the
+    90-piece burst again.
+  - A Redemption run is as long as what is owed (1 to 10 cards), but its button always says
+    "10 stops"; a 1/1 run gets the perfect-run copy with no bonus, and 2/3 reads "Rough".
+  - An emptied Redemption deck stays selected, disabled and "NOW BOARDING".
+  - A streak badge toast shows before the XP toast that earned it.
+  - The perfect-run bonus can itself rank you up; the result row shows the run's XP, not the bonus.
+  - Clearing a station makes the next one current without opening its card.
+  - The Dojo template header is 41 px tall on a phone, under the 44 px floor; the ritual row's
+    1.5 px border draws as 1 px at 1x.
 
 ## Audit (October 2026)
 
