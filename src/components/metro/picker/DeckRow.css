@@ -1,0 +1,12 @@
+.drow {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px;
+  padding: 8px 14px; border-top: 1px solid var(--sunken); text-align: left;
+  transition: background .15s;
+}
+@media (hover: hover) { .drow:not(:disabled):not(.sel):hover { background: var(--sunken); } }
+.drow:not(:disabled):active { background: var(--sunken); }
+.drow.sel { background: var(--sunken); }
+.drow:disabled { opacity: .4; cursor: default; }
+.drow-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.drow-name { font-size: 14.5px; font-weight: 600; letter-spacing: -.1px; }
+.drow-sub { font-family: var(--mono); font-size: 11px; color: var(--ink2); font-variant-numeric: tabular-nums; }

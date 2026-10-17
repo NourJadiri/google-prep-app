@@ -1,0 +1,2 @@
+.dtag { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .1em; padding: 4px 8px; border-radius: 999px; flex: none; font-variant-numeric: tabular-nums; }
+.dplat { font-family: var(--mono); font-size: 11px; color: var(--ink2); flex: none; }

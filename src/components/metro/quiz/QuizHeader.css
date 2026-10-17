@@ -1,0 +1,6 @@
+.qtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.qcat { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
+.qcat.pat { color: var(--blue); } .qcat.bug { color: var(--red); } .qcat.line { color: var(--med); } .qcat.cx { color: var(--green); }
+.qmeta { font-family: var(--mono); font-size: 11px; color: var(--ink2); display: flex; gap: 10px; align-items: center; font-variant-numeric: tabular-nums; }
+.qmeta .streak { display: inline-flex; align-items: center; gap: 3px; }
+.mult { color: var(--yellow); font-weight: 700; }

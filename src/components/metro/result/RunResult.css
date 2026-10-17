@@ -1,0 +1,9 @@
+.result { text-align: center; padding: 30px 16px 22px; }
+.result .big { font-size: 46px; font-weight: 700; font-family: var(--mono); letter-spacing: -1.5px; line-height: 1; font-variant-numeric: tabular-nums; }
+.result .sub { color: var(--ink2); font-size: 13.5px; margin-top: 7px; }
+.result .row { display: flex; justify-content: center; gap: 22px; margin-top: 18px; font-family: var(--mono); font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.result .row b { color: var(--ink); font-size: 16px; display: block; margin-bottom: 1px; }
+.result .mrow { justify-content: center; margin-top: 20px; }
+.result .mbtn { transition: background .15s, transform .12s; }
+@media (hover: hover) { .result .mbtn:hover { background: var(--sunken); } }
+.result .mbtn:active { transform: scale(.97); background: var(--sunken); }

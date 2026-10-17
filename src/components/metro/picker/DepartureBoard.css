@@ -1,0 +1,5 @@
+/* Rows are 60px, so they clear the 44px thumb floor without a ::after overlay. */
+.dboard {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: var(--shadow); margin: 14px 0 0; overflow: hidden;
+}

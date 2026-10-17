@@ -1,4 +1,4 @@
-/* Ten ticks, one per stop, colouring in behind you as the run goes. */
+import "./StopsTrack.css";
 
 interface StopsTrackProps {
   ids: string[];
@@ -6,11 +6,16 @@ interface StopsTrackProps {
   results: boolean[];
 }
 
+function tickClass(result: boolean | undefined) {
+  if (result === undefined) return "";
+  return result ? "ok" : "ko";
+}
+
 export default function StopsTrack({ ids, results }: StopsTrackProps) {
   return (
     <div className="stops-track" aria-hidden="true">
       {ids.map((_, k) => (
-        <i key={k} className={k < results.length ? (results[k] ? "ok" : "ko") : ""} />
+        <i key={k} className={tickClass(results[k])} />
       ))}
     </div>
   );

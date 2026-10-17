@@ -1,27 +1,26 @@
-import { useApp } from "../../state/AppState";
-import Icon from "../shared/Icon";
+import { RITUAL_XP } from "../../data/plan";
+import { cx } from "../../lib/cx";
 import type { Day } from "../../types";
-
-/* The same toggle as the Line's ritual row — one piece of state, two doors. */
+import Icon from "../shared/Icon";
+import "./RitualLog.css";
 
 interface RitualLogProps {
   day: Day;
   ritual: string;
   logged: boolean;
+  onToggle: (dayId: string) => void;
 }
 
-export default function RitualLog({ day, ritual, logged }: RitualLogProps) {
-  const { actions } = useApp();
-
+/* Same toggle as the Line's ritual row: one piece of state, two doors. */
+export default function RitualLog({ day, ritual, logged, onToggle }: RitualLogProps) {
   return (
-    <div className={"dojo-log" + (logged ? " logged" : "")}>
-      {/* One text node after the <b>, not two — a split here shifts glyph
-          antialiasing by a subpixel against the reference. */}
+    <div className={cx("dojo-log", logged && "logged")}>
+      {/* One text node after the <b>, not two: a split shifts glyph antialiasing by a subpixel. */}
       <p>
         <b>{"Day " + day.d + " ritual:"}</b>
         {" " + ritual}
       </p>
-      <button onClick={() => actions.toggleRitual(day.id)} aria-pressed={logged}>
+      <button onClick={() => onToggle(day.id)} aria-pressed={logged}>
         {logged ? (
           <>
             Logged
@@ -31,7 +30,7 @@ export default function RitualLog({ day, ritual, logged }: RitualLogProps) {
           <>
             Done
             <i className="bdot" />
-            +15 XP
+            {"+" + RITUAL_XP + " XP"}
           </>
         )}
       </button>

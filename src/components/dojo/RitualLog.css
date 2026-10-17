@@ -1,0 +1,8 @@
+.dojo-log { margin-top: 14px; padding: 13px 14px; border-radius: 14px; border: 1.5px dashed var(--yellow); display: flex; align-items: center; gap: 12px; background: var(--surface); }
+.dojo-log p { margin: 0; font-size: 13px; flex: 1; }
+.dojo-log button { padding: 9px 15px; border-radius: 999px; background: var(--yellow); color: #202124; font-weight: 700; font-size: 13px; flex: none; display: inline-flex; align-items: center; gap: 6px; transition: transform .12s, box-shadow .15s; }
+.dojo-log button:active { transform: scale(.97); }
+.dojo-log .bdot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .6; }
+.dojo-log.logged { border-style: solid; }
+.dojo-log.logged button { background: var(--sunken); color: var(--ink2); }
+@media (hover: hover) { .dojo-log button:hover { box-shadow: var(--shadow); } }

@@ -1,0 +1,4 @@
+.dboard-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 10px; }
+.dboard-title { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--ink2); }
+.dboard-live { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.dboard-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
