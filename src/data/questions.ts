@@ -1,15 +1,5 @@
-// The 120-card quiz bank. The original 56 cards were ported from
-// reference/onsite-express.html, then hand-rebalanced so option length gives
-// nothing away; q57+ are new. q105–q120 are the complexity-analysis set: on
-// several of those every option quotes the same bound and only one justification
-// holds, so knowing the answer without the why scores nothing. This file is
-// authored by hand now — do NOT regenerate it with scripts/extract-data.mjs,
-// that would resurrect the old bank.
-
 import type { Deck, QType, Question } from "../types";
 
-/* Quiz bank. t: pat|bug|line|cx · ph: graphs|bt|dp|ds · a is index into o BEFORE
-   shuffle — the correct option is always stored first and never displayed first. */
 export const Q: Question[] = [
 { id:"q1", t:"pat", ph:"graphs", q:"A grid of 0s and 1s. Count the groups of connected 1s.",
   o:["Flood fill from each unvisited land cell","Row-by-row sliding window over runs of 1s","Topological sort of cells by neighbour count","Binary search on the count of islands"], a:0,

@@ -1,34 +1,10 @@
-// The line, 24 stations. Days 1–10 are ridden history — d1–d7 ported verbatim
-// from reference/onsite-express.html, d8–d10 hand-authored and done; their
-// problem ids key real progress in real exports, so never rename, reword or
-// reorder them. Days 11–24 are the Google fortnight, rebuilt as multi-day arcs
-// instead of one pattern a day: graphs for five days (BFS → components &
-// union-find → topo order → Dijkstra → state graphs and the bitmask TSP), then
-// DP for three (knapsack → strings → grids), hard trees for two, then the
-// staples, a design day, and a final re-drill day. Easy in, hard out ACROSS an
-// arc — a gentle day is allowed. Five problems a day; every day's last problem
-// is a warm-up re-drilling an older pattern so nothing already learned rots,
-// and several rituals resurrect old templates outright. Picks are
-// cross-checked against liquidslr/leetcode-company-wise-problems' Google lists
-// (30-day and 3-month CSVs — the same repo the timed mocks link to). Where a
-// problem from the retired d11–d14 survives, it keeps its old id, so a tick
-// made ahead of schedule still counts.
-//
-// The premium classics (Meeting Rooms II, Alien Dictionary, Graph Valid Tree,
-// Walls and Gates, …) ride as in-app drills: original re-statements of the
-// same tasks — own wording, own examples — carried on a row by `drill`
-// instead of slug. Like every problem here, they open in the workspace
-// (statement, editor, tests) from src/data/problems; for these there is no
-// LeetCode page to fall back on. LeetCode's actual text is paywalled and none
-// of it is copied here. This file is no longer written by
-// scripts/extract-data.mjs — regenerating would amputate everything past d7.
-
 import type { Day, Diff, NonEmpty, Problem } from "../types";
 
 export const LC: (slug: string) => string = s => "https://leetcode.com/problems/" + s + "/";
 export const XPD: Record<Diff, number> = { E: 10, M: 20, H: 40 };
 export const RITUAL_XP: number = 15;
 
+// Problem ids key real progress in exports: never rename or reorder them.
 export const PLAN: NonEmpty<Day> = [
   { id:"d1", d:1, stn:"Pathfinding", color:"var(--blue)", ph:"graphs",
     name:"Paths as first-class objects",
@@ -291,22 +267,8 @@ export const PLAN: NonEmpty<Day> = [
     ]},
 ];
 
-/* Derived lookups. The ported literals above are never mutated — the reference
-   hung a back-reference off each problem, which would make PLAN cyclic.
-
-   Keyed by string rather than a union of the 61 known ids on purpose: these are
-   read with ids off the persisted blob, which a stale export can populate with
-   anything. Under noUncheckedIndexedAccess every lookup therefore has to admit
-   it can miss, which is exactly the check a stale id needs. */
-export const PROBS: Record<string, Problem> = {};
-export const DAY_OF: Record<string, Day> = {};
-PLAN.forEach((day) => day.probs.forEach((p) => { PROBS[p.id] = p; DAY_OF[p.id] = day; }));
-
-export const TOTAL: number = PLAN.reduce((a, d) => a + d.probs.length, 0);
 export const DIFFN: Record<Diff, string> = { E: "EASY", M: "MED", H: "HARD" };
 export const probXP = (p: Problem): number => p.xp || XPD[p.diff];
 
-/* Where a problem's ↗ goes, for rows that leave the app — the timed mocks,
-   which carry a url, and any slug the problem bank doesn't have yet. A drill
-   has neither, and gets "": its only door is the workspace. */
+/** "" for a drill, whose only way in is the workspace. */
 export const probURL = (p: Problem): string => p.url ?? (p.slug ? LC(p.slug) : "");

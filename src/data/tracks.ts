@@ -1,7 +1,3 @@
-// The lines. Everything that differs between riding to Google and riding to
-// Amazon is a field here, so the engine and the views ask TRACKS[id] instead
-// of branching on which line they're on.
-
 import { PLAN } from "./plan";
 import { AWS_PLAN } from "./aws";
 import { AWS_RANKCOL, AWS_RANKS, RANKCOL, RANKS } from "./meta";
@@ -62,18 +58,14 @@ export const TRACK_IDS: readonly TrackId[] = ["google", "aws"];
 
 export const isTrackId = (x: unknown): x is TrackId => x === "google" || x === "aws";
 
-/** Where a problem lives: its row, its station, its line. */
 export interface ProblemRef {
   prob: Problem;
   day: Day;
   track: TrackId;
 }
 
-/* Keyed by string for the reason plan.ts's lookups are: ids arrive off the
-   persisted blob, and a stale one has to be able to miss. Ids are unique
-   across lines by construction (short ids on the Google line, slugs on the
-   Local); a collision would silently cross-wire progress, so it fails loudly
-   at load instead. */
+// Keyed by string: ids come off the persisted blob, and a stale one has to be able to miss.
+// Ids are unique across lines; a collision would cross-wire progress, so it throws at load.
 export const PROB_INDEX: Record<string, ProblemRef> = {};
 export const DAY_INDEX: Record<string, { day: Day; track: TrackId }> = {};
 
@@ -88,10 +80,8 @@ for (const id of TRACK_IDS) {
   }
 }
 
-/** How many problems a line carries. */
 export const totalOf = (id: TrackId): number =>
   TRACKS[id].plan.reduce((a, d) => a + d.probs.length, 0);
 
-/** The problem-bank id a row opens in the workspace: the drill id for a
- *  premium stand-in, else the LeetCode slug. Timed mocks have neither. */
+/** The problem-bank key a row opens in the workspace: a drill's id, else its slug. Timed mocks have neither. */
 export const specOf = (p: Problem): string | null => p.drill ?? p.slug ?? null;

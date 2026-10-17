@@ -1,21 +1,8 @@
-// Day One Local — the slow train to Amazon. Thirteen stops through Seattle,
-// one idea per stop, LeetCode Easy only, no timetable: nothing here counts
-// down, and no stop has a morning ritual. Picks lean on what Amazon actually
-// asks at the easy end (Two Sum, Valid Parentheses, Merge Two Sorted Lists,
-// Most Common Word…), ordered so each stop needs only the ideas before it.
-//
-// Every problem has an in-app statement and tests under src/data/problems,
-// keyed by slug — which is also the problem id here, so ids never collide
-// with the Google line's short ones. Stations are named for places on the way
-// to Amazon's Day 1 tower, each with a reason: two gates at the Ballard Locks
-// for two pointers, a needle in a haystack for binary search, a park full of
-// trees, islands in the Sound. Station ids are "a1".."a13" for the same
-// reason the problem ids are slugs: never the same as a Google day's.
-
 import type { Day, NonEmpty, Problem } from "../types";
 
 const E = (slug: string, n: string): Problem => ({ id: slug, n, slug, diff: "E" });
 
+// Station ids ("a1".."a13") and problem ids (slugs) never collide with the Google line's short ids.
 export const AWS_PLAN: NonEmpty<Day> = [
   { id:"a1", d:1, stn:"Pike Place", color:"var(--aws-orange)", ph:"ds",
     name:"Hash sets and hash maps",
