@@ -1,0 +1,2 @@
+.qrbig { width: min(78vw, 48vh, 380px); aspect-ratio: 1; flex: none; padding: 10px; border-radius: 12px; background: #ffffff; }
+.qrbig svg { display: block; }

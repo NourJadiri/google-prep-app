@@ -1,0 +1,3 @@
+.io { width: 100%; margin-top: 10px; font-family: var(--mono); font-size: 11px; line-height: 1.55; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-height: 70px; display: none; resize: vertical; }
+.io.on { display: block; }
+.io:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }

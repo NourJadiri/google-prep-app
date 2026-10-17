@@ -1,11 +1,12 @@
 import { useApp } from "../../state/AppState";
 import { progressOf, trackOf } from "../../lib/engine";
-import StatsGrid from "./StatsGrid";
-import RankLadder from "./RankLadder";
-import BadgeGrid from "./BadgeGrid";
-import DataPanel from "./DataPanel";
-import SyncPanel from "./SyncPanel";
-import "./me.css";
+import Section from "../ui/Section";
+import BadgeGrid from "./badges/BadgeGrid";
+import DataPanel from "./data/DataPanel";
+import RankLadder from "./ladder/RankLadder";
+import MeHero from "./MeHero";
+import StatsGrid from "./stats/StatsGrid";
+import SyncPanel from "./sync/SyncPanel";
 
 export default function MeView() {
   const { state } = useApp();
@@ -14,32 +15,26 @@ export default function MeView() {
 
   return (
     <section className="view on">
-      <div className="hero">
-        <h1>
-          Your <b>line</b>
-        </h1>
-        <p>{"The numbers, the ranks, the hardware — " + T.name + "."}</p>
-      </div>
+      <MeHero trackName={T.name} />
 
-      {/* Mount point kept from the reference so the DOM matches element for
-          element — see the note in MetroView. */}
+      {/* The reference app's mount point; scripts/parity diffs this subtree against it. */}
       <div id="meArea">
         <StatsGrid data={data} />
-
-        <div className="sectionlabel">Rank ladder</div>
-        <RankLadder ranks={T.ranks} colors={T.rankCol} xp={progressOf(data).xp} />
-
-        <div className="sectionlabel">Hardware</div>
-        <BadgeGrid ids={T.badges} colors={T.rankCol} badges={data.badges} />
-
-        <div className="sectionlabel">Data</div>
-        <DataPanel />
+        <Section title="Rank ladder">
+          <RankLadder ranks={T.ranks} colors={T.rankCol} xp={progressOf(data).xp} />
+        </Section>
+        <Section title="Hardware">
+          <BadgeGrid ids={T.badges} colors={T.rankCol} badges={data.badges} />
+        </Section>
+        <Section title="Data">
+          <DataPanel />
+        </Section>
       </div>
 
-      {/* Outside #meArea on purpose: the parity harness diffs that subtree
-          against the reference, and sync is new behaviour, not ported. */}
-      <div className="sectionlabel">Sync</div>
-      <SyncPanel />
+      {/* Outside #meArea on purpose: sync is new behaviour, not ported from the reference. */}
+      <Section title="Sync">
+        <SyncPanel />
+      </Section>
     </section>
   );
 }

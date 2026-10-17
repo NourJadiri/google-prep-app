@@ -1,0 +1,27 @@
+/* The sheet owns the screen while it is open, at the scanner's layer: above the tab bar (40) and confetti (55), under toasts (60).
+   Darker scrim than the camera's: the phone reading this meters the whole frame, and a dark surround stops it blowing the white card out.
+   `dvh`, not `vh`: on a phone the URL bar comes and goes, and a sheet measured against the tall viewport puts Close under the chrome. */
+.qrscrim { position: fixed; inset: 0; height: 100dvh; z-index: 58; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.82); padding: calc(16px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom)); }
+/* White in both themes on purpose, like QrCode: a scanner wants dark modules on a light card with a margin round them.
+   It scrolls rather than overflows: an iPhone SE in Get mode, with the warning and the waiting line showing, is taller than 667px. */
+.qrsheet {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: min(94vw, 440px); max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  padding: 16px 16px 14px; border-radius: 16px;
+  background: #ffffff; color: #202124; box-shadow: 0 8px 28px rgba(0,0,0,.4);
+}
+/* A scrolling column must not also squash, or the toggle's track is the first thing to go. */
+.qrsheet > * { flex: none; }
+/* Inside the sheet the theme tokens would fight the white; pin the controls to the light palette's own values. */
+.qrsheet .synccode { margin-top: 0; border-color: #dadce0; background: #ffffff; color: #202124; }
+.qrsheet .synccode:active { background: #f1f3f4; }
+.qrsheet .mbtn { border-color: #dadce0; background: #ffffff; color: #202124; }
+.qrsheet .mbtn:active { background: #f1f3f4; }
+.qrsheet .syncinput { width: 100%; flex: none; border-color: #dadce0; background: #ffffff; color: #202124; min-height: 44px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .qrscrim { animation: scrimin .18s ease-out; }
+  .qrsheet { animation: sheetin .22s cubic-bezier(.05,.7,.1,1); }
+}
+@keyframes scrimin { from { opacity: 0; } }
+@keyframes sheetin { from { transform: scale(.94); opacity: 0; } }

@@ -1,0 +1,8 @@
+/* The same footprint as the square it replaces, so the sheet doesn't jump on the way out. */
+.qrlinked { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: min(78vw, 48vh, 380px); aspect-ratio: 1; color: #1e8e3e; }
+.qrlinked .ic { width: 88px; height: 88px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, currentColor 12%, transparent); }
+.qrlinked p { margin: 0; font-size: 16px; font-weight: 700; color: #202124; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .qrlinked .ic { animation: syncpop 420ms cubic-bezier(.2,1.6,.4,1); }
+}

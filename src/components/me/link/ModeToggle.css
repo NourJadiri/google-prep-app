@@ -1,0 +1,4 @@
+/* One segmented control with half lit reads as a choice already made, not as two things to do. Pinned to the light palette like the rest of the sheet. */
+.segtoggle { display: flex; width: 100%; gap: 3px; padding: 3px; border-radius: 999px; background: #f1f3f4; }
+.segtoggle button { flex: 1; min-width: 0; min-height: 44px; padding: 0 8px; border: 0; border-radius: 999px; background: transparent; color: #5f6368; font-size: 13px; font-weight: 600; transition: background-color .15s ease, color .15s ease; }
+.segtoggle button[aria-pressed="true"] { background: #ffffff; color: #1a73e8; box-shadow: 0 1px 2px rgba(60,64,67,.24); }

@@ -1,0 +1,4 @@
+/* Above the tab bar (40) and the confetti (55), under the toasts (60), which have to read over everything. */
+.scanwrap { position: fixed; inset: 0; z-index: 58; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(0,0,0,.72); padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+.scanvid { width: min(85vw, 420px); max-height: 58vh; border-radius: 16px; background: #000; object-fit: cover; }
+.scannote { margin: 0; max-width: 34ch; text-align: center; font-size: 12.5px; line-height: 1.5; color: #ffffff; }

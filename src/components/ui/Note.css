@@ -1,0 +1,2 @@
+.storenote + .storenote { margin-top: 6px; }
+.storenote.warn { color: var(--ink); }

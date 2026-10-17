@@ -1,0 +1,11 @@
+/* The dots are inline text either way, so nothing reflows when they stop moving. */
+.waiting .ell { white-space: nowrap; }
+.waiting .ell i { font-style: normal; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 1.6s, so it reads as patience, not as a spinner promising something in the next second. */
+  .waiting .ell i { animation: ellfade 1.6s ease-in-out infinite; }
+  .waiting .ell i:nth-child(2) { animation-delay: .22s; }
+  .waiting .ell i:nth-child(3) { animation-delay: .44s; }
+}
+@keyframes ellfade { 0%, 70%, 100% { opacity: .28; } 28% { opacity: 1; } }

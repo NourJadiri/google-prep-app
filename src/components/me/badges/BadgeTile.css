@@ -1,0 +1,4 @@
+.badge { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 6px 10px; text-align: center; }
+.badge .ic { width: 38px; height: 38px; margin: 0 auto; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, currentColor 12%, transparent); }
+.badge span { font-size: 10px; color: var(--ink2); display: block; margin-top: 6px; line-height: 1.25; }
+.badge.locked { opacity: .35; filter: grayscale(1); }
