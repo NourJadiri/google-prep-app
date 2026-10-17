@@ -1,0 +1,2 @@
+.ws-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; flex: 1; color: var(--ink2); font-size: 13.5px; position: relative; }
+.ws-loading > .ws-iconbtn { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 12px; }

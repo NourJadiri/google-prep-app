@@ -1,0 +1,6 @@
+.ws-runner { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; font-size: 11.5px; color: var(--ink2); }
+.ws-runner i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink2); opacity: .6; }
+.ws-runner.ready i { background: var(--green); opacity: 1; }
+.ws-runner.loading i, .ws-runner.busy i { background: var(--accent); opacity: 1; animation: wspulse 1s ease-in-out infinite; }
+.ws-runner.failed { color: var(--bad-ink); }
+.ws-runner.failed i { background: var(--red); opacity: 1; }

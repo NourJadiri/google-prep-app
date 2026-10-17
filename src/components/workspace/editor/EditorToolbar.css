@@ -1,0 +1,6 @@
+.ws-toolbar {
+  flex: none; display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+.ws-lang { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--ink); }
+.ws-font { font-family: var(--mono); font-size: 10.5px; color: var(--ink2); min-width: 30px; text-align: center; font-variant-numeric: tabular-nums; }

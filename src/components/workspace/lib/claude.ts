@@ -1,14 +1,31 @@
+import type { Spec } from "../../../data/problems";
 import type { CaseResult } from "../../../runner/types";
-import type { Verdict } from "./verdict";
+import { caseLabelForClaude } from "./caseLabel";
 import { withoutLead } from "./markdown";
+import type { RunView } from "./runPlan";
+import type { Verdict } from "./verdict";
 
 export interface ClaudeInput {
   title: string;
-  /** "LeetCode 1" or "stands in for LeetCode 253 (premium)". */
+  /** "LeetCode 1", "stands in for LeetCode 253, premium" or "original". */
   source: string;
   statement: string;
   code: string;
   last: { verdict: Verdict; focus: CaseResult | null; label: string | null } | null;
+}
+
+export function sourceOf(spec: Spec): string {
+  const lc = spec.lc;
+  if (!lc?.num) return "original";
+  return lc.premium ? `stands in for LeetCode ${lc.num}, premium` : `LeetCode ${lc.num}`;
+}
+
+/** The finished run's verdict and the case it points at, or null before one has finished. */
+export function lastRunOf(spec: Spec, run: RunView | null): ClaudeInput["last"] {
+  if (!run?.verdict) return null;
+  const verdict = run.verdict;
+  const focus = run.outcome?.results[verdict.focus] ?? null;
+  return { verdict, focus, label: focus ? caseLabelForClaude(spec, run, focus.i) : null };
 }
 
 const indent = (lines: string[]) => lines.map((l) => "    " + l).join("\n");

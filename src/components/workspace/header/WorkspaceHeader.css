@@ -1,0 +1,14 @@
+.ws-head {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.ws-title { min-width: 0; flex: 1; }
+.ws-title h2 {
+  margin: 0; font-size: 15.5px; font-weight: 650; letter-spacing: -.2px; line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 899px) {
+  .ws-head { gap: 6px; padding-left: 6px; padding-right: 8px; }
+  .ws-title h2 { font-size: 14.5px; }
+}

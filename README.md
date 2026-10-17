@@ -253,7 +253,7 @@ everyone else out. One-time setup:
 How it stays yours:
 
 - **The key never leaves Cloudflare.** It is a Worker secret, and
-  `worker/assistant.ts` is the only code that reads it — never in the bundle (it is not
+  `worker/assistant/` is the only code that reads it — never in the bundle (it is not
   a `VITE_` variable, which Vite would bake into the public JavaScript), never in git,
   never in a browser.
 - **The Worker is the door, and the password its lock.** Every request carries the
@@ -273,7 +273,7 @@ How it stays yours:
   workspace's monthly cap is the most it could cost. If the password leaks, change the
   secret (it takes effect at once); if the key does, revoke it in the Console.
 - **Answers can't run code in the page.** They are rendered by their own `marked`
-  instance (`answer.ts`) that shows raw HTML as text, never loads an image (a markdown
+  instance (`renderAnswer.ts`) that shows raw HTML as text, never loads an image (a markdown
   image is a request to whatever URL the text names), and links only to http(s).
 
 Each question takes along a snapshot of your code when it changed since the last one,
@@ -393,8 +393,8 @@ scripts/problems/               validate.mjs (the bank's validator), specfmt.py 
 worker/index.ts                 the Worker's router: /api/state/<code> and /api/assistant
 worker/sync.ts                  the sync endpoint: one D1 row per code, last-write-wins,
                                 self-migrating schema, refuses schema downgrades
-worker/assistant.ts             the assistant endpoint: password gate, the only holder of
-                                the Anthropic key, streams Claude's answer back
+worker/assistant/               the assistant endpoint: password gate, request checks, the
+                                prompt, the only holder of the Anthropic key, the stream back
 worker/http.ts                  the no-store JSON both endpoints answer with
 wrangler.jsonc                  the Worker: dist/ as static assets, the D1 binding
 public/_headers                 cross-origin isolation + immutable /pyodide/* caching
@@ -421,16 +421,23 @@ src/
   lib/          engine.ts       every rule, as pure functions
                 storage.ts      localStorage with an in-memory fallback
                 drafts.ts       your code per problem, and workspace prefs — local only
-                assistant.ts    the assistant's password and window spot — local only
+                cx.ts           class-name joiner; platform.ts: Mac or not, ⌘ or Ctrl
                 sync.ts         mirrors the blob to /api/state; offline-first
                 link.ts         the link a QR carries: #sync=<code>&do=send|recv
                 qr.ts           the QR matrix, via the qrcode package
                 dates.ts        calendar-day helpers
   state/        AppState.tsx    Context + useReducer + persistence
                 TimerProvider.tsx  the Day-7 mock clock, hoisted above the views
+  hooks/        useMedia, useLatest, useCopied — shared by more than one area
   components/   layout/ line/ metro/ dojo/ me/ shared/
-                workspace/      the editor, the panes, results, verdicts, Copy for Claude,
-                                and the assistant (Assistant.tsx, answer.ts)
+                ui/             shared primitives: Button, IconButton, LinkButton, Tabs,
+                                SegmentedControl, StatusDot, Badge, Spinner, Spacer
+                workspace/      the editor modal: Workspace (the shell) and WorkspaceBody,
+                                header/, layout/, problem/, editor/, console/, plus
+                                hooks/ (draft, prefs, run session, shortcuts…) and
+                                lib/ (run plan, verdicts, Copy for Claude, markdown)
+                assistant/      the ⌘K window: components, hooks/ (chat, password,
+                                floating box…) and lib/ (messages, storage, safe answers)
 ```
 
 ### What the types are actually doing

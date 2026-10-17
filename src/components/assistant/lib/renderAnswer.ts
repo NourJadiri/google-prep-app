@@ -5,7 +5,7 @@ import { highlightPython } from "./highlightPython";
 /* No language, or any spelling of Python: the model's fences are nearly always Python here. */
 const PYTHON = /^(py|python3?)?$/i;
 
-/* Its own instance, because Markdown.tsx passes HTML through and this is model text: raw HTML is escaped, and images are refused because a markdown image is a request that can smuggle data out. */
+/* Its own instance, because `Markdown` passes HTML through and this is model text: raw HTML is escaped, and images are refused because a markdown image is a request that can smuggle data out. */
 const answers = new Marked({
   gfm: true,
   breaks: false,

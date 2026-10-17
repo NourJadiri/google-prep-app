@@ -26,7 +26,7 @@ that stands.
 
 | # | Area | State |
 |---|------|-------|
-| 1 | Workspace: problem pane, editor, console, Python runner, the assistant, plus the first shared UI primitives | in progress |
+| 1 | Workspace: problem pane, editor, console, Python runner, the assistant, plus the first shared UI primitives | done |
 | 2 | Me tab and sync: sync panel, link sheet, scanner, `lib/sync.ts` | |
 | 3 | Line, Metro and Dojo tabs, the app shell, shared components (`Icon`, celebrations) | |
 | 4 | State and domain: `lib/engine.ts`, `state/AppState.tsx`, `types.ts`, data files | |
@@ -34,6 +34,30 @@ that stands.
 The domain layer (step 4) is the safest mechanical split, but the components are what reads worst,
 so they go first. When step 4 comes, `lib/engine.ts` can stay as a re-exporting barrel so no UI
 import has to change.
+
+## Step 1 result
+
+The workspace and the assistant went from 17 files to 119 (65 components). The largest component
+file went from 524 lines to 151, and comments from 9% of lines to 4%. `Workspace` is now a shell over
+`WorkspaceBody`, which wires hooks (`useDraft`, `useRunSession`, `useWorkspaceShortcuts`…) into
+named parts (`header/`, `layout/`, `problem/`, `editor/`, `console/`). The assistant lives in
+`src/components/assistant/`, and the Worker's half in `worker/assistant/`. Shared pieces started in
+`src/components/ui/`, `src/hooks/` and `src/lib/`.
+
+Checked with 18 scripted scenarios (388 assertions) and 44 screenshots, desktop and phone, light
+and dark, including the assistant against a fake Anthropic server: identical before and after,
+pixel for pixel.
+
+Left for later, on purpose:
+- Class names were kept (`ws-btn`, `asst-*`…) so the screenshots stayed comparable. The `ui/`
+  components still render `ws-*` classes; rename them when another area adopts them.
+- `Note`, `Pre`, `Hint` (console) and `SectionHeading` (problem) are local primitives that belong
+  in `ui/` once a second area needs them.
+- The answer renderer's Python highlighting duplicates the editor's highlight style.
+- The client and the Worker each declare the assistant's request shape and the 40-turn cap.
+- Known quirks kept as they were: the verdict can focus a different case than the chip order
+  suggests when a typed case is broken; crossing the 900 px breakpoint remounts the editor and the
+  assistant (losing undo history and the chat); "Nothing to run" shows its message twice.
 
 ## Audit (October 2026)
 
