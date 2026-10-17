@@ -6,8 +6,9 @@ import "./Chips.css";
 interface ResultChipsProps {
   run: RunView;
   results: CaseResult[];
+  /** Plan index of the open case. */
   selected: number;
-  onSelect: (k: number) => void;
+  onSelect: (i: number) => void;
   label: (r: CaseResult) => string;
   notRun: number;
 }
@@ -16,8 +17,8 @@ export default function ResultChips({ run, results, selected, onSelect, label, n
   const submit = run.mode === "submit";
   return (
     <div className={"ws-chips" + (submit ? " grid" : "")} role="tablist" aria-label="Cases">
-      {results.map((r, k) => (
-        <ResultChip key={r.i} status={r.status} label={label(r)} selected={k === selected} onSelect={() => onSelect(k)}>
+      {results.map((r) => (
+        <ResultChip key={r.i} status={r.status} label={label(r)} selected={r.i === selected} onSelect={() => onSelect(r.i)}>
           {submit ? planTestNumber(run, r.i) : label(r)}
         </ResultChip>
       ))}

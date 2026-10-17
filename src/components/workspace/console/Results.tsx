@@ -26,7 +26,7 @@ export default function Results({ spec, cases, run }: ResultsProps) {
   if (!o) return <ResultsRunning run={run} />;
 
   const results = run.mode === "run" ? orderLikeCases(run, cases, o.results) : o.results;
-  const chosen = results[sel] ?? results[0];
+  const chosen = results.find((r) => r.i === sel) ?? results[0];
 
   return (
     <div className="ws-results">

@@ -12,22 +12,18 @@ interface DesktopLayoutProps {
   problem: ReactNode;
   editor: ReactNode;
   tests: ReactNode;
-  assistant: ReactNode;
 }
 
-export default function DesktopLayout({ splitX, splitY, onSplitX, onSplitY, onCommitSplits, problem, editor, tests, assistant }: DesktopLayoutProps) {
+export default function DesktopLayout({ splitX, splitY, onSplitX, onSplitY, onCommitSplits, problem, editor, tests }: DesktopLayoutProps) {
   return (
-    <>
-      <div className="ws-main">
-        <Split dir="row" ratio={splitX} onRatio={onSplitX} onCommit={onCommitSplits} label="Resize the statement">
-          {problem}
-          <Split dir="col" ratio={splitY} onRatio={onSplitY} onCommit={onCommitSplits} min={0.25} max={0.85} label="Resize the editor">
-            {editor}
-            {tests}
-          </Split>
+    <div className="ws-main">
+      <Split dir="row" ratio={splitX} onRatio={onSplitX} onCommit={onCommitSplits} label="Resize the statement">
+        {problem}
+        <Split dir="col" ratio={splitY} onRatio={onSplitY} onCommit={onCommitSplits} min={0.25} max={0.85} label="Resize the editor">
+          {editor}
+          {tests}
         </Split>
-      </div>
-      {assistant}
-    </>
+      </Split>
+    </div>
   );
 }

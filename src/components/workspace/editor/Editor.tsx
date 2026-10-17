@@ -1,10 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { historyField } from "@codemirror/commands";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { editorExtensions } from "./extensions";
 import { setErrorLine } from "./errorLine";
 import { fontTheme } from "./theme";
 import "./Editor.css";
+
+export interface EditorSnapshot {
+  docKey: string;
+  state: unknown;
+}
 
 export interface EditorProps {
   /** The document to show. Replaced wholesale whenever `docKey` changes; otherwise the editor owns the text and
@@ -20,6 +26,8 @@ export interface EditorProps {
   fontSize: number;
   readOnly?: boolean;
   label: string;
+  /** Outlives the editor: a rebuild for the same document resumes from it, undo history included. */
+  snapshot?: RefObject<EditorSnapshot | null>;
 }
 
 export default function Editor({
@@ -33,6 +41,7 @@ export default function Editor({
   fontSize,
   readOnly = false,
   label,
+  snapshot,
 }: EditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -43,13 +52,15 @@ export default function Editor({
   useEffect(() => {
     const el = host.current;
     if (!el) return;
-    const state = EditorState.create({
-      doc: value,
-      extensions: editorExtensions({ callbacks, font, fontSize, label, readOnly }),
-    });
+    const extensions = editorExtensions({ callbacks, font, fontSize, label, readOnly });
+    const saved = snapshot?.current?.docKey === docKey ? snapshot.current.state : null;
+    const state = saved
+      ? EditorState.fromJSON(saved, { extensions }, { history: historyField })
+      : EditorState.create({ doc: value, extensions });
     const v = new EditorView({ state, parent: el });
     view.current = v;
     return () => {
+      if (snapshot) snapshot.current = { docKey, state: v.state.toJSON({ history: historyField }) };
       v.destroy();
       view.current = null;
     };

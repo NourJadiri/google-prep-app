@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ProblemContent } from "../../data/problems";
 import type { ProblemRef } from "../../data/tracks";
 import { useMedia } from "../../hooks/useMedia";
 import { useApp } from "../../state/AppState";
 import { useAssistantWindow } from "../assistant/hooks/useAssistantWindow";
 import ConsolePane from "./console/ConsolePane";
+import type { EditorSnapshot } from "./editor/Editor";
 import EditorPane from "./editor/EditorPane";
 import HeaderActions from "./header/HeaderActions";
 import ProblemMeta from "./header/ProblemMeta";
@@ -40,6 +41,9 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
   const [problemTab, setProblemTab] = useState<"desc" | "solution">("desc");
   const [consoleTab, setConsoleTab] = useState<"cases" | "result">("cases");
   const [mobileTab, setMobileTab] = useState<MobileTab>("problem");
+  const [revealed, setRevealed] = useState(false);
+  /* Crossing 900px swaps layouts and remounts the panes; what must survive that lives here. */
+  const editorSnapshot = useRef<EditorSnapshot | null>(null);
 
   const session = useRunSession({
     pid,
@@ -64,7 +68,17 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
   const runCases = () => session.start("run");
   const submit = () => session.start("submit");
 
-  const problemPane = <ProblemPane content={content} tab={problemTab} onTab={setProblemTab} accepted={accepted} fontSize={prefs.font} />;
+  const problemPane = (
+    <ProblemPane
+      content={content}
+      tab={problemTab}
+      onTab={setProblemTab}
+      accepted={accepted}
+      revealed={revealed}
+      onReveal={() => setRevealed(true)}
+      fontSize={prefs.font}
+    />
+  );
   const editorPane = (
     <EditorPane
       title={spec.title}
@@ -77,6 +91,7 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
       fontSize={prefs.font}
       onFontStep={prefs.stepFont}
       onReset={draft.reset}
+      snapshot={editorSnapshot}
     />
   );
   const consolePane = (
@@ -132,7 +147,6 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
           problem={problemPane}
           editor={editorPane}
           tests={consolePane}
-          assistant={assistant}
         />
       ) : (
         <MobileLayout
@@ -143,9 +157,9 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
           problem={problemPane}
           editor={editorPane}
           tests={consolePane}
-          assistant={assistant}
         />
       )}
+      {assistant}
     </>
   );
 }

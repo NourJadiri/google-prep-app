@@ -23,10 +23,9 @@ interface MobileLayoutProps {
   problem: ReactNode;
   editor: ReactNode;
   tests: ReactNode;
-  assistant: ReactNode;
 }
 
-export default function MobileLayout({ tab, onTab, busy, verdict, problem, editor, tests, assistant }: MobileLayoutProps) {
+export default function MobileLayout({ tab, onTab, busy, verdict, problem, editor, tests }: MobileLayoutProps) {
   const testsDot = busy ? <StatusDot tone="pulse" /> : verdict && <StatusDot tone={verdict.tone} />;
 
   return (
@@ -45,7 +44,6 @@ export default function MobileLayout({ tab, onTab, busy, verdict, problem, edito
         <div className={cx("ws-pane", tab === "code" && "on")}>{editor}</div>
         <div className={cx("ws-pane", tab === "tests" && "on")}>{tests}</div>
       </div>
-      {assistant}
     </>
   );
 }

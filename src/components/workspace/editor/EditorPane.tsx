@@ -1,5 +1,6 @@
+import type { RefObject } from "react";
 import { errorLineOf, type RunView } from "../lib/runPlan";
-import Editor from "./Editor";
+import Editor, { type EditorSnapshot } from "./Editor";
 import EditorToolbar from "./EditorToolbar";
 import "./EditorPane.css";
 
@@ -15,9 +16,10 @@ interface EditorPaneProps {
   fontSize: number;
   onFontStep: (delta: number) => void;
   onReset: () => void;
+  snapshot: RefObject<EditorSnapshot | null>;
 }
 
-export default function EditorPane({ title, code, docKey, onChange, onRun, onSubmit, run, fontSize, onFontStep, onReset }: EditorPaneProps) {
+export default function EditorPane({ title, code, docKey, onChange, onRun, onSubmit, run, fontSize, onFontStep, onReset, snapshot }: EditorPaneProps) {
   return (
     <section className="ws-code" aria-label="Code">
       <EditorToolbar fontSize={fontSize} onFontStep={onFontStep} onReset={onReset} />
@@ -32,6 +34,7 @@ export default function EditorPane({ title, code, docKey, onChange, onRun, onSub
           errorRev={run?.id ?? 0}
           fontSize={fontSize}
           label={"Your solution to " + title}
+          snapshot={snapshot}
         />
       </div>
     </section>
