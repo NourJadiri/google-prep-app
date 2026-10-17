@@ -4,6 +4,10 @@ import { DIFFN, LC } from "../../data/plan";
 import { PROB_INDEX, TRACKS, specOf, type ProblemRef } from "../../data/tracks";
 import { caseFields, hasProblem, loadProblem, type ProblemContent, type Spec } from "../../data/problems";
 import { clearDraft, loadDraft, loadPrefs, saveDraft, savePrefs } from "../../lib/drafts";
+import { isMac, modKey } from "../../lib/platform";
+import { useCopied } from "../../hooks/useCopied";
+import { useLatest } from "../../hooks/useLatest";
+import { useMedia } from "../../hooks/useMedia";
 import * as runner from "../../runner/runner";
 import type { RunRequest } from "../../runner/types";
 import Editor from "./Editor";
@@ -17,6 +21,14 @@ import { withoutLead } from "./Markdown";
 import type { AskContext } from "./Assistant";
 import { useRunnerStatus } from "./useRunner";
 import Icon from "../shared/Icon";
+import Button from "../ui/Button";
+import IconButton from "../ui/IconButton";
+import LinkButton from "../ui/LinkButton";
+import Segment from "../ui/Segment";
+import SegmentedControl from "../ui/SegmentedControl";
+import Spacer from "../ui/Spacer";
+import Spinner from "../ui/Spinner";
+import StatusDot from "../ui/StatusDot";
 import "./workspace.css";
 
 /* The assistant and the AI SDK behind it load on the first ⌘K, not before. */
@@ -90,14 +102,12 @@ export default function Workspace({ pid }: { pid: string }) {
         <Body key={pid} r={ref} content={content} />
       ) : (
         <div className="ws-loading">
-          <button className="ws-iconbtn" onClick={actions.closeWork} aria-label="Close">
-            <Icon name="chevron-left" size={18} />
-          </button>
+          <IconButton icon="chevron-left" label="Close" onClick={actions.closeWork} />
           {content === null ? (
             <p>This problem has no in-app version yet.</p>
           ) : (
             <>
-              <div className="ws-spinner" aria-hidden="true" />
+              <Spinner />
               <p>Opening {ref.prob.n}…</p>
             </>
           )}
@@ -105,17 +115,6 @@ export default function Workspace({ pid }: { pid: string }) {
       )}
     </div>
   );
-}
-
-function useMedia(query: string): boolean {
-  const [match, setMatch] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const mq = window.matchMedia(query);
-    const on = () => setMatch(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, [query]);
-  return match;
 }
 
 const initialCases = (spec: Spec): CaseDraft[] =>
@@ -152,15 +151,14 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
   const [paneTab, setPaneTab] = useState<"desc" | "solution">("desc");
   const [mobileTab, setMobileTab] = useState<"problem" | "code" | "tests">("problem");
   const [run, setRun] = useState<RunView | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, copy] = useCopied(2200);
   /* summon counts the presses that should pull focus into the assistant;
      loaded stays true once it has been opened, so closing keeps the chat. */
   const [ask, setAsk] = useState({ open: false, summon: 0, loaded: false });
 
   /* Drafts: saved 400ms after the last keystroke, and on the way out. A draft
      identical to the starter is no draft at all. */
-  const latest = useRef(code);
-  latest.current = code;
+  const latest = useLatest(code);
   const saveTimer = useRef(0);
   const persist = (c: string) => (c === spec.starter ? clearDraft(pid) : saveDraft(pid, c));
   const onChange = (c: string) => {
@@ -235,8 +233,7 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
   const closeAsk = useCallback(() => setAsk((a) => ({ ...a, open: false })), []);
 
   /* Shortcuts that work wherever focus is; the editor has its own copies. */
-  const startRef = useRef(start);
-  startRef.current = start;
+  const startRef = useLatest(start);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
@@ -245,7 +242,7 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
       if (mod && e.key === "Enter") {
         e.preventDefault();
         void startRef.current(e.shiftKey ? "submit" : "run");
-      } else if (e.key.toLowerCase() === "k" && !e.shiftKey && !e.altKey && (onMac() ? e.metaKey : e.ctrlKey)) {
+      } else if (e.key.toLowerCase() === "k" && !e.shiftKey && !e.altKey && (isMac() ? e.metaKey : e.ctrlKey)) {
         /* Ctrl alone on a Mac stays the editor's: Ctrl-K deletes to the end of the line there. */
         e.preventDefault();
         if (e.target instanceof HTMLElement && e.target.closest(".asst:not([hidden])")) closeAsk();
@@ -283,18 +280,16 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
     return v ? { verdict: v, focus, label: focus ? labelFor(spec, run, focus.i) : null } : null;
   };
 
-  const copyForClaude = () => {
-    const text = claudePrompt({
-      title: spec.title,
-      source: sourceOf(spec),
-      statement: content.statement,
-      code,
-      last: lastRun(),
-    });
-    navigator.clipboard?.writeText(text).catch(() => {});
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2200);
-  };
+  const copyForClaude = () =>
+    copy(
+      claudePrompt({
+        title: spec.title,
+        source: sourceOf(spec),
+        statement: content.statement,
+        code,
+        last: lastRun(),
+      })
+    );
 
   /* What a question takes along, read the moment it is sent. Behind a ref,
      so the assistant's props hold still while you type in the editor. */
@@ -306,8 +301,7 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
       run: last ? runReport(last) : null,
     };
   };
-  const askRef = useRef(askNow);
-  askRef.current = askNow;
+  const askRef = useLatest(askNow);
   const readAsk = useCallback(() => askRef.current(), []);
 
   const assistant = ask.loaded && (
@@ -321,9 +315,7 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
 
   const header = (
     <header className="ws-head">
-      <button className="ws-iconbtn" onClick={actions.closeWork} aria-label="Back to the line" title="Back (Esc)">
-        <Icon name="chevron-left" size={18} />
-      </button>
+      <IconButton icon="chevron-left" label="Back to the line" title="Back (Esc)" onClick={actions.closeWork} />
       <div className="ws-title">
         <h2>{spec.title}</h2>
         <div className="ws-meta">
@@ -350,34 +342,34 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
       </div>
       <div className="ws-actions">
         {wide && <Stopwatch />}
-        <button
-          className="ws-btn ghost"
+        <Button
+          variant="ghost"
           onClick={ask.open ? closeAsk : openAsk}
           aria-pressed={ask.open}
           title={"Ask the assistant (" + modKey() + "+K)"}
         >
           <Icon name="sparkles" size={14} />
           {wide && "Ask"}
-        </button>
-        <button className={"ws-btn ghost" + (copied ? " ok" : "")} onClick={copyForClaude} title="Problem, code and last result, ready to paste into Claude">
+        </Button>
+        <Button variant="ghost" tone={copied ? "ok" : undefined} onClick={copyForClaude} title="Problem, code and last result, ready to paste into Claude">
           <Icon name={copied ? "check" : "copy"} size={14} />
           {wide && (copied ? "Copied" : "Copy for Claude")}
-        </button>
+        </Button>
         {busy ? (
-          <button className="ws-btn" onClick={runner.stop} title="Stop">
+          <Button onClick={runner.stop} title="Stop">
             <Icon name="square" size={13} />
             Stop
-          </button>
+          </Button>
         ) : (
-          <button className="ws-btn" onClick={() => void start("run")} title={"Run the cases (" + modKey() + "+Enter)"}>
+          <Button onClick={() => void start("run")} title={"Run the cases (" + modKey() + "+Enter)"}>
             <Icon name="play" size={13} />
             Run
-          </button>
+          </Button>
         )}
-        <button className="ws-btn primary" onClick={() => void start("submit")} disabled={busy} title={"Run every test (" + modKey() + "+Shift+Enter)"}>
+        <Button variant="primary" onClick={() => void start("submit")} disabled={busy} title={"Run every test (" + modKey() + "+Shift+Enter)"}>
           <Icon name="send" size={13} />
           Submit
-        </button>
+        </Button>
       </div>
     </header>
   );
@@ -387,23 +379,15 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
       <div className="ws-toolbar">
         <span className="ws-lang">Python 3.14</span>
         <RunnerBadge phase={status.phase} />
-        {status.phase === "failed" && (
-          <button className="ws-linkbtn" onClick={() => void runner.warm().catch(() => {})}>
-            Retry
-          </button>
-        )}
-        <span className="ws-spacer" />
-        <button className="ws-iconbtn sm" onClick={() => setFont(-1)} aria-label="Smaller text" title="Smaller text">
-          <Icon name="minus" size={13} />
-        </button>
+        {status.phase === "failed" && <LinkButton onClick={() => void runner.warm().catch(() => {})}>Retry</LinkButton>}
+        <Spacer />
+        <IconButton size="sm" icon="minus" label="Smaller text" title="Smaller text" onClick={() => setFont(-1)} />
         <span className="ws-font">{prefs.font}px</span>
-        <button className="ws-iconbtn sm" onClick={() => setFont(1)} aria-label="Larger text" title="Larger text">
-          <Icon name="plus" size={13} />
-        </button>
-        <button className="ws-linkbtn" onClick={reset} title="Back to the starter code">
+        <IconButton size="sm" icon="plus" label="Larger text" title="Larger text" onClick={() => setFont(1)} />
+        <LinkButton onClick={reset} title="Back to the starter code">
           <Icon name="rotate-ccw" size={12} />
           Reset
-        </button>
+        </LinkButton>
       </div>
       <div className="ws-editor">
         <Editor
@@ -473,15 +457,15 @@ function Body({ r, content }: { r: ProblemRef; content: ProblemContent }) {
   return (
     <>
       {header}
-      <div className="ws-seg" role="tablist" aria-label="Workspace panes">
+      <SegmentedControl aria-label="Workspace panes">
         {(["problem", "code", "tests"] as const).map((t) => (
-          <button key={t} role="tab" aria-selected={mobileTab === t} className={mobileTab === t ? "on" : ""} onClick={() => setMobileTab(t)}>
+          <Segment key={t} selected={mobileTab === t} onSelect={() => setMobileTab(t)}>
             {t === "problem" ? "Problem" : t === "code" ? "Code" : "Tests"}
-            {t === "tests" && busy && <i className="ws-dot pulse" />}
-            {t === "tests" && !busy && run?.verdict && <i className={"ws-dot " + run.verdict.tone} />}
-          </button>
+            {t === "tests" && busy && <StatusDot tone="pulse" />}
+            {t === "tests" && !busy && run?.verdict && <StatusDot tone={run.verdict.tone} />}
+          </Segment>
         ))}
-      </div>
+      </SegmentedControl>
       {/* All three stay mounted, so switching panes keeps the editor's undo
           history and the statement's scroll position. */}
       <div className="ws-stack">
@@ -500,9 +484,6 @@ function labelFor(spec: Spec, run: RunView | null, i: number): string {
   const t = spec.tests[p.test];
   return run?.mode === "submit" ? `test ${p.test + 1}${t?.label ? ` (${t.label})` : ""}` : "an example";
 }
-
-const onMac = () => /Mac|iPhone|iPad/.test(navigator.platform);
-const modKey = () => (onMac() ? "⌘" : "Ctrl");
 
 function RunnerBadge({ phase }: { phase: runner.RunnerPhase }) {
   const copy: Record<runner.RunnerPhase, string> = {

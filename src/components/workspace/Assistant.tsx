@@ -2,8 +2,13 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormE
 import { useChat } from "@ai-sdk/react";
 import { APICallError, DefaultChatTransport, type UIMessage } from "ai";
 import { forgetPassword, loadPassword, loadSpot, savePassword, saveSpot, type Spot } from "../../lib/assistant";
+import { useLatest } from "../../hooks/useLatest";
 import { renderAnswer } from "./answer";
 import Icon from "../shared/Icon";
+import Button from "../ui/Button";
+import IconButton from "../ui/IconButton";
+import LinkButton from "../ui/LinkButton";
+import Spacer from "../ui/Spacer";
 import "./assistant.css";
 
 /* The assistant: a small window over the workspace for the questions a
@@ -160,10 +165,8 @@ function Assistant({
   const [spot, setSpot] = useState<Spot>(() => fit(loadSpot() ?? firstSpot()));
 
   /* The transport is built once; these let it read the current values. */
-  const pass = useRef(password);
-  pass.current = password;
-  const ctx = useRef(context);
-  ctx.current = context;
+  const pass = useLatest(password);
+  const ctx = useLatest(context);
 
   const transport = useMemo(
     () =>
@@ -375,20 +378,10 @@ function Assistant({
       >
         <Icon name="sparkles" size={15} className="asst-mark" />
         <h3>Assistant</h3>
-        <span className="ws-spacer" />
-        {messages.length > 0 && (
-          <button className="ws-iconbtn sm" onClick={fresh} aria-label="New chat" title="New chat">
-            <Icon name="rotate-ccw" size={13} />
-          </button>
-        )}
-        {password && (
-          <button className="ws-iconbtn sm" onClick={lock} aria-label="Forget the password" title="Forget the password on this device">
-            <Icon name="lock" size={13} />
-          </button>
-        )}
-        <button className="ws-iconbtn sm" onClick={onClose} aria-label="Close the assistant" title="Close (Esc)">
-          <Icon name="x" size={14} />
-        </button>
+        <Spacer />
+        {messages.length > 0 && <IconButton size="sm" icon="rotate-ccw" label="New chat" title="New chat" onClick={fresh} />}
+        {password && <IconButton size="sm" icon="lock" label="Forget the password" title="Forget the password on this device" onClick={lock} />}
+        <IconButton size="sm" icon="x" iconSize={14} label="Close the assistant" title="Close (Esc)" onClick={onClose} />
       </header>
 
       {!password ? (
@@ -409,9 +402,9 @@ function Assistant({
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
           />
-          <button className="ws-btn primary" type="submit" disabled={!typed.trim()}>
+          <Button variant="primary" type="submit" disabled={!typed.trim()}>
             Unlock
-          </button>
+          </Button>
         </form>
       ) : (
         <>
@@ -443,16 +436,8 @@ function Assistant({
               <div className="asst-trouble" role="alert">
                 <Icon name="alert-triangle" size={14} />
                 <span>{trouble.text}</span>
-                {trouble.kind === "other" && (
-                  <button className="ws-linkbtn" onClick={retry}>
-                    Retry
-                  </button>
-                )}
-                {trouble.kind === "full" && (
-                  <button className="ws-linkbtn" onClick={fresh}>
-                    New chat
-                  </button>
-                )}
+                {trouble.kind === "other" && <LinkButton onClick={retry}>Retry</LinkButton>}
+                {trouble.kind === "full" && <LinkButton onClick={fresh}>New chat</LinkButton>}
               </div>
             )}
             {full && !busy && <p className="asst-note">This chat is full. Start a new one to keep going.</p>}

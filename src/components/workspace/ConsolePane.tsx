@@ -3,8 +3,15 @@ import type { ReactNode } from "react";
 import type { Spec } from "../../data/problems";
 import { caseFields, fieldNames } from "../../data/problems";
 import type { CaseResult, RunOutcome, RunProgress } from "../../runner/types";
+import { modKey } from "../../lib/platform";
 import { caseMark, type Verdict } from "./verdict";
 import Icon from "../shared/Icon";
+import Badge from "../ui/Badge";
+import LinkButton from "../ui/LinkButton";
+import Spinner from "../ui/Spinner";
+import StatusDot from "../ui/StatusDot";
+import Tab from "../ui/Tab";
+import Tabs from "../ui/Tabs";
 
 /* The bottom of the right column: the cases you're about to run, and what
    happened when you ran them. LeetCode's two tabs, kept because the muscle
@@ -86,21 +93,18 @@ export default function ConsolePane({
   };
 
   const running = run !== null && run.outcome === null;
+  const resultDot = running ? <StatusDot tone="pulse" aria-label="running" /> : run?.verdict && <StatusDot tone={run.verdict.tone} aria-hidden="true" />;
 
   return (
     <section className="ws-console" aria-label="Tests">
-      <div className="ws-tabs" role="tablist">
-        <button role="tab" aria-selected={tab === "cases"} className={tab === "cases" ? "on" : ""} onClick={() => onTab("cases")}>
-          <Icon name="list-checks" size={14} />
+      <Tabs>
+        <Tab icon="list-checks" selected={tab === "cases"} onSelect={() => onTab("cases")}>
           Testcase
-        </button>
-        <button role="tab" aria-selected={tab === "result"} className={tab === "result" ? "on" : ""} onClick={() => onTab("result")}>
-          <Icon name="terminal" size={14} />
+        </Tab>
+        <Tab icon="terminal" selected={tab === "result"} onSelect={() => onTab("result")} status={resultDot}>
           Result
-          {running && <i className="ws-dot pulse" aria-label="running" />}
-          {!running && run?.verdict && <i className={"ws-dot " + run.verdict.tone} aria-hidden="true" />}
-        </button>
-      </div>
+        </Tab>
+      </Tabs>
 
       <div className="ws-console-body">
         {tab === "cases" ? (
@@ -122,9 +126,9 @@ export default function ConsolePane({
               <button className="ws-chip add" onClick={add} aria-label="Add a case" title="Add a case">
                 <Icon name="plus" size={13} />
               </button>
-              <button className="ws-linkbtn" onClick={restore} title="Back to the problem's examples">
+              <LinkButton onClick={restore} title="Back to the problem's examples">
                 Reset
-              </button>
+              </LinkButton>
             </div>
             {cur && (
               <div className="ws-fields">
@@ -163,6 +167,7 @@ function Results({ spec, cases, run }: { spec: Spec; cases: CaseDraft[]; run: Ru
   useEffect(() => setSel(focus), [runId, focus]);
 
   if (!run) {
+    const mod = modKey();
     return (
       <div className="ws-empty">
         <p>
@@ -170,7 +175,7 @@ function Results({ spec, cases, run }: { spec: Spec; cases: CaseDraft[]; run: Ru
           and a clean sweep ticks the problem.
         </p>
         <p className="ws-keys">
-          <kbd>{MOD}</kbd> <kbd>↵</kbd> run · <kbd>{MOD}</kbd> <kbd>⇧</kbd> <kbd>↵</kbd> submit
+          <kbd>{mod}</kbd> <kbd>↵</kbd> run · <kbd>{mod}</kbd> <kbd>⇧</kbd> <kbd>↵</kbd> submit
         </p>
       </div>
     );
@@ -181,7 +186,7 @@ function Results({ spec, cases, run }: { spec: Spec; cases: CaseDraft[]; run: Ru
     const n = run.progress?.results.length ?? 0;
     return (
       <div className="ws-running">
-        <div className="ws-spinner" aria-hidden="true" />
+        <Spinner />
         <p>{run.progress ? `Running ${run.mode === "submit" ? "test" : "case"} ${Math.min(n + 1, run.plan.length)} of ${run.plan.length}…` : "Starting Python…"}</p>
       </div>
     );
@@ -237,8 +242,6 @@ function Results({ spec, cases, run }: { spec: Spec; cases: CaseDraft[]; run: Ru
   );
 }
 
-const MOD = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
-
 /* Run-mode results arrive spec tests first, then typed-in ones (that's how
    the harness takes them); the chips should read in the Testcase tab's
    order instead. */
@@ -278,7 +281,7 @@ function CaseDetail({ spec, r, title, abortMsg }: { spec: Spec; r: CaseResult; t
   return (
     <div className="ws-detail">
       <div className="ws-detail-head">
-        <span className={"ws-badge " + m.tone}>{m.word}</span>
+        <Badge tone={m.tone}>{m.word}</Badge>
         <span className="ws-detail-title">{title}</span>
         {r.perf && <span className="tag">large input</span>}
         {r.ms > 0 && <span className="ws-ms">{r.ms < 1 ? "<1" : Math.round(r.ms)} ms</span>}

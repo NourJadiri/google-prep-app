@@ -1,8 +1,13 @@
 import { useMemo, useState } from "react";
 import type { ProblemContent } from "../../data/problems";
+import { useCopied } from "../../hooks/useCopied";
 import { Md, sections } from "./Markdown";
 import Editor from "./Editor";
 import Icon from "../shared/Icon";
+import Button from "../ui/Button";
+import LinkButton from "../ui/LinkButton";
+import Tab from "../ui/Tab";
+import Tabs from "../ui/Tabs";
 
 /* The left pane: the statement, and behind a second tab the walkthrough and
    reference solution. The solution is veiled until you ask, or until you've
@@ -22,7 +27,7 @@ interface ProblemPaneProps {
 
 export default function ProblemPane({ content, tab, onTab, accepted, fontSize }: ProblemPaneProps) {
   const [revealed, setRevealed] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, copy] = useCopied(1800);
   const parts = useMemo(() => sections(content.statement), [content.statement]);
   const open = accepted || revealed;
 
@@ -33,16 +38,14 @@ export default function ProblemPane({ content, tab, onTab, accepted, fontSize }:
 
   return (
     <section className="ws-problem" aria-label="Problem">
-      <div className="ws-tabs" role="tablist">
-        <button role="tab" aria-selected={tab === "desc"} className={tab === "desc" ? "on" : ""} onClick={() => onTab("desc")}>
-          <Icon name="file-text" size={14} />
+      <Tabs>
+        <Tab icon="file-text" selected={tab === "desc"} onSelect={() => onTab("desc")}>
           Description
-        </button>
-        <button role="tab" aria-selected={tab === "solution"} className={tab === "solution" ? "on" : ""} onClick={() => onTab("solution")}>
-          <Icon name={open ? "book-open" : "lock"} size={14} />
+        </Tab>
+        <Tab icon={open ? "book-open" : "lock"} selected={tab === "solution"} onSelect={() => onTab("solution")}>
           Solution
-        </button>
-      </div>
+        </Tab>
+      </Tabs>
 
       <div className="ws-problem-body">
         {tab === "desc" ? (
@@ -88,27 +91,20 @@ export default function ProblemPane({ content, tab, onTab, accepted, fontSize }:
               <b>Try it first.</b> The walkthrough and a reference solution are here when you want them — and they
               open by themselves once every test passes.
             </p>
-            <button className="ws-btn" onClick={() => setRevealed(true)}>
+            <Button onClick={() => setRevealed(true)}>
               <Icon name="eye" size={15} />
               Reveal the solution
-            </button>
+            </Button>
           </div>
         ) : (
           <>
             <Md text={content.notes} />
             <div className="ws-sol-head">
               <h3 className="ws-h">Reference solution</h3>
-              <button
-                className="ws-linkbtn"
-                onClick={() => {
-                  navigator.clipboard?.writeText(content.solution).catch(() => {});
-                  setCopied(true);
-                  window.setTimeout(() => setCopied(false), 1800);
-                }}
-              >
+              <LinkButton onClick={() => copy(content.solution)}>
                 <Icon name={copied ? "check" : "copy"} size={13} />
                 {copied ? "Copied" : "Copy"}
-              </button>
+              </LinkButton>
             </div>
             <div className="ws-sol-code">
               <Editor

@@ -1,0 +1,7 @@
+.ws-iconbtn {
+  flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  color: var(--ink2); transition: background .15s, color .15s, transform .12s;
+}
+.ws-iconbtn.sm { width: 26px; height: 26px; }
+.ws-iconbtn:active { transform: scale(.94); }
+@media (hover: hover) { .ws-iconbtn:hover { background: var(--sunken); color: var(--ink); } }

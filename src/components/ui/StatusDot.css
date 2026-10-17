@@ -1,0 +1,6 @@
+.ws-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; background: var(--ink2); }
+.ws-dot.ok { background: var(--green); }
+.ws-dot.bad { background: var(--red); }
+.ws-dot.warn { background: var(--med); }
+.ws-dot.pulse { background: var(--accent); animation: wspulse 1s ease-in-out infinite; }
+@keyframes wspulse { 50% { opacity: .3; } }
