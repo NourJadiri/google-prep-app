@@ -1,8 +1,6 @@
-import Station from "./Station";
 import type { Track } from "../../types";
-
-/* End of the line. The dot is the only four-colour object in the app — in
-   the line's own four colours. */
+import Station from "./Station";
+import "./Terminus.css";
 
 export default function Terminus({ track, cleared }: { track: Track; cleared: number }) {
   return (

@@ -1,12 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
+import { cx } from "../../lib/cx";
+import Icon from "../shared/Icon";
+import "./Station.css";
 
-/* One stop on the rail. Sets --seg to the day's phase colour; the rail
-   segment, the dot, the progress bar and the ritual border all read it.
-   Rendered as a direct child of .linewrap so the first/last rail trims land. */
-
-/** React's CSSProperties has no slot for custom properties, and --seg is how
- *  four separate rules pick up the day's colour. Intersecting rather than
- *  casting keeps the value checked: --seg still has to be a string. */
+/* --seg is the day's colour; the rail, dot, eyebrow, progress bar and ritual border all read it.
+   Station must stay a direct child of .linewrap: the rail trims rely on :first-child / :last-child. */
 type SegStyle = CSSProperties & { "--seg": string };
 
 interface StationProps {
@@ -15,29 +13,16 @@ interface StationProps {
   now?: boolean;
   open?: boolean;
   terminus?: boolean;
-  /** What sits inside the dot — a tick on a cleared station, else nothing. */
-  mark?: ReactNode;
   children?: ReactNode;
 }
 
-export default function Station({
-  color,
-  done,
-  now,
-  open,
-  terminus,
-  mark,
-  children,
-}: StationProps) {
-  const cls = ["stn", done && "done", now && "now", open && "open", terminus && "terminus"]
-    .filter(Boolean)
-    .join(" ");
+export default function Station({ color, done, now, open, terminus, children }: StationProps) {
   const style: SegStyle = { "--seg": color };
 
   return (
-    <div className={cls} style={style}>
+    <div className={cx("stn", done && "done", now && "now", open && "open", terminus && "terminus")} style={style}>
       <div className="rail">
-        <div className="stop">{mark}</div>
+        <div className="stop">{done && <Icon name="check" size={12} strokeWidth={3.5} />}</div>
       </div>
       <div className="stn-body">{children}</div>
     </div>

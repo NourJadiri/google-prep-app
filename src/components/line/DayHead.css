@@ -1,0 +1,10 @@
+.dayhead { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; text-align: left; transition: background .15s ease; }
+.dayhead:active { background: var(--sunken); }
+.dayhead .eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--seg); font-weight: 700; }
+.dayhead h2 { font-size: 15.5px; font-weight: 600; margin: 1px 0 0; line-height: 1.3; }
+.dayhead .chev { margin-left: auto; display: grid; place-items: center; color: var(--ink2); transition: transform .2s ease; flex: none; }
+.stn.open .chev { transform: rotate(180deg); }
+
+@media (hover: hover) {
+  .dayhead:hover { background: var(--sunken); }
+}

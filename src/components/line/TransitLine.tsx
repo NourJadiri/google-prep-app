@@ -1,40 +1,29 @@
+import { useTrack } from "../../hooks/useTrack";
+import { stationsCleared } from "../../lib/engine";
 import { useApp } from "../../state/AppState";
-import { focusDay, progressOf, stationsCleared, trackOf } from "../../lib/engine";
-import Station from "./Station";
 import DayCard from "./DayCard";
+import Station from "./Station";
 import Terminus from "./Terminus";
-import Icon from "../shared/Icon";
-import "./line.css";
+import { dayStatus } from "./lib/dayStatus";
+import "./TransitLine.css";
 
 export default function TransitLine() {
   const { state } = useApp();
-  const { data } = state;
-  const T = trackOf(data);
-  const t = progressOf(data);
-  const focus = focusDay(data);
+  const { data, track, progress, focus } = useTrack();
 
   return (
     <div className="linewrap">
-      {T.plan.map((day) => {
-        const doneN = day.probs.filter((p) => t.done[p.id]).length;
-        const isDone = doneN === day.probs.length;
-        const isNow = day.id === focus.id && !isDone;
-        const isOpen = state.openDays.includes(day.id);
+      {track.plan.map((day) => {
+        const status = dayStatus(day, progress.done, focus.id);
+        const open = state.openDays.includes(day.id);
 
         return (
-          <Station
-            key={day.id}
-            color={day.color}
-            done={isDone}
-            now={isNow}
-            open={isOpen}
-            mark={isDone ? <Icon name="check" size={12} strokeWidth={3.5} /> : null}
-          >
-            <DayCard day={day} doneN={doneN} open={isOpen} />
+          <Station key={day.id} color={day.color} done={status.done} now={status.now} open={open}>
+            <DayCard day={day} doneN={status.doneN} open={open} />
           </Station>
         );
       })}
-      <Terminus track={T} cleared={stationsCleared(data)} />
+      <Terminus track={track} cleared={stationsCleared(data)} />
     </div>
   );
 }

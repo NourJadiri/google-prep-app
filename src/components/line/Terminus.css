@@ -1,0 +1,7 @@
+.terminus .stop { width: 26px; height: 26px; border: none; background: conic-gradient(var(--blue) 0 25%, var(--red) 0 50%, var(--yellow) 0 75%, var(--green) 0); }
+:root[data-track="aws"] .terminus .stop {
+  background: conic-gradient(var(--aws-orange) 0 25%, var(--aws-teal) 0 50%, var(--aws-ink) 0 75%, var(--aws-rust) 0);
+}
+.terminus-card { padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.terminus-card h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.2px; }
+.terminus-card p { margin: 3px 0 0; font-size: 12.5px; color: var(--ink2); }

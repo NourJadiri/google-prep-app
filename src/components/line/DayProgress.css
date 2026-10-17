@@ -1,0 +1,2 @@
+.dayprog { height: 3px; background: var(--sunken); }
+.dayprog i { display: block; height: 100%; background: var(--seg); width: 0%; transition: width .35s ease; }

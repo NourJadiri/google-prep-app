@@ -1,0 +1,13 @@
+.ritual {
+  display: flex; align-items: center; gap: 10px; margin: 4px 14px 12px; padding: 9px 12px;
+  border: 1.5px dashed var(--seg); border-radius: 10px; font-size: 13px;
+  transition: background .15s ease;
+}
+.ritual .pcheck { width: 22px; height: 22px; }
+.ritual:active { background: color-mix(in srgb, var(--seg) 6%, transparent); }
+.ritual:active .pcheck { transform: scale(.92); }
+.ritual.done { border-style: solid; background: color-mix(in srgb, var(--seg) 8%, transparent); }
+
+@media (hover: hover) {
+  .ritual:not(.done):hover { background: color-mix(in srgb, var(--seg) 4%, transparent); }
+}

@@ -1,30 +1,31 @@
-import { useTimer } from "../../state/TimerProvider";
+import { cx } from "../../lib/cx";
 import { fmtT } from "../../lib/engine";
-import Icon from "../shared/Icon";
+import { useTimer } from "../../state/TimerProvider";
+import type { IconName } from "../shared/Icon";
+import XpValue from "../ui/XpValue";
+import TimerButton from "./TimerButton";
+import "./MockTimer.css";
 
-/* 25:00, no pauses, talk out loud. Goes red under five minutes and calls
-   pencils down at zero. Keeps running if you leave the tab. */
+type TimerLabel = ReturnType<typeof useTimer>["label"];
 
+const GLYPH: Record<TimerLabel, IconName> = { Start: "play", Pause: "pause", Resume: "play", Done: "check" };
+
+/* Reads the timer itself, so its once-a-second tick re-renders only this and never the line. */
 export default function MockTimer() {
   const timer = useTimer();
-  const glyph = timer.label === "Pause" ? "pause" : timer.label === "Done" ? "check" : "play";
 
   return (
-    <div className={"timer" + (timer.low ? " low" : "")}>
+    <div className={cx("timer", timer.low && "low")}>
       <b role="timer" aria-live="off">
         {fmtT(timer.left)}
       </b>
-      <button className="tbtn" onClick={timer.toggle}>
-        <Icon name={glyph} size={12} strokeWidth={2.5} />
+      <TimerButton icon={GLYPH[timer.label]} onClick={timer.toggle}>
         {timer.label}
-      </button>
-      <button className="tbtn" onClick={timer.reset}>
-        <Icon name="rotate-ccw" size={12} strokeWidth={2.5} />
+      </TimerButton>
+      <TimerButton icon="rotate-ccw" onClick={timer.reset}>
         Reset
-      </button>
-      <span className="xpv" style={{ marginLeft: "auto" }}>
-        the mock clock
-      </span>
+      </TimerButton>
+      <XpValue style={{ marginLeft: "auto" }}>the mock clock</XpValue>
     </div>
   );
 }

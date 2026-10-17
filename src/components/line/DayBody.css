@@ -1,0 +1,4 @@
+.daybody { display: none; border-top: 1px solid var(--line); }
+.stn.open .daybody { display: block; }
+.daynote { padding: 10px 14px 2px; font-size: 12.5px; color: var(--ink2); }
+.plist { list-style: none; margin: 6px 0 0; padding: 0 6px 8px; }

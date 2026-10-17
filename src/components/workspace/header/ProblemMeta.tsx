@@ -1,7 +1,9 @@
 import type { Spec } from "../../../data/problems";
-import { DIFFN, LC } from "../../../data/plan";
+import { LC } from "../../../data/plan";
 import { TRACKS, type ProblemRef } from "../../../data/tracks";
 import Icon from "../../shared/Icon";
+import DifficultyTag from "../../ui/DifficultyTag";
+import Tag from "../../ui/Tag";
 import "./ProblemMeta.css";
 
 interface ProblemMetaProps {
@@ -18,11 +20,11 @@ export default function ProblemMeta({ spec, problemRef: { day, track }, done, ac
 
   return (
     <div className="ws-meta">
-      <span className={"diff " + spec.difficulty}>{DIFFN[spec.difficulty]}</span>
+      <DifficultyTag diff={spec.difficulty} />
       <span className="ws-bullet" data-track={track} aria-label={T.name}>
         {T.bullet}
       </span>
-      <span className="tag">{`${T.unit} ${day.d} · ${day.stn}`}</span>
+      <Tag>{`${T.unit} ${day.d} · ${day.stn}`}</Tag>
       {done && (
         <span className="ws-done">
           <Icon name="check" size={11} strokeWidth={3} />
@@ -35,7 +37,7 @@ export default function ProblemMeta({ spec, problemRef: { day, track }, done, ac
           <Icon name="arrow-up-right" size={11} />
         </a>
       ) : spec.lc?.premium ? (
-        <span className="tag">{"LC " + spec.lc.num + " · premium"}</span>
+        <Tag>{"LC " + spec.lc.num + " · premium"}</Tag>
       ) : null}
     </div>
   );

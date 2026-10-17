@@ -1,0 +1,11 @@
+.prow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; transition: background .15s ease; }
+.prow + .prow { border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+.prow.done .pcheck { background: var(--seg, var(--green)); border-color: var(--seg, var(--green)); color: #fff; }
+.prow.done .pname { color: var(--ink2); text-decoration: line-through; text-decoration-thickness: 1px; }
+.pmain { min-width: 0; flex: 1; }
+.pname { font-size: 14px; font-weight: 500; display: block; transition: color .15s ease; }
+
+@media (hover: hover) {
+  .prow:hover { background: var(--sunken); }
+  .prow:not(.done) .pcheck:hover { border-color: var(--ink2); color: var(--line); }
+}

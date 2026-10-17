@@ -1,0 +1,20 @@
+/* Each option wears its own line's colour (--lc) whichever line is showing. */
+.linepick {
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line); text-align: left;
+  transition: border-color .15s ease, background .15s ease, transform .12s ease;
+}
+.linepick:active { transform: scale(.98); }
+.linepick { --lc: var(--blue); }
+.linepick[data-track="aws"] { --lc: var(--aws-orange); }
+.linepick.on { border-color: var(--lc); background: color-mix(in srgb, var(--lc) 8%, var(--surface)); }
+.lbullet {
+  width: 28px; height: 28px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--lc); color: #fff; font-weight: 800; font-size: 14px; letter-spacing: -.02em;
+}
+@media (prefers-color-scheme: dark) { .lbullet { color: var(--bg); } }
+.linepick:not(.on) .lbullet { background: color-mix(in srgb, var(--lc) 18%, var(--surface)); color: var(--lc); }
+.lname { display: flex; flex-direction: column; line-height: 1.2; }
+.lname b { font-size: 13px; font-weight: 650; color: var(--ink); }
+.lname span { font-family: var(--mono); font-size: 10px; color: var(--ink2); margin-top: 2px; letter-spacing: .02em; }
+@media (hover: hover) { .linepick:not(.on):hover { border-color: color-mix(in srgb, var(--lc) 50%, var(--line)); } }
