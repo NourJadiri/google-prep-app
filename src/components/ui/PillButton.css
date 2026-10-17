@@ -6,6 +6,7 @@
 .mbtn.ico { display: inline-flex; align-items: center; gap: 6px; }
 .mbtn.ico svg { flex: none; opacity: .75; }
 .mbtn[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, var(--surface)); }
-.mbtn:active { transform: scale(.97); background: var(--sunken); }
+.mbtn:not(:disabled):active { transform: scale(.97); background: var(--sunken); }
+.mbtn:disabled { opacity: .5; cursor: default; }
 .mbtn.danger { color: var(--red); border-color: var(--red); }
-.mbtn.danger:active { background: var(--bad-bg); }
+.mbtn.danger:not(:disabled):active { background: var(--bad-bg); }

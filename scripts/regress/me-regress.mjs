@@ -367,6 +367,27 @@ scenario("02-data", "Data panel: Export, Import (v2, legacy v1, refusals), Reset
   await s.expect("…rank Pathfinder (215 XP)", async () => (await headerRank(page)).rank, "Pathfinder");
   await A.shot("import-legacy");
 
+  // ---- Import vets the values inside the maps too: only true ticks, real ritual days, real badge stamps, counts in card stats
+  await A.clearToasts();
+  const garbled = {
+    v: 2, track: "google",
+    tracks: { google: { xp: 40, done: { ap: true, btp: false, ps2: "yes" }, rituals: { d1: "2026-03-01", d2: true, d3: "tomorrow" }, accepted: {} } },
+    quiz: { answered: 3, correct: 1, perQ: { q1: 5, q2: { seen: "2", right: 1 }, q3: { seen: 2.7, right: -1, extra: 1 } } },
+    badges: { first: 0, half: "x", streak3: T0 },
+    streak: { last: "soon", cur: "3", best: 2 },
+  };
+  await u.box.fill(JSON.stringify(garbled));
+  await u.import.click();
+  await s.expect("a garbled v2 export is still accepted", () => A.toasts(), ["* Progress imported"]);
+  await s.expect("…and only what holds up is kept: one tick, one ritual, one badge, card stats as whole counts, the streak's day dropped", () => A.blob(), {
+    ...BLANK,
+    tracks: { google: { xp: 40, done: { ap: true }, rituals: { d1: "2026-03-01" }, accepted: {} }, aws: BLANK.tracks.aws },
+    quiz: { ...BLANK.quiz, answered: 3, correct: 1, perQ: { q2: { seen: 0, right: 1 }, q3: { seen: 2, right: 0 } } },
+    badges: { streak3: T0 },
+    streak: { last: "", cur: 0, best: 2 },
+  });
+  await s.expect("…so the tiles count one problem and one ritual, and First Blood (stamped 0) is not earned", async () => ({ stats: (await stats(page)).slice(0, 3), first: (await badges(page)).find((b) => b.name === "First Blood")?.locked }), { stats: ["1/115 problems", "0/24 stations", "1/24 rituals"], first: true });
+
   // ---- Import vets what it takes: unknown lines fall back to Google, XP is rounded and floored, stale ids are not counted
   await A.clearToasts();
   const odd = { v: 2, track: "nowhere", tracks: { google: { xp: 12.6, done: { ap: true, "two-sum": true, zzz: true }, rituals: { d1: "2026-03-01" }, accepted: { ap: 5, bad: "x" } }, aws: { xp: -5 } }, quiz: { answered: "7" }, badges: null, streak: {}, extra: "from somewhere" };
@@ -459,6 +480,7 @@ scenario("03-sync-on", "turn on sync: the code, the status card, Sync now, copy,
   await s.expect("the card says Syncing… in blue with the upload cloud, and has never synced", () => card(page), { title: "Syncing…", when: null, tone: "var(--blue)", glyph: "cloud-upload" });
   await s.expect("the minted code is on the chip, which says it copies on tap", async () => ({ text: await u.chip.textContent(), title: await u.chip.getAttribute("title") }), { text: code, title: "Tap to copy" });
   await s.expect("while it works: Sync now is disabled, and Link a device and Turn off are there", () => panelButtons(page), ["Sync now (disabled)", "Link a device", "Turn off"]);
+  await s.expect("…and Sync now looks disabled: dimmed, with a plain pointer", () => u.syncNow.evaluate((b) => ({ opacity: getComputedStyle(b).opacity, cursor: getComputedStyle(b).cursor })), { opacity: "0.5", cursor: "default" });
   await s.expect("a working card has no note under it", () => syncNote(page), "");
   await s.expect("the config is saved with the code, a stamp for the edit, nothing acknowledged yet", async () => {
     const c = await A.cfg();
@@ -745,7 +767,7 @@ scenario("05-link-get", "link sheet, Get mode: A shows a code, B sends from its 
   await s.expect("1.1 s on: the Linked card is still up", () => sheet(A.page).count(), 1);
   await A.advance(100);
   await s.expect("at 1.2 s the sheet closes by itself", () => sheet(A.page).count(), 0);
-  await s.expect("…focus is not restored (the button that opened it was replaced when sync came on): it falls back to the page", () => A.page.evaluate(() => document.activeElement?.tagName), "BODY");
+  await s.expect("…focus goes to the panel's Link a device button (the one that opened the sheet was replaced when sync came on)", () => A.page.evaluate(() => ({ tag: document.activeElement?.tagName, text: document.activeElement?.textContent?.trim() })), { tag: "BUTTON", text: "Link a device" });
   await s.expect("…and the panel behind shows the synced card with the same code", async () => ({ chip: await u.chip.textContent(), card: (await card(A.page)).title }), { chip: code, card: "All changes synced" });
   const gets = A.net.count("GET", code);
   await A.advance(20_000);
@@ -1284,6 +1306,13 @@ scenario("09-lww", "two devices on one code: flush on hide, pull on wake and Syn
   await B.clearToasts();
   await ui(B.page).syncNow.click();
   await s.expect("and B, syncing, adopts it", async () => ({ toasts: await B.toasts(), stats: (await stats(B.page))[0] }), { toasts: ["* Progress synced from the cloud"], stats: "10/115 problems" });
+
+  // ---- a tied stamp: a replay of the same write goes through, another write at the same instant does not
+  const tie = codeOf(9, "t", 1);
+  const first = await d1.put(tie, T0, SEED);
+  const replay = await d1.put(tie, T0, SEED);
+  const other = await d1.put(tie, T0, SEED_B);
+  await s.expect("the Worker on a tied stamp: the same write again is applied, a different one is refused and handed the row", async () => ({ first: first.body.applied, replay: replay.body.applied, other: other.body.applied, handed: JSON.stringify(other.body.data) === JSON.stringify(SEED), kept: JSON.stringify((await d1.get(tie)).body.data) === JSON.stringify(SEED) }), { first: true, replay: true, other: false, handed: true, kept: true });
   finish(s);
 });
 
@@ -1709,6 +1738,20 @@ scenario("14-boot", "sync across a reload: pending edits pushed at boot, a newer
   release();
   await s.expect("it pulls (the row is the device's own old write), then pushes the waiting edit under its stamp", async () => ({ log: A.net.log.map((e) => `${e.method} ${e.status}`), row: (await d1.get(p)).body }), (v) => JSON.stringify(v.log) === JSON.stringify(["GET 200", "PUT 200"]) && v.row.updatedAt === T0 + 5_000 && JSON.stringify(canonOf(v.row.data)) === JSON.stringify(canonOf(SEED_B)));
   await s.expect("…and ends green with the stamp acknowledged, no toast", async () => ({ title: (await card(A.page)).title, cfg: await A.cfg(), toasts: await A.toasts() }), (v) => v.title === "All changes synced" && v.cfg.serverAt === T0 + 5_000 && v.cfg.editedAt === T0 + 5_000 && v.toasts.length === 0);
+
+  // ---- the row carries this device's unacknowledged stamp: its own write if the content matches, another device's if not
+  const own = codeOf(14, "o", 1);
+  await d1.put(own, T0 + 5_000, SEED_B);
+  const O = await s.device({ seed: SEED_B, syncCfg: cfgOf(own, { editedAt: T0 + 5_000, serverAt: T0 + 1_000, okAt: T0 + 1_000 }) });
+  await O.open();
+  await O.tab("Me");
+  await s.expect("a tie with the same content is this device's own write whose answer was lost: acknowledged, nothing adopted or pushed", async () => ({ title: (await card(O.page)).title, cfg: await O.cfg(), toasts: await O.toasts(), put: O.net.count("PUT") }), (v) => v.title === "All changes synced" && v.cfg.serverAt === T0 + 5_000 && v.cfg.editedAt === T0 + 5_000 && v.toasts.length === 0 && v.put === 0);
+  const tied = codeOf(14, "x", 1);
+  await d1.put(tied, T0 + 5_000, SEED);
+  const W = await s.device({ seed: SEED_B, syncCfg: cfgOf(tied, { editedAt: T0 + 5_000, serverAt: T0 + 1_000, okAt: T0 + 1_000 }) });
+  await W.open();
+  await W.tab("Me");
+  await s.expect("a tie with other content is another device's write at the same instant: the cloud copy is adopted, nothing pushed, both level", async () => ({ toasts: await W.toasts(), stats: (await stats(W.page))[0], cfg: await W.cfg(), put: W.net.count("PUT") }), (v) => v.toasts.join() === "* Progress synced from the cloud" && v.stats === "22/115 problems" && v.cfg.serverAt === T0 + 5_000 && v.cfg.editedAt === T0 + 5_000 && v.put === 0);
 
   // ---- the cloud moved on while the device was closed
   const q = codeOf(14, "q", 1);

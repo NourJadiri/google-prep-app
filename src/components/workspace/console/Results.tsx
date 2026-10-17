@@ -33,7 +33,7 @@ export default function Results({ spec, cases, run }: ResultsProps) {
       {run.verdict && <VerdictBanner verdict={run.verdict} />}
 
       {o.compileError && <ErrorBox err={o.compileError} />}
-      {o.entryError && <Note>{o.entryError}</Note>}
+      {o.entryError && !run.verdict && <Note>{o.entryError}</Note>}
       {o.stdout && (
         <Block title="Printed while loading">
           <Pre>{o.stdout}</Pre>

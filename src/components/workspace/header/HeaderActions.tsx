@@ -1,12 +1,15 @@
+import type { RefObject } from "react";
 import { modKey } from "../../../lib/platform";
 import AskButton from "../../assistant/AskButton";
 import Icon from "../../shared/Icon";
 import Button from "../../ui/Button";
 import Stopwatch from "../Stopwatch";
+import type { Clock } from "../hooks/useStopwatch";
 import "./HeaderActions.css";
 
 interface HeaderActionsProps {
   wide: boolean;
+  clock: RefObject<Clock>;
   /** The assistant is open. */
   asking: boolean;
   onAsk: () => void;
@@ -18,10 +21,10 @@ interface HeaderActionsProps {
   onSubmit: () => void;
 }
 
-export default function HeaderActions({ wide, asking, onAsk, copied, onCopy, busy, onRun, onStop, onSubmit }: HeaderActionsProps) {
+export default function HeaderActions({ wide, clock, asking, onAsk, copied, onCopy, busy, onRun, onStop, onSubmit }: HeaderActionsProps) {
   return (
     <div className="ws-actions">
-      {wide && <Stopwatch />}
+      {wide && <Stopwatch clock={clock} />}
       <AskButton open={asking} wide={wide} onClick={onAsk} />
       <Button variant="ghost" tone={copied ? "ok" : undefined} onClick={onCopy} title="Problem, code and last result, ready to paste into Claude">
         <Icon name={copied ? "check" : "copy"} size={14} />

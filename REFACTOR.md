@@ -55,10 +55,9 @@ Left for later, on purpose:
   in `ui/` once a second area needs them.
 - The answer renderer's Python highlighting duplicates the editor's highlight style.
 - The client and the Worker each declare the assistant's request shape and the 40-turn cap.
-- "Nothing to run" shows its message twice. Two other quirks the check found were fixed right
-  after the step: the Result tab opening on the wrong case, and the 900 px layout swap losing the
-  chat, the undo history and a revealed solution. The stopwatch, shown on wide screens only,
-  still restarts after a swap.
+- Quirks the check found, all fixed since: the Result tab opening on the wrong case, the 900 px
+  layout swap losing the chat, the undo history, a revealed solution and (later) the stopwatch's
+  time, and "Nothing to run" showing its message twice.
 
 The check itself is in `scripts/regress/` (see the README). Later steps should start the same way:
 capture a baseline run of the area before changing it, then compare.
@@ -81,9 +80,12 @@ Left for later, on purpose:
 - Bugs the suite found. Fixed right after the step: a cloud copy from a newer app version now
   reads "Update needed" (it said "Cloud unreachable"), sending to one says nothing was sent (it
   celebrated), the link sheet no longer says "Linked" when it couldn't read what arrived, and
-  disconnecting mid-sync no longer leaves sync stuck on "working". Still pinned: equal stamps on
-  two devices count as each one's own write; focus falls to the page after a Get-mode link on a
-  fresh device; the Connect button's disabled state never shows.
+  disconnecting mid-sync no longer leaves sync stuck on "working". Fixed later: two devices
+  whose writes tie on the same stamp now end on one copy (the Worker accepts a tie only as a
+  replay of the same bytes, and a device that finds another's content under its own pending
+  stamp adopts it); focus returns to the panel's Link a device button after a Get-mode link; the
+  Connect button's busy state, which could never show, is gone, and disabled pill buttons now
+  look disabled.
 - The `.mbtn`, `.mrow`, `.sectionlabel` and `.storenote` rules still live in `styles/layout.css`;
   the new primitives render those classes. Move the CSS when step 3 adopts them in Metro and Dojo.
 - The workspace suite's `06-stop-stopped-console` screenshot depends on where the Stop click lands
@@ -146,10 +148,10 @@ object identity: no mismatch. Before trusting it, it was run against 45 planted 
 the engine and caught all but two that changed nothing.
 
 Left for later, on purpose:
-- `normalize` doesn't vet the inside of `quiz.perQ` entries or the values in `done` and
-  `rituals`: a hand-edited export with `perQ: {id: 5}` turns into `NaN` stats on the next
-  answer, and `done: {id: false}` counts as progress. A badge stamped `0` in an import would be
-  announced again. A streak date in the future resets the streak to 1.
+- Fixed right after: `normalize` now vets the values inside the maps (only `true` ticks, real
+  ritual days, positive badge stamps, whole card-stat counts, a valid streak day with best at least
+  the current run), and a streak day in the future, from a clock or time zone ahead, is left
+  alone instead of resetting the streak.
 - `src/data/templates.ts` keeps its generated header: `scripts/extract-data.mjs` still writes
   it byte for byte from the reference.
 - `drafts.ts` holds both the per-problem drafts and the workspace prefs.

@@ -11,7 +11,6 @@ export function useJoinForm(hasProgress: boolean) {
   const fx = useOutcomeFx();
   const [entering, setEntering] = useState(false);
   const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
 
   const toggle = useCallback(() => setEntering((v) => !v), []);
   const close = useCallback(() => setEntering(false), []);
@@ -30,13 +29,12 @@ export function useJoinForm(hasProgress: boolean) {
     ) {
       return;
     }
-    setBusy(true);
+    // join() turns sync on before it calls out, so the panel's status card shows the wait.
     const out = await sync.join(trimmed);
-    setBusy(false);
     if (!fx.joined(out)) return;
     setEntering(false);
     setCode("");
   }
 
-  return { entering, code, busy, setCode, toggle, close, connect };
+  return { entering, code, setCode, toggle, close, connect };
 }

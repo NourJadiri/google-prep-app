@@ -92,8 +92,18 @@ export async function push(keepalive = false): Promise<SyncOutcome> {
   }
 }
 
+/** JSON with every object's keys sorted, so two copies of one blob compare equal whatever order they were built in. */
+const canonical = (x: unknown): string =>
+  JSON.stringify(x, (_, v: unknown) =>
+    v && typeof v === "object" && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : 1))) : v
+  );
+
+/* Our unacknowledged stamp on different content: another device stamped the same instant first. */
+const tiedWithAnother = (c: SyncConfig, row: RemoteRow): boolean =>
+  row.updatedAt === c.editedAt && row.updatedAt > c.serverAt && canonical(row.data) !== canonical(state.latest);
+
 function reconcile(c: SyncConfig, row: RemoteRow, remoteWins: boolean): SyncOutcome {
-  if (remoteWins || row.updatedAt > c.editedAt) {
+  if (remoteWins || row.updatedAt > c.editedAt || tiedWithAnother(c, row)) {
     return adopt(row.data, row.updatedAt) ? "adopted" : "held";
   }
   /* The row is our own last write, acknowledged or replayed. */

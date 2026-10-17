@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useApp } from "../../../state/AppState";
 import { hasAnyProgress } from "../../../lib/engine";
 import LinkConfirm from "../link/LinkConfirm";
@@ -25,6 +26,9 @@ export default function SyncPanel() {
   const flow = useLinkFlow(state.link);
   const join = useJoinForm(hasProgress);
   const { enable, syncNow, disable } = useSyncActions();
+  /* Whichever control set is showing, its Link a device button: a Get-mode link turns sync on behind the
+     sheet, which replaces the button that opened it. */
+  const linkBtn = useRef<HTMLButtonElement>(null);
 
   const openSheet = () => {
     join.close();
@@ -49,13 +53,20 @@ export default function SyncPanel() {
           now={now}
           onSyncNow={syncNow}
           onLink={openSheet}
+          linkRef={linkBtn}
           onDisable={disable}
         />
       ) : (
-        <DisabledControls join={join} onEnable={enable} onToggleJoin={toggleJoin} onLink={openSheet} />
+        <DisabledControls join={join} onEnable={enable} onToggleJoin={toggleJoin} onLink={openSheet} linkRef={linkBtn} />
       )}
       {flow.sheet && (
-        <LinkSheet status={status} hasProgress={hasProgress} onScan={flow.toScanner} onDone={flow.closeSheet} />
+        <LinkSheet
+          status={status}
+          hasProgress={hasProgress}
+          onScan={flow.toScanner}
+          onDone={flow.closeSheet}
+          returnFocus={linkBtn}
+        />
       )}
       <SyncNote status={status} />
     </>

@@ -49,7 +49,10 @@ export function award(c: Ctx, id: string): boolean {
 function touchStreak(c: Ctx): void {
   const st = c.d.streak;
   if (st.last === c.today) return;
-  st.cur = st.last && daysBetween(st.last, c.today) === 1 ? st.cur + 1 : 1;
+  const gap = st.last ? daysBetween(st.last, c.today) : Infinity;
+  // A day ahead of this one came from a clock or time zone in front: wait for it rather than reset.
+  if (gap < 0) return;
+  st.cur = gap === 1 ? st.cur + 1 : 1;
   st.last = c.today;
   if (st.cur > st.best) st.best = st.cur;
   if (st.cur >= 3) award(c, "streak3");

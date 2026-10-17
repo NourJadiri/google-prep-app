@@ -38,13 +38,33 @@ const num = (x: unknown): number => (typeof x === "number" && Number.isFinite(x)
 const xpOf = (x: unknown): number =>
   typeof x === "number" && Number.isFinite(x) ? Math.max(0, Math.round(x)) : 0;
 
+const count = (x: unknown): number => Math.max(0, Math.floor(num(x)));
+
+const isDay = (x: unknown): x is string => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+
+/** The entries of `x` whose value passes `keep`, as a fresh map. */
+function entries<T>(x: unknown, keep: (v: unknown) => v is T): Record<string, T> {
+  if (!isObj(x)) return {};
+  return Object.fromEntries(Object.entries(x).filter((e): e is [string, T] => keep(e[1])));
+}
+
+const isTrue = (v: unknown): v is true => v === true;
+const isStamp = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v > 0;
+
+function normPerQ(x: unknown): Record<string, QStat> {
+  const stats = entries(x, isObj);
+  return Object.fromEntries(
+    Object.entries(stats).map(([id, s]) => [id, { seen: count(s["seen"]), right: count(s["right"]) }])
+  );
+}
+
 function normQuiz(x: unknown): QuizData {
   const q = { ...(blankQuiz() as unknown as Loose), ...(isObj(x) ? x : {}) };
   return {
     ...(q as unknown as QuizData),
     answered: num(q["answered"]),
     correct: num(q["correct"]),
-    perQ: isObj(q["perQ"]) ? ({ ...q["perQ"] } as Record<string, QStat>) : {},
+    perQ: normPerQ(q["perQ"]),
     missed: Array.isArray(q["missed"])
       ? q["missed"].filter((id): id is string => typeof id === "string" && !!Q_BY_ID[id])
       : [],
@@ -61,23 +81,24 @@ function normTrack(x: unknown): TrackData {
   return {
     ...(t as unknown as TrackData),
     ...(typeof peak === "number" && Number.isFinite(peak) ? { peak } : {}),
-    ...(isObj(uncleared) ? { uncleared: { ...uncleared } as Record<string, true> } : {}),
+    ...(isObj(uncleared) ? { uncleared: entries(uncleared, isTrue) } : {}),
     xp: xpOf(t["xp"]),
-    done: isObj(t["done"]) ? ({ ...t["done"] } as Record<string, true>) : {},
-    rituals: isObj(t["rituals"]) ? ({ ...t["rituals"] } as Record<string, string>) : {},
+    done: entries(t["done"], isTrue),
+    rituals: entries(t["rituals"], isDay),
     accepted: Object.fromEntries(
       Object.entries(accepted).filter(([, v]) => typeof v === "number" && Number.isFinite(v))
     ) as Record<string, number>,
   };
 }
 
-const normBadges = (x: unknown): Record<string, number> =>
-  isObj(x) ? ({ ...x } as Record<string, number>) : {};
+// Only a real stamp counts, so the Me tab's grid and the award rule can't disagree about a badge.
+const normBadges = (x: unknown): Record<string, number> => entries(x, isStamp);
 
-const normStreak = (x: unknown) => ({
-  ...blank().streak,
-  ...(isObj(x) ? x : {}),
-});
+function normStreak(x: unknown) {
+  const s = isObj(x) ? x : {};
+  const cur = count(s["cur"]);
+  return { ...s, last: isDay(s["last"]) ? s["last"] : "", cur, best: Math.max(cur, count(s["best"])) };
+}
 
 // The only place that takes unknown: it reads every export any build has written.
 export function normalize(loaded: unknown): PersistedData {

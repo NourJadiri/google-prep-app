@@ -133,6 +133,12 @@ export default function register(scenario) {
     await R.clearFx();
     await pcheck(R.page, "Top K Frequent Elements", false).click();
     await s.expect("a second tick the same day does not touch the streak", async () => ({ feed: feedOf(await R.fx()), streak: (await R.saved()).streak }), { feed: ["+20 XP · Top K Frequent Elements", "confetti 12"], streak: { last: TODAY, cur: 1, best: 5 } });
+    const ahead = edit(F.mid, (b) => { b.streak = { last: "2026-03-11", cur: 4, best: 4 }; });
+    const T = await s.device({ seed: ahead, motion: true });
+    await T.open();
+    await T.clearFx();
+    await pcheck(T.page, "N-Queens", false).click();
+    await s.expect("a streak last touched tomorrow (a clock or time zone ahead) is left alone, not reset: no badge, same days", async () => ({ feed: feedOf(await T.fx()), streak: (await T.saved()).streak }), { feed: ["+40 XP · N-Queens", "confetti 12"], streak: { last: "2026-03-11", cur: 4, best: 4 } });
     finish(s);
   });
 

@@ -4,12 +4,11 @@ import CodeInput from "../CodeInput";
 
 interface JoinRowProps {
   code: string;
-  busy: boolean;
   onChange: (code: string) => void;
   onConnect: () => Promise<void>;
 }
 
-export default function JoinRow({ code, busy, onChange, onConnect }: JoinRowProps) {
+export default function JoinRow({ code, onChange, onConnect }: JoinRowProps) {
   return (
     <ButtonRow>
       <CodeInput
@@ -18,7 +17,7 @@ export default function JoinRow({ code, busy, onChange, onConnect }: JoinRowProp
         placeholder="Paste your sync code"
         aria-label="Sync code"
       />
-      <PillButton disabled={busy} onClick={() => void onConnect()}>
+      <PillButton onClick={() => void onConnect()}>
         Connect
       </PillButton>
     </ButtonRow>

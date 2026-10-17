@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import type { SyncStatus } from "../../../lib/sync";
 import ButtonRow from "../../ui/ButtonRow";
 import PillButton from "../../ui/PillButton";
@@ -10,10 +11,11 @@ interface EnabledControlsProps {
   now: number;
   onSyncNow: () => Promise<void>;
   onLink: () => void;
+  linkRef: Ref<HTMLButtonElement>;
   onDisable: () => void;
 }
 
-export default function EnabledControls({ status, pop, now, onSyncNow, onLink, onDisable }: EnabledControlsProps) {
+export default function EnabledControls({ status, pop, now, onSyncNow, onLink, linkRef, onDisable }: EnabledControlsProps) {
   return (
     <>
       <SyncStatusCard status={status} pop={pop} now={now} />
@@ -22,7 +24,7 @@ export default function EnabledControls({ status, pop, now, onSyncNow, onLink, o
         <PillButton disabled={status.phase === "working"} onClick={() => void onSyncNow()}>
           Sync now
         </PillButton>
-        <PillButton icon="qr-code" onClick={onLink}>
+        <PillButton icon="qr-code" onClick={onLink} ref={linkRef}>
           Link a device
         </PillButton>
         <PillButton tone="danger" onClick={onDisable}>

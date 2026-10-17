@@ -14,6 +14,7 @@ import { useCaseDrafts } from "./hooks/useCaseDrafts";
 import { useClaudeHandoff } from "./hooks/useClaudeHandoff";
 import { useDraft } from "./hooks/useDraft";
 import { useRunSession } from "./hooks/useRunSession";
+import { useClock } from "./hooks/useStopwatch";
 import { useWorkspacePrefs } from "./hooks/useWorkspacePrefs";
 import { useWorkspaceShortcuts } from "./hooks/useWorkspaceShortcuts";
 import DesktopLayout from "./layout/DesktopLayout";
@@ -44,6 +45,7 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
   const [revealed, setRevealed] = useState(false);
   /* Crossing 900px swaps layouts and remounts the panes; what must survive that lives here. */
   const editorSnapshot = useRef<EditorSnapshot | null>(null);
+  const clock = useClock();
 
   const session = useRunSession({
     pid,
@@ -126,6 +128,7 @@ export default function WorkspaceBody({ problemRef, content }: WorkspaceBodyProp
         actions={
           <HeaderActions
             wide={wide}
+            clock={clock}
             asking={assistantWindow.open}
             onAsk={assistantWindow.toggle}
             copied={claude.copied}

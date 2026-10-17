@@ -151,16 +151,20 @@ export async function putState(env: SyncEnv, code: string, request: Request): Pr
 
   const { v, track } = labels(data);
 
-  /* The whole LWW rule, atomically: a tied or newer stamp wins, an older one
-     changes nothing — and neither does an older schema, however new its
-     stamp. meta.changes says which branch ran. */
+  /* The whole LWW rule, atomically: a newer stamp wins, an older one changes
+     nothing, and so does an older schema, however new its stamp. A tied stamp
+     wins only as a replay of the same bytes; another device's write at the
+     same instant loses and adopts the row, so both devices end on one copy.
+     meta.changes says which branch ran. */
   const result = await withTable(env.DB, () =>
     env.DB.prepare(
       `INSERT INTO states (id, data, updated_at, v, track) VALUES (?1, ?2, ?3, ?4, ?5)
        ON CONFLICT(id) DO UPDATE SET
          data = excluded.data, updated_at = excluded.updated_at,
          v = excluded.v, track = excluded.track
-       WHERE excluded.updated_at >= states.updated_at AND excluded.v >= states.v`
+       WHERE (excluded.updated_at > states.updated_at
+              OR (excluded.updated_at = states.updated_at AND excluded.data = states.data))
+         AND excluded.v >= states.v`
     )
       .bind(key, JSON.stringify(data), Math.floor(updatedAt), v, track)
       .run()

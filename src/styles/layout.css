@@ -16,6 +16,6 @@
 
 /* PillButton's hover, kept below every component sheet: the link sheet's `.qrsheet .mbtn` ties it on specificity, and hover has always won. */
 @media (hover: hover) {
-  .mbtn:hover { background: var(--sunken); border-color: color-mix(in srgb, var(--ink2) 35%, var(--line)); }
-  .mbtn.danger:hover { background: var(--bad-bg); border-color: var(--red); }
+  .mbtn:not(:disabled):hover { background: var(--sunken); border-color: color-mix(in srgb, var(--ink2) 35%, var(--line)); }
+  .mbtn.danger:not(:disabled):hover { background: var(--bad-bg); border-color: var(--red); }
 }

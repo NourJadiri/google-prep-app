@@ -1,13 +1,14 @@
+import type { RefObject } from "react";
 import { fmtT } from "../../lib/engine";
 import Icon from "../shared/Icon";
-import { useStopwatch } from "./hooks/useStopwatch";
+import { useStopwatch, type Clock } from "./hooks/useStopwatch";
 import "./Stopwatch.css";
 
 const MAX_SECS = 99 * 60 + 59;
 
 /* Session-only on purpose: a mirror, not a record. */
-export default function Stopwatch() {
-  const { secs, running, toggle, reset } = useStopwatch();
+export default function Stopwatch({ clock }: { clock: RefObject<Clock> }) {
+  const { secs, running, toggle, reset } = useStopwatch(clock);
 
   return (
     <div className={"wclock" + (running ? "" : " paused")}>

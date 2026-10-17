@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 import * as sync from "../../../lib/sync";
 import type { SyncStatus } from "../../../lib/sync";
 import Dialog from "../../ui/Dialog";
@@ -23,9 +23,11 @@ interface LinkSheetProps {
   onScan: () => void;
   /** Close: Escape, the scrim, Close, or an arrival finishing. */
   onDone: () => void;
+  /** Where focus goes on close if the button that opened the sheet was replaced meanwhile. */
+  returnFocus: RefObject<HTMLElement | null>;
 }
 
-export default function LinkSheet({ status, hasProgress, onScan, onDone }: LinkSheetProps) {
+export default function LinkSheet({ status, hasProgress, onScan, onDone, returnFocus }: LinkSheetProps) {
   /* A device with progress is nearly always the one with something to give; a fresh one the one that wants it. */
   const [mode, setMode] = useState<SheetMode>(hasProgress ? "send" : "get");
   /* One code per opening, so a re-render or a flip between modes keeps showing the same square. */
@@ -41,7 +43,7 @@ export default function LinkSheet({ status, hasProgress, onScan, onDone }: LinkS
   const square = get || enabled;
 
   return (
-    <Dialog className="qrscrim" label="Link a device" onDismiss={onDone} initialFocus={closeBtn}>
+    <Dialog className="qrscrim" label="Link a device" onDismiss={onDone} initialFocus={closeBtn} returnFocus={returnFocus}>
       <div className="qrsheet">
         {linked ? (
           <LinkedCard />

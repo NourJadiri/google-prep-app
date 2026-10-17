@@ -7,10 +7,12 @@ interface DialogProps extends Omit<ComponentProps<"div">, "role" | "aria-label" 
   onDismiss?: () => void;
   /** Takes focus on open; whatever opened the dialog gets it back on close. */
   initialFocus?: RefObject<HTMLElement | null>;
+  /** Gets focus on close when what opened the dialog is no longer on the page. */
+  returnFocus?: RefObject<HTMLElement | null>;
 }
 
-export default function Dialog({ label, onDismiss, initialFocus, children, ...rest }: DialogProps) {
-  useDialogBehavior(onDismiss, initialFocus);
+export default function Dialog({ label, onDismiss, initialFocus, returnFocus, children, ...rest }: DialogProps) {
+  useDialogBehavior(onDismiss, initialFocus, returnFocus);
   return (
     <div
       role="dialog"

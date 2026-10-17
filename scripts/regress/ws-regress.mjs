@@ -1226,6 +1226,10 @@ scenario("13-layout", "split panes (keyboard and drag, remembered) and the stopw
     await page.getByRole("tab", { name: "Solution" }).click();
     await page.getByRole("button", { name: "Reveal the solution" }).click();
     await s.expect("(setup) the reference solution is revealed", () => page.locator(".ws-veil").count(), 0);
+    await sleep(1300);
+    await clock.click();
+    const held = (await text()).trim();
+    await s.expect("(setup) the stopwatch is paused away from zero", async () => [await label(), held !== "00:00"], ["Resume the clock", true]);
     await page.setViewportSize({ width: 800, height: 860 });
     await s.expect("below 900px: the segmented control replaces the splits", async () => ({ seg: await page.locator(".ws-seg").count(), split: await page.locator(".split").count(), clock: await page.locator(".wclock").count() }), { seg: 1, split: 0, clock: 0 });
     await s.expect("…opening on the Problem pane", () => page.locator(".ws-seg [role=tab]").evaluateAll((els) => els.map((e) => e.getAttribute("aria-selected"))), ["true", "false", "false"]);
@@ -1242,6 +1246,7 @@ scenario("13-layout", "split panes (keyboard and drag, remembered) and the stopw
     await page.setViewportSize({ width: 1280, height: 860 });
     await s.expect("back above 900px: splits are back at their saved ratios, no segmented control", async () => ({ seg: await page.locator(".ws-seg").count(), x: await val(sepX), y: await val(sepY), clock: await page.locator(".wclock").count() }), { seg: 0, x: "55", y: "70", clock: 1 });
     await s.expect("…and the editor still holds the code", () => codeOf(page), CORRECT);
+    await s.expect("…and the stopwatch is where it was left: paused, same time", async () => [await label(), (await text()).trim()], ["Resume the clock", held]);
     finish(s);
   } finally {
     await ctx.close();
@@ -1501,6 +1506,7 @@ scenario("18-runner-failure", "Python fails to load: badge, Retry, 'Nothing to r
     await page.locator(sel.run).click();
     await page.locator(".ws-verdict").waitFor({ timeout: 60_000 });
     await s.expect("Run with no interpreter: 'Nothing to run' (bad) with the reason", () => verdictOf(page), (v) => v.tone === "bad" && v.title === "Nothing to run" && /^Python couldn't load: .+\. Check the connection and try again\.$/.test(v.detail));
+    await s.expect("…said once: no note under the banner repeats it", () => page.locator(".ws-results .ws-note").count(), 0);
     await s.expect("…the Run button comes back (nothing is stuck busy)", async () => ({ run: await page.locator(sel.run).count(), stop: await page.locator(sel.stop).count() }), { run: 1, stop: 0 });
     await s.expect("…and the badge still says failed", () => page.locator(".ws-runner").textContent(), "Python failed to load");
 

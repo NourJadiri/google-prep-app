@@ -1,7 +1,12 @@
 import { useEffect, type RefObject } from "react";
 
-/** Focus goes to `initial` on open and back to whatever opened the dialog on close; Escape calls `onClose`. Inert without `onClose`. */
-export function useDialogBehavior(onClose: (() => void) | undefined, initial?: RefObject<HTMLElement | null>) {
+/** Focus goes to `initial` on open and back to whatever opened the dialog on close, or to `fallback` if that is gone;
+ *  Escape calls `onClose`. Inert without `onClose`. */
+export function useDialogBehavior(
+  onClose: (() => void) | undefined,
+  initial?: RefObject<HTMLElement | null>,
+  fallback?: RefObject<HTMLElement | null>
+) {
   const active = onClose !== undefined;
 
   useEffect(() => {
@@ -10,8 +15,9 @@ export function useDialogBehavior(onClose: (() => void) | undefined, initial?: R
     initial?.current?.focus();
     return () => {
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+      else fallback?.current?.focus();
     };
-  }, [active, initial]);
+  }, [active, initial, fallback]);
 
   useEffect(() => {
     if (!onClose) return;
