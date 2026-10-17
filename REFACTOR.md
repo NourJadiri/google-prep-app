@@ -55,9 +55,13 @@ Left for later, on purpose:
   in `ui/` once a second area needs them.
 - The answer renderer's Python highlighting duplicates the editor's highlight style.
 - The client and the Worker each declare the assistant's request shape and the 40-turn cap.
-- Known quirks kept as they were: the verdict can focus a different case than the chip order
-  suggests when a typed case is broken; crossing the 900 px breakpoint remounts the editor and the
-  assistant (losing undo history and the chat); "Nothing to run" shows its message twice.
+- "Nothing to run" shows its message twice. Two other quirks the check found were fixed right
+  after the step: the Result tab opening on the wrong case, and the 900 px layout swap losing the
+  chat, the undo history and a revealed solution. The stopwatch, shown on wide screens only,
+  still restarts after a swap.
+
+The check itself is in `scripts/regress/` (see the README). Later steps should start the same way:
+capture a baseline run of the area before changing it, then compare.
 
 ## Audit (October 2026)
 

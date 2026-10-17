@@ -387,6 +387,7 @@ writing one.
 reference/onsite-express.html   the original single-file app — ground truth for all content
 scripts/extract-data.mjs        slices its data <script> block into src/data
 scripts/parity/                 harness that diffs this app against the reference
+scripts/regress/                the workspace's regression check: scripted sessions + screenshots
 
 scripts/problems/               validate.mjs (the bank's validator), specfmt.py (spec writer)
 
@@ -597,6 +598,30 @@ node scripts/parity/roundtrip.mjs    # export from the reference, import here
 node scripts/parity/behaviour.mjs    # timers, toasts, shuffling, import guards
 node scripts/parity/screenshots.mjs  # side-by-side PNGs to flip between
 ```
+
+### Workspace regression check
+
+`scripts/regress/` drives the editor workspace through 18 scripted sessions (392
+assertions, 44 screenshots), desktop and phone, light and dark. It covers runs,
+submits, Stop and time limits, test cases, drafts, the layout, and the assistant
+against a fake Anthropic server. It builds the app, serves it with `wrangler dev`,
+and writes each run to `$REGRESS_OUT/runs/<label>/` (default `/tmp/yalc-regress`).
+Comparing two runs flags any assertion whose outcome changed and any screenshot
+pixel that moved. It was written for refactors: run it before a change and after,
+and the two runs should be identical.
+
+```bash
+npm install --no-save playwright                        # Chromium too, if you don't have one:
+npx playwright install chromium                         # or point CHROMIUM_PATH at yours
+scripts/regress/ws-check.sh . 8810 before               # ports 8810-8812; WS_JOBS=3 runs 3 at once
+# ...change the code...
+scripts/regress/ws-check.sh . 8810 after
+python3 -I scripts/regress/ws-diff.py before after      # needs Pillow; exit 0 = identical
+```
+
+Compare runs made on the same machine: Chromium's text antialiasing can differ between
+environments (see below), though two runs in one environment have matched pixel for
+pixel.
 
 `computed.mjs` is the one that matters: it walks both DOMs and compares every element's box
 geometry to a sub-pixel plus 56 computed style properties, on all four tabs in both
